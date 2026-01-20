@@ -287,7 +287,7 @@ class Ketidakhadiran extends BaseController
                 ]
             ],
             'tanggal_mulai' => [
-                'rules' => 'required|valid_date[Y-m-d]|daysAfter[3]',
+                'rules' => 'required|valid_date[Y-m-d]|daysAfter[0]',
                 'errors' => [
                     'required' => 'Tanggal mulai ketidakhadiran wajib diisi.',
                     'valid_date' => 'Tanggal harus dalam format YYYY-MM-DD.',
@@ -418,7 +418,7 @@ class Ketidakhadiran extends BaseController
                 ]
             ],
             'tanggal_mulai' => [
-                'rules' => 'required|valid_date[Y-m-d]|daysAfter[3]',
+                'rules' => 'required|valid_date[Y-m-d]|daysAfter[0]',
                 'errors' => [
                     'required' => 'Tanggal mulai ketidakhadiran wajib diisi.',
                     'valid_date' => 'Tanggal harus dalam format YYYY-MM-DD.',
@@ -776,8 +776,8 @@ class Ketidakhadiran extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pengajuan Tidak Ditemukan');
         }
 
-        if ($data_ketidakhadiran->tanggal_mulai <= date('Y-m-d')) {
-            session()->setFlashdata('info', 'Tanggal ketidakhadiran sudah terlewat. Tidak dapat merubah status pengajuan.');
+        if ($data_ketidakhadiran->tanggal_mulai > date('Y-m-d')) {
+            session()->setFlashdata('info', 'Tanggal ketidakhadiran belum tiba. Tidak dapat merubah status pengajuan untuk tanggal di masa depan.');
             return redirect()->to(base_url('/kelola-ketidakhadiran'));
         }
 

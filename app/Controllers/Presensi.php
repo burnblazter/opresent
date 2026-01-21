@@ -23,6 +23,8 @@ class Presensi extends BaseController
         $this->lokasiModel = new LokasiPresensiModel();
         $this->presensiModel = new PresensiModel();
         $this->pegawaiModel = new PegawaiModel();
+
+        helper(['telegram', 'text']);
     }
 
     public function presensiMasuk()
@@ -87,14 +89,34 @@ class Presensi extends BaseController
 
     public function simpanPresensiMasuk()
     {
+        // Validasi foto
         $foto = $this->request->getPost('image-cam');
+        if (empty($foto)) {
+            session()->setFlashdata('gagal', 'Foto presensi tidak boleh kosong');
+            return redirect()->to(base_url());
+        }
+
+        // Decode foto
         $foto = str_replace('data:image/jpeg;base64,', '', $foto);
         $foto = base64_decode($foto, true);
+        
+        if ($foto === false) {
+            session()->setFlashdata('gagal', 'Format foto tidak valid');
+            return redirect()->to(base_url());
+        }
 
+        // Simpan foto
         $username = $this->request->getPost('username');
         $nama_foto = 'masuk-' . date('Y-m-d-H-i-s') . '-' . $username . '.png';
-        $file_path = FCPATH . 'assets/img/foto_presensi/masuk/' . $nama_foto;
-
+        $folder = FCPATH . 'assets/img/foto_presensi/masuk/';
+        
+        // Pastikan folder exist
+        if (!is_dir($folder)) {
+            mkdir($folder, 0755, true);
+        }
+        
+        $file_path = $folder . $nama_foto;
+        
         if (!file_put_contents($file_path, $foto)) {
             session()->setFlashdata('gagal', 'Gagal menyimpan foto presensi masuk');
             return redirect()->to(base_url());
@@ -104,12 +126,67 @@ class Presensi extends BaseController
         $tanggal_masuk = $this->request->getPost('tanggal_masuk');
         $jam_masuk = $this->request->getPost('jam_masuk');
 
-        $this->presensiModel->save([
-            'id_pegawai' => $id_pegawai,
-            'tanggal_masuk' =>  $tanggal_masuk,
-            'jam_masuk' => $jam_masuk,
-            'foto_masuk' => $nama_foto,
-        ]);
+        // Simpan ke Database
+        try {
+            $this->presensiModel->save([
+                'id_pegawai' => $id_pegawai,
+                'tanggal_masuk' => $tanggal_masuk,
+                'jam_masuk' => $jam_masuk,
+                'foto_masuk' => $nama_foto,
+            ]);
+        } catch (\Exception $e) {
+            // Hapus foto jika gagal save database
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+            log_message('error', 'Gagal simpan presensi: ' . $e->getMessage());
+            session()->setFlashdata('gagal', 'Gagal menyimpan presensi');
+            return redirect()->to(base_url());
+        }
+
+        // ------------------------------------------------------------------
+        // INTEGRASI TELEGRAM NOTIFIKASI
+        // ------------------------------------------------------------------
+        try {
+            // Ambil detail pegawai dengan JOIN (dapat: nama, nip, jabatan, lokasi, jam_masuk)
+            $detail_pegawai = $this->pegawaiModel->getPegawaiById($id_pegawai);
+            
+            if ($detail_pegawai) {
+                // Tentukan status TEPAT WAKTU atau TERLAMBAT
+                $jam_jadwal = $detail_pegawai->jam_masuk;
+                
+                if (strtotime($jam_masuk) > strtotime($jam_jadwal)) {
+                    $status_text = 'TERLAMBAT ⚠️';
+                } else {
+                    $status_text = 'TEPAT WAKTU ✅';
+                }
+                
+                // Format tanggal Indonesia
+                $tanggal_indo = format_tanggal_indo($tanggal_masuk);
+                
+                // Buat pesan Telegram
+                $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
+                $pesan .= "👤 <b>Nama:</b> " . esc($detail_pegawai->nama) . "\n";
+                $pesan .= "🆔 <b>NIP:</b> " . esc($detail_pegawai->nip) . "\n";
+                $pesan .= "💼 <b>Jabatan:</b> " . esc($detail_pegawai->jabatan) . "\n";
+                $pesan .= "📅 <b>Tanggal:</b> " . $tanggal_indo . "\n";
+                $pesan .= "🕐 <b>Jam Masuk:</b> " . $jam_masuk . "\n";
+                $pesan .= "📍 <b>Lokasi:</b> " . esc($detail_pegawai->nama_lokasi) . "\n\n";
+                $pesan .= "<b>Status:</b> " . $status_text;
+                
+                // Kirim notifikasi Telegram
+                $result = send_telegram_notification($pesan);
+                
+                // Log jika gagal (optional, tidak ganggu user)
+                if ($result === false) {
+                    log_message('warning', 'Notifikasi Telegram gagal untuk: ' . $detail_pegawai->nama);
+                }
+            } else {
+                log_message('warning', 'Data pegawai ID ' . $id_pegawai . ' tidak ditemukan untuk notifikasi Telegram');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error notifikasi Telegram: ' . $e->getMessage());
+        }
 
         session()->setFlashdata('berhasil', 'Presensi masuk berhasil disimpan');
         return redirect()->to(base_url());

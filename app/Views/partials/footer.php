@@ -12,7 +12,8 @@
             <a href="https://josephines1.github.io/" target="_blank" class="link-secondary">Josephine</a>.
           </li>
           <li class="list-inline-item">
-            Revamped by <span class="fw-semibold">Bhagaskara Rafael</span>
+            <a href="https://github.com/burnblazter/" target="_blank" claas="
+            Recrafted by <span class=" fw-semibold">Bhagaskara R</span>
           </li>
         </ul>
       </div>

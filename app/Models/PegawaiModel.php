@@ -121,4 +121,15 @@ class PegawaiModel extends Model
         $query = $builder->get();
         return $query->getNumRows();
     }
+
+    public function getPegawaiById($id_pegawai)
+    {
+        $builder = $this->db->table('pegawai');
+        $builder->select('pegawai.*, jabatan.jabatan, lokasi_presensi.nama_lokasi, lokasi_presensi.jam_masuk, lokasi_presensi.jam_pulang');
+        $builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan', 'left');
+        $builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi', 'left');
+        $builder->where('pegawai.id', $id_pegawai);
+        
+        return $builder->get()->getRow(); // Return as OBJECT
+    }
 }

@@ -9,13 +9,8 @@
   <link href="<?= base_url('assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/css/demo.min.css?1684106062') ?>" rel="stylesheet" />
   <link rel="website icon" type="png" href="<?= base_url('assets/img/company/logo.png') ?>">
+  <link href="<?= base_url('assets/css/custom.css?1684106062') ?>" rel="stylesheet" />
   <style>
-  @import url('https://rsms.me/inter/inter.css');
-
-  :root {
-    --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
-  }
-
   body {
     font-feature-settings: "cv03", "cv04", "cv11";
   }

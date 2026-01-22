@@ -1,0 +1,297 @@
+/* 1. IMPORT FONT PREMIUM (Plus Jakarta Sans) */
+/* Font ini lebih geometris & modern daripada Inter biasa */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
+
+:root {
+  /* --- COLOR PALETTE --- */
+  --tblr-primary: #1e3a8a;
+  --tblr-primary-rgb: 30, 58, 138;
+
+  --tblr-secondary: #dda518;
+  --tblr-secondary-rgb: 51, 65, 85;
+
+  /* Background Cream Keputihan (Warm White) */
+  --custom-bg-cream: #fdfbf7;
+  --custom-bg-surface: #ffffff;
+
+  /* --- UI VARIABLES --- */
+  --tblr-font-sans-serif:
+    "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --tblr-body-bg: var(--custom-bg-cream);
+  --tblr-body-color: #334155; /* Text lebih soft (slate gray), tidak hitam pekat */
+  --tblr-border-radius: 16px; /* Sudut lebih bulat (modern standard) */
+}
+
+/* 2. GLOBAL BACKGROUND & TYPOGRAPHY */
+body {
+  background-color: var(--custom-bg-cream) !important;
+  /* Sedikit noise/pattern agar tidak flat (opsional, memberikan tekstur mahal) */
+  background-image: radial-gradient(#1e3a8a 0.5px, transparent 0.5px);
+  background-size: 24px 24px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.h1,
+.h2,
+.h3,
+.h4,
+.h5,
+.h6 {
+  color: #0f172a; /* Warna heading lebih gelap */
+  font-weight: 700;
+  letter-spacing: -0.025em; /* Tight tracking agar terlihat rapi */
+}
+
+/* 3. CARD STYLING (Glassmorphism Lite) */
+.card {
+  background: var(--custom-bg-surface);
+  border: 1px solid rgba(30, 58, 138, 0.04); /* Border sangat halus */
+  /* Shadow yang dalam dan lembut (Deep Soft Shadow) */
+  box-shadow:
+    0 10px 30px -5px rgba(30, 58, 138, 0.06),
+    0 4px 10px -3px rgba(30, 58, 138, 0.03);
+  border-radius: var(--tblr-border-radius);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -5px rgba(30, 58, 138, 0.1);
+  border-color: rgba(30, 58, 138, 0.15);
+}
+
+.card-header {
+  background: transparent;
+  border-bottom: 1px dashed #e2e8f0;
+  padding: 1.5rem 1.5rem;
+}
+
+/* 4. NAVBAR OVERHAUL */
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+  color: #dda518 !important; /* Aksen kuning saat hover/aktif */
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+/* 5. BUTTONS & INPUTS */
+.btn {
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #1e3a8a;
+  border: none;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+}
+
+.btn-primary:hover {
+  background-color: #172554; /* Lebih gelap */
+  box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
+  transform: scale(1.02);
+}
+
+/* Tombol Secondary (Kuning) */
+.btn-secondary,
+.btn-warning {
+  background-color: #dda518 !important;
+  color: #1e3a8a !important; /* Text biru biar kontras */
+  border: none;
+}
+
+/* Input Form yang lebih bersih */
+.form-control,
+.form-select {
+  background-color: #f8fafc; /* Sedikit abu-abu, bukan putih polos */
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  background-color: #fff;
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); /* Ring focus biru transparan */
+}
+
+/* 6. TABLE STYLING */
+.table thead th {
+  background-color: #f1f5f9;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.table tbody td {
+  vertical-align: middle;
+  color: #475569;
+}
+
+/* Badge Styling */
+.badge {
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+.bg-primary {
+  background-color: rgba(30, 58, 138, 0.1) !important;
+  color: #1e3a8a !important;
+}
+.bg-secondary {
+  background-color: rgba(255, 183, 3, 0.15) !important;
+  color: #854d0e !important;
+}
+.bg-success {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #047857 !important;
+}
+.bg-danger {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #b91c1c !important;
+}
+
+/* 7. CUSTOM SCROLLBAR (Biar rapi) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1e3a8a;
+}
+
+/* --- MODERN NAVBAR STYLING (Sultan Edition) --- */
+
+/* 1. Container Navbar Utama */
+.navbar-expand-md {
+  background: transparent !important; /* Hapus background bawaan */
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.navbar-expand-md .navbar {
+  border-radius: 16px; /* Membuat navbar melengkung */
+  padding: 0.5rem 1rem;
+  margin: 0 1rem; /* Memberi jarak kiri-kanan agar terlihat melayang */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 2. Item Menu (Bentuk Kapsul) */
+.navbar-nav {
+  gap: 5px; /* Jarak antar menu */
+  align-items: center;
+}
+
+.navbar-nav .nav-item {
+  margin: 0;
+}
+
+.navbar-nav .nav-link {
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 50px !important; /* Bentuk Kapsul Sempurna */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 3. Efek Hover & Active (Nyala Emas) */
+.navbar-nav .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px); /* Sedikit naik saat disentuh */
+}
+
+/* 4. Ikon di Navbar */
+.navbar-nav .nav-link .nav-link-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5; /* Ikon lebih tebal */
+}
+
+/* 5. Dropdown Menu (Popup Modern) */
+.dropdown-menu {
+  border: none;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-top: 15px !important; /* Jarak dari navbar */
+  box-shadow: 0 15px 30px -5px rgba(30, 58, 138, 0.15);
+  padding: 8px;
+  animation: slideUp 0.3s ease forwards;
+}
+
+.dropdown-item {
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.dropdown-item:hover {
+  background-color: #fff9e6; /* Background kuning sangat muda */
+  color: #1e3a8a; /* Text biru */
+  transform: translateX(5px); /* Geser kanan sedikit */
+}
+
+.dropdown-item.active {
+  background-color: #1e3a8a;
+  color: #fff;
+}
+
+/* Animasi untuk Dropdown */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 6. Tombol Logout (Spesial Merah Soft) */
+/* Kita target nav-item terakhir untuk Logout jika posisinya di akhir */
+.nav-item:last-child .nav-link[href*="logout"] {
+  background-color: rgba(239, 68, 68, 0.15); /* Merah transparan */
+  color: #ff8787 !important;
+}
+
+.nav-item:last-child .nav-link[href*="logout"]:hover {
+  background-color: #ef4444; /* Merah solid saat hover */
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* --- MOBILE RESPONSIVE FIX --- */
+@media (max-width: 768px) {
+  .navbar-expand-md .navbar {
+    margin: 0;
+    border-radius: 0 0 16px 16px; /* Hanya tumpul bawah di HP */
+  }
+  .navbar-nav {
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+  .navbar-nav .nav-link {
+    width: 100%; /* Full width di HP */
+    border-radius: 8px !important; /* Kotak tumpul di HP */
+  }
+}

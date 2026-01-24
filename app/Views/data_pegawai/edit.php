@@ -31,13 +31,21 @@
           <?= csrf_field() ?>
           <input type="hidden" name="username_db" value="<?= $data_pegawai->username ?>">
           <input type="hidden" name="id" value="<?= $data_pegawai->id ?>">
-          <input type="hidden" name="nip" value="<?= $data_pegawai->nip ?>">
           <input type="hidden" name="id_pegawai" value="<?= $data_pegawai->id_pegawai ?>">
           <input type="hidden" name="id_user" value="<?= $data_pegawai->id_user ?>">
           <input type="hidden" name="role_db" value="<?= $data_pegawai->role_id ?>">
 
           <div class="card w-100">
             <div class="card-body">
+
+              <div class="mb-3">
+                <label class="form-label">Nomor Induk (NIS/NIP)</label>
+                <input name="nomor_induk" type="text"
+                  class="form-control <?= validation_show_error('nomor_induk') ? 'is-invalid' : '' ?>"
+                  value="<?= old('nomor_induk', $data_pegawai->nomor_induk) ?>">
+                <div class="invalid-feedback"><?= validation_show_error('nomor_induk') ?></div>
+                <small class="form-hint">NIS untuk siswa atau NIP untuk pegawai</small>
+              </div>
 
               <div class="mb-3">
                 <label class="form-label">Nama</label>
@@ -84,7 +92,7 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Alamat Email Pegawai</label>
+                <label class="form-label">Alamat Email</label>
                 <input name="email" type="text"
                   class="form-control <?= validation_show_error('email') ? 'is-invalid' : '' ?>"
                   value="<?= old('email', $data_pegawai->email) ?>">

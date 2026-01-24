@@ -198,7 +198,7 @@
               <table class="table table-bordered">
                 <tr class="text-center">
                   <th>No</th>
-                  <th>NIP</th>
+                  <th>Nomor Induk (NIS/NIP)</th>
                   <th>Nama</th>
                   <th>Username</th>
                   <th>Jabatan</th>
@@ -211,7 +211,7 @@
                 <?php foreach ($data_pegawai as $pegawai) : ?>
                 <tr>
                   <td class="text-center"><?= $nomor++ ?></td>
-                  <td><?= $pegawai->nip ?></td>
+                  <td><?= $pegawai->nomor_induk ?></td>
                   <td><a href="<?= base_url('/data-pegawai/' . $pegawai->username) ?>"
                       class="d-flex align-items-start g-3 flex-wrap" style="gap: 1px;">
                       <?= $pegawai->nama ?>
@@ -465,6 +465,7 @@ $(document).ready(function() {
               <li>Kolom <strong>AKTIVASI SEKARANG</strong>: isi "YA" untuk aktivasi langsung, "TIDAK" untuk aktivasi
                 nanti</li>
               <li>Kolom <strong>PASSWORD</strong>: isi password yang diinginkan (minimal 8 karakter)</li>
+              <li>Kolom <strong>NOMOR INDUK</strong>: isi nomor induk (NIS/NIP)yang diinginkan</li>
             </ul>
           </div>
           <div class="modal-footer">

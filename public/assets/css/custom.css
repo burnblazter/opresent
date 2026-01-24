@@ -43,7 +43,6 @@
   --tblr-secondary-rgb: 51, 65, 85;
   --custom-bg-cream: #fdfbf7;
   --custom-bg-surface: #ffffff;
-  --tblr-navbar-bg: #fffefc;
 
   --tblr-font-sans-serif:
     "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
@@ -83,21 +82,19 @@ h6,
   letter-spacing: -0.025em;
 }
 
-/* 3. CARD STYLING (Apple Glassmorphism) */
+/* 3. CARD STYLING */
 .card {
   background: rgba(255, 255, 255, 0.7); /* Semi-transparan */
-  backdrop-filter: blur(20px) saturate(180%); /* Blur kaca Apple */
-  -webkit-backdrop-filter: blur(20px) saturate(180%); /* Safari support */
   border: 1px solid rgba(255, 255, 255, 0.3); /* Border putih transparan */
   box-shadow:
     0 8px 32px rgba(30, 58, 138, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.5); /* Shadow + highlight atas */
   border-radius: var(--tblr-border-radius);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: visible;
 }
 
 .card:hover {
-  transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.85); /* Lebih solid saat hover */
   box-shadow:
     0 20px 40px rgba(30, 58, 138, 0.12),
@@ -302,7 +299,6 @@ h6,
   margin-top: 15px !important; /* Jarak dari navbar */
   box-shadow: 0 15px 30px -5px rgba(30, 58, 138, 0.15);
   padding: 8px;
-  animation: slideUp 0.3s ease forwards;
 }
 
 .dropdown-item {

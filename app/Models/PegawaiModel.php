@@ -9,7 +9,7 @@ class PegawaiModel extends Model
     protected $db, $builder;
     protected $table = 'pegawai';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['nip', 'nama', 'jenis_kelamin', 'alamat', 'no_handphone', 'id_jabatan', 'id_lokasi_presensi', 'foto'];
+    protected $allowedFields = ['nomor_induk', 'nama', 'jenis_kelamin', 'alamat', 'no_handphone', 'id_jabatan', 'id_lokasi_presensi', 'foto'];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
@@ -34,7 +34,7 @@ class PegawaiModel extends Model
         $this->builder->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id');
         $this->builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan');
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi');
-        $this->builder->orderBy('nip', 'ASC');
+        $this->builder->orderBy('nama', 'ASC'); // SORT BY NAMA - LEBIH MASUK AKAL!
 
         $total = 0;
 
@@ -89,7 +89,6 @@ class PegawaiModel extends Model
             $result = $this->builder->get($perPage, $offset)->getResult();
         }
 
-        // $pager->makeLinks($page, $perPage, $total, 'template_name', $segment, 'my-group');
         return [
             'pegawai' => $result,
             'links' => $pager->makeLinks($page, $perPage, $total, 'my_pagination', 0, 'pegawai'),
@@ -97,17 +96,6 @@ class PegawaiModel extends Model
             'perPage' => $perPage,
             'page' => $page,
         ];
-    }
-
-    public function getNIPPegawai()
-    {
-        $builder = $this->db->table('pegawai');
-        $builder->selectMax('nip', 'latest_nip');
-
-        $query = $builder->get();
-        $result = $query->getRow();
-
-        return $result->latest_nip;
     }
 
     public function getJumlahPegawaiAktif()
@@ -130,6 +118,6 @@ class PegawaiModel extends Model
         $builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi', 'left');
         $builder->where('pegawai.id', $id_pegawai);
         
-        return $builder->get()->getRow(); // Return as OBJECT
+        return $builder->get()->getRow();
     }
 }

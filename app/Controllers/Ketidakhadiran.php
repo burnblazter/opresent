@@ -160,13 +160,13 @@ class Ketidakhadiran extends BaseController
 
         $worksheet->setCellValue('A1', 'Data Ketidakhadiran');
         $worksheet->setCellValue('A3', 'Nama');
-        $worksheet->setCellValue('A4', 'NIP');
+        $worksheet->setCellValue('A4', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('F3', 'Bulan');
         $worksheet->setCellValue('F4', 'Tahun');
         $worksheet->setCellValue('F5', 'Filter Tipe');
         $worksheet->setCellValue('F6', 'Filter Status');
         $worksheet->setCellValue('C3', $user_profile->nama);
-        $worksheet->setCellValue('C4', $user_profile->nip);
+        $worksheet->setCellValue('C4', $user_profile->nomor_induk);
         $worksheet->setCellValue('G3', $nama_bulan);
         $worksheet->setCellValue('G4', $filter['tahun']);
         $worksheet->setCellValue('G5', $filter['tipe']);
@@ -683,7 +683,7 @@ class Ketidakhadiran extends BaseController
         $worksheet->setCellValue('F3', $filter['tipe']);
         $worksheet->setCellValue('F4', $filter['status']);
         $worksheet->setCellValue('A6', '#');
-        $worksheet->setCellValue('B6', 'NIP');
+        $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('C6', 'NAMA PEGAWAI');
         $worksheet->setCellValue('D6', 'TIPE');
         $worksheet->setCellValue('E6', 'TANGGAL MULAI');
@@ -720,7 +720,7 @@ class Ketidakhadiran extends BaseController
                 $total_durasi_format = sprintf("%d Hari", $total_durasi);
 
                 $worksheet->setCellValue('A' . $data_start_row, $nomor++);
-                $worksheet->setCellValue('B' . $data_start_row, $data->nip);
+                $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
                 $worksheet->setCellValue('C' . $data_start_row, $data->nama);
                 $worksheet->setCellValue('D' . $data_start_row, $data->tipe_ketidakhadiran);
                 $worksheet->setCellValue('E' . $data_start_row, $data->tanggal_mulai);

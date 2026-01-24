@@ -26,7 +26,7 @@ class PresensiModel extends Model
         $page = (@$_GET['page_rekap']) ? $_GET['page_rekap'] : 1;
         $offset = ($page - 1) * $perPage;
 
-        $this->builder->select('presensi.*, pegawai.nip, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
+        $this->builder->select('presensi.*, pegawai.nomor_induk, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
         $this->builder->join('pegawai', 'pegawai.id = presensi.id_pegawai');
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi');
         $this->builder->where('presensi.id_pegawai', $id_pegawai);
@@ -79,7 +79,7 @@ class PresensiModel extends Model
         $offset = ($page - 1) * $perPage;
 
         $this->builder = $this->db->table('presensi');
-        $this->builder->select('presensi.*, pegawai.nip, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
+        $this->builder->select('presensi.*, pegawai.nomor_induk, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
         $this->builder->join('pegawai', 'pegawai.id = presensi.id_pegawai');
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi');
         $this->builder->orderBy('tanggal_masuk', 'DESC');
@@ -120,7 +120,7 @@ class PresensiModel extends Model
         $offset = ($page - 1) * $perPage;
 
         $this->builder = $this->db->table('presensi');
-        $this->builder->select('presensi.*, pegawai.nip, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
+        $this->builder->select('presensi.*, pegawai.nomor_induk, pegawai.nama, pegawai.id_lokasi_presensi, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor');
         $this->builder->join('pegawai', 'pegawai.id = presensi.id_pegawai');
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi');
         $this->builder->orderBy('tanggal_masuk', 'DESC');

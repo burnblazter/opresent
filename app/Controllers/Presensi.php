@@ -148,7 +148,7 @@ class Presensi extends BaseController
         // INTEGRASI TELEGRAM NOTIFIKASI
         // ------------------------------------------------------------------
         try {
-            // Ambil detail pegawai dengan JOIN (dapat: nama, nip, jabatan, lokasi, jam_masuk)
+            // Ambil detail pegawai dengan JOIN (dapat: nama, nomor_induk, jabatan, lokasi, jam_masuk)
             $detail_pegawai = $this->pegawaiModel->getPegawaiById($id_pegawai);
             
             if ($detail_pegawai) {
@@ -167,7 +167,7 @@ class Presensi extends BaseController
                 // Buat pesan Telegram
                 $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
                 $pesan .= "👤 <b>Nama:</b> " . esc($detail_pegawai->nama) . "\n";
-                $pesan .= "🆔 <b>NIP:</b> " . esc($detail_pegawai->nip) . "\n";
+                $pesan .= "🆔 <b>Nomor induk:</b> " . esc($detail_pegawai->nomor_induk) . "\n";
                 $pesan .= "💼 <b>Jabatan:</b> " . esc($detail_pegawai->jabatan) . "\n";
                 $pesan .= "📅 <b>Tanggal:</b> " . $tanggal_indo . "\n";
                 $pesan .= "🕐 <b>Jam Masuk:</b> " . $jam_masuk . "\n";
@@ -362,9 +362,9 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C3', $tanggal_awal);
         $worksheet->setCellValue('C4', $tanggal_akhir);
         $worksheet->setCellValue('E3', 'Nama Pegawai');
-        $worksheet->setCellValue('E4', 'NIP');
+        $worksheet->setCellValue('E4', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('F3', $data_pegawai->nama);
-        $worksheet->setCellValue('F4', $data_pegawai->nip);
+        $worksheet->setCellValue('F4', $data_pegawai->nomor_induk);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'TANGGAL MASUK');
         $worksheet->setCellValue('C6', 'JAM MASUK');
@@ -554,7 +554,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C3', $tanggal_awal);
         $worksheet->setCellValue('C4', $tanggal_akhir);
         $worksheet->setCellValue('A6', '#');
-        $worksheet->setCellValue('B6', 'NIP');
+        $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('C6', 'NAMA PEGAWAI');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
@@ -621,7 +621,7 @@ class Presensi extends BaseController
                 }
 
                 $worksheet->setCellValue('A' . $data_start_row, $nomor++);
-                $worksheet->setCellValue('B' . $data_start_row, $data->nip);
+                $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
                 $worksheet->setCellValue('C' . $data_start_row, $data->nama);
                 $worksheet->setCellValue('D' . $data_start_row, $data->tanggal_masuk);
                 $worksheet->setCellValue('E' . $data_start_row, $data->jam_masuk);
@@ -751,7 +751,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C3', date('F', strtotime($filter_bulan)));
         $worksheet->setCellValue('C4', $filter_tahun);
         $worksheet->setCellValue('A6', '#');
-        $worksheet->setCellValue('B6', 'NIP');
+        $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('C6', 'NAMA PEGAWAI');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
@@ -818,7 +818,7 @@ class Presensi extends BaseController
                 }
 
                 $worksheet->setCellValue('A' . $data_start_row, $nomor++);
-                $worksheet->setCellValue('B' . $data_start_row, $data->nip);
+                $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
                 $worksheet->setCellValue('C' . $data_start_row, $data->nama);
                 $worksheet->setCellValue('D' . $data_start_row, $data->tanggal_masuk);
                 $worksheet->setCellValue('E' . $data_start_row, $data->jam_masuk);

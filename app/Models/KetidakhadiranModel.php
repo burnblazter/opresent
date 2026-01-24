@@ -31,7 +31,7 @@ class KetidakhadiranModel extends Model
 
         $offset = ($page - 1) * $perPage;
 
-        $this->builder->select('ketidakhadiran.*, pegawai.nip, pegawai.nama');
+        $this->builder->select('ketidakhadiran.*, pegawai.nomor_induk, pegawai.nama');
         $this->builder->join('pegawai', 'pegawai.id = ketidakhadiran.id_pegawai');
         $this->builder->orderBy('ketidakhadiran.updated_at', 'DESC');
 
@@ -112,7 +112,7 @@ class KetidakhadiranModel extends Model
 
     public function findDataKetidakhadiran($id)
     {
-        $this->builder->select('ketidakhadiran.*, pegawai.nip, pegawai.nama');
+        $this->builder->select('ketidakhadiran.*, pegawai.nomor_induk, pegawai.nama');
         $this->builder->join('pegawai', 'pegawai.id = ketidakhadiran.id_pegawai');
         $this->builder->where('ketidakhadiran.id', $id);
 

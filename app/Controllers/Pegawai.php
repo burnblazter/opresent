@@ -179,7 +179,7 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('C7', $filter['lokasi-presensi']);
         $worksheet->setCellValue('A9', '#');
         $worksheet->setCellValue('B9', 'NAMA');
-        $worksheet->setCellValue('C9', 'NIP');
+        $worksheet->setCellValue('C9', 'NOMOR INDUK');
         $worksheet->setCellValue('D9', 'JABATAN');
         $worksheet->setCellValue('E9', 'ROLE AKUN');
         $worksheet->setCellValue('F9', 'USERNAME');
@@ -218,7 +218,7 @@ class Pegawai extends BaseController
                 }
                 $worksheet->setCellValue('A' . $data_start_row, $nomor++);
                 $worksheet->setCellValue('B' . $data_start_row, $data->nama);
-                $worksheet->setCellValue('C' . $data_start_row, $data->nip);
+                $worksheet->setCellValue('C' . $data_start_row, $data->nomor_induk);
                 $worksheet->setCellValue('D' . $data_start_row, $data->jabatan);
                 $worksheet->setCellValue('E' . $data_start_row, $data->role);
                 $worksheet->setCellValue('F' . $data_start_row, $data->username);
@@ -286,20 +286,10 @@ class Pegawai extends BaseController
     }
 
     public function add(): string
-    {
-        $nip = $this->pegawaiModel->getNIPPegawai();
-        if (!empty($nip)) {
-            $nip = explode('-', $nip);
-            $nomor_baru = (int)$nip[1] + 1;
-            $nip_baru = 'PEG-' . str_pad($nomor_baru, 4, 0, STR_PAD_LEFT);
-        } else {
-            $nip_baru = 'PEG-0001';
-        }
-
+    {    
         $data = [
-            'title' => 'Tambah Data Pegawai: ' . $nip_baru,
+            'title' => 'Tambah Data Pegawai/Siswa',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
-            'nip_baru' => $nip_baru,
             'jabatan' => $this->jabatanModel->getJabatan()['jabatan'],
             'role' => $this->roleModel->findAll(),
             'lokasi' => $this->lokasiModel->get()->getResultArray(),
@@ -311,6 +301,14 @@ class Pegawai extends BaseController
     public function store()
     {
         $rules = [
+             'nomor_induk' => [
+                'rules' => 'required|is_unique[pegawai.nomor_induk]|max_length[50]',
+                'errors' => [
+                    'required' => 'Mohon isi nomor induk (NIS/NIP)',
+                    'is_unique' => 'Nomor induk sudah terdaftar',
+                    'max_length' => 'Nomor induk maksimal 50 karakter',
+                ]
+        ],
             'nama' => [
                 'rules' => 'required',
                 'errors' => [
@@ -397,16 +395,16 @@ class Pegawai extends BaseController
             $active = 1;
         }
 
-        $this->pegawaiModel->save([
-            'nip' => $this->request->getVar('nip_baru'),
-            'nama' => $this->request->getVar('nama'),
-            'jenis_kelamin' => $this->request->getVar('jenis_kelamin'),
-            'alamat' => $this->request->getVar('alamat'),
-            'no_handphone' => $this->request->getVar('no_handphone'),
-            'id_jabatan' => $this->request->getVar('jabatan'),
-            'id_lokasi_presensi' => $this->request->getVar('lokasi_presensi'),
-            'foto' => $this->foto_default,
-        ]);
+    $this->pegawaiModel->save([
+        'nomor_induk' => $this->request->getVar('nomor_induk'),
+        'nama' => $this->request->getVar('nama'),
+        'jenis_kelamin' => $this->request->getVar('jenis_kelamin'),
+        'alamat' => $this->request->getVar('alamat'),
+        'no_handphone' => $this->request->getVar('no_handphone'),
+        'id_jabatan' => $this->request->getVar('jabatan'),
+        'id_lokasi_presensi' => $this->request->getVar('lokasi_presensi'),
+        'foto' => $this->foto_default,
+    ]);
 
         // Mendapatkan ID terakhir dari model pegawai
         $id_pegawai = $this->pegawaiModel->insertID();
@@ -465,6 +463,13 @@ class Pegawai extends BaseController
         $username_db = $this->request->getVar('username_db');
         $data_pegawai_db = $this->pegawaiModel->getPegawai($username_db)['pegawai'];
         $email_db = $data_pegawai_db->email;
+        $nomor_induk_db = $data_pegawai_db->nomor_induk;
+        $nomor_induk_input = $this->request->getVar('nomor_induk');
+        if ($nomor_induk_db == $nomor_induk_input) {
+            $rules_nomor_induk = 'required|max_length[50]';
+        } else {
+            $rules_nomor_induk = 'required|is_unique[pegawai.nomor_induk]|max_length[50]';
+        }
 
         $email_input = $this->request->getVar('email');
         if ($email_db == $email_input) {
@@ -481,6 +486,14 @@ class Pegawai extends BaseController
         }
 
         $rules = [
+            'nomor_induk' => [
+                'rules' => $rules_nomor_induk,
+                'errors' => [
+                    'required' => 'Mohon isi nomor induk',
+                    'is_unique' => 'Nomor induk sudah terdaftar',
+                    'max_length' => 'Nomor induk maksimal 50 karakter',
+                ]
+            ],
             'nama' => [
                 'rules' => 'required',
                 'errors' => [
@@ -550,7 +563,7 @@ class Pegawai extends BaseController
 
         $this->pegawaiModel->save([
             'id' => $this->request->getVar('id'),
-            'nip' => $this->request->getVar('nip'),
+            'nomor_induk' => $this->request->getVar('nomor_induk'),
             'nama' => $this->request->getVar('nama'),
             'jenis_kelamin' => $this->request->getVar('jenis_kelamin'),
             'alamat' => $this->request->getVar('alamat'),
@@ -630,15 +643,16 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('I1', 'ROLE AKUN');
         $worksheet->setCellValue('J1', 'AKTIVASI SEKARANG');
         $worksheet->setCellValue('K1', 'PASSWORD');
+        $worksheet->setCellValue('L1', 'NOMOR INDUK (NIS/NIP)');
 
         // Style header
-        $worksheet->getStyle('A1:K1')->getFont()->setBold(true);
-        $worksheet->getStyle('A1:K1')->getFill()
+        $worksheet->getStyle('A1:L1')->getFont()->setBold(true);
+        $worksheet->getStyle('A1:L1')->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
             ->getStartColor()->setARGB('FFD3D3D3');
         
         // Set width kolom
-        foreach (range('A', 'K') as $col) {
+        foreach (range('A', 'L') as $col) {
             $worksheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -654,6 +668,7 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('I2', 'pegawai');
         $worksheet->setCellValue('J2', 'YA');
         $worksheet->setCellValue('K2', 'password123');
+        $worksheet->setCellValue('L2', '21781');
         
         $worksheet->getStyle('A4:A10')->getFont()->setItalic(true);
 
@@ -712,10 +727,11 @@ class Pegawai extends BaseController
                 $role_nama = trim($row[8]); // ini akan selalu 'pegawai'
                 $aktivasi = strtoupper(trim($row[9])) === 'YA' ? 1 : 0;
                 $password = trim($row[10]);
+                $nomor_induk = trim($row[11]);
 
                 // Validasi data wajib
-                if (empty($nama) || empty($email) || empty($username) || empty($password)) {
-                    $errors[] = "Baris " . ($i + 1) . ": Nama, Email, Username, atau Password kosong";
+                if (empty($nama) || empty($email) || empty($username) || empty($password) || empty($nomor_induk)) {
+                    $errors[] = "Baris " . ($i + 1) . ": Nama, Email, Username, Password, atau Nomor Induk kosong";
                     $failed++;
                     continue;
                 }
@@ -743,6 +759,13 @@ class Pegawai extends BaseController
                     continue;
                 }
 
+                $nomorIndukCheck = $db->table('pegawai')->where('nomor_induk', $nomor_induk)->get()->getNumRows();
+                if ($nomorIndukCheck > 0) {
+                    $errors[] = "Baris " . ($i + 1) . ": Nomor Induk '$nomor_induk' sudah terdaftar";
+                    $failed++;
+                    continue;
+                }
+
                 // Cari ID jabatan berdasarkan nama - GUNAKAN QUERY BUILDER
                 $jabatanQuery = $db->table('jabatan')->where('jabatan', $jabatan_nama)->get()->getRow();
                 if (!$jabatanQuery) {
@@ -764,16 +787,6 @@ class Pegawai extends BaseController
                 // Role selalu pegawai (id = 3)
                 $role_id = 3;
 
-                // Generate NIP baru
-                $nip_terakhir = $this->pegawaiModel->getNIPPegawai();
-                if (!empty($nip_terakhir)) {
-                    $nip_parts = explode('-', $nip_terakhir);
-                    $nomor_baru = (int)$nip_parts[1] + 1;
-                    $nip_baru = 'PEG-' . str_pad($nomor_baru, 4, 0, STR_PAD_LEFT);
-                } else {
-                    $nip_baru = 'PEG-0001';
-                }
-
                 // Generate activate hash
                 $activate_hash = bin2hex(random_bytes(16));
 
@@ -791,7 +804,7 @@ class Pegawai extends BaseController
                 try {
                     // Simpan data pegawai
                     $this->pegawaiModel->save([
-                        'nip' => $nip_baru,
+                        'nomor_induk' => $nomor_induk,
                         'nama' => $nama,
                         'jenis_kelamin' => $jenis_kelamin,
                         'alamat' => $alamat,

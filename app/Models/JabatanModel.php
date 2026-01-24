@@ -20,7 +20,7 @@ class JabatanModel extends Model
         $this->builder = $this->db->table('jabatan');
     }
 
-    public function getJabatan($slug = false, $keyword = false, $perPage = 10)
+    public function getJabatan($slug = false, $keyword = false, $perPage = 100, $getAllForDropdown = false)
     {
         $pager = service('pager');
         $pager->setPath('jabatan', 'jabatan');
@@ -34,6 +34,18 @@ class JabatanModel extends Model
         $this->builder->orderBy('jabatan', 'ASC');
 
         $total = 0;
+
+        // Jika getAllForDropdown true, return semua data tanpa paginasi
+        if ($getAllForDropdown) {
+            $result = $this->builder->get()->getResult();
+            return [
+                'jabatan' => $result,
+                'links' => '',
+                'total' => count($result),
+                'perPage' => count($result),
+                'page' => 1,
+            ];
+        }
 
         if ($slug) {
             $countQuery = clone $this->builder;

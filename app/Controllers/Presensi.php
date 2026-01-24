@@ -168,7 +168,7 @@ class Presensi extends BaseController
                 $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
                 $pesan .= "👤 <b>Nama:</b> " . esc($detail_pegawai->nama) . "\n";
                 $pesan .= "🆔 <b>Nomor induk:</b> " . esc($detail_pegawai->nomor_induk) . "\n";
-                $pesan .= "💼 <b>Jabatan:</b> " . esc($detail_pegawai->jabatan) . "\n";
+                $pesan .= "💼 <b>Unit:</b> " . esc($detail_pegawai->jabatan) . "\n";
                 $pesan .= "📅 <b>Tanggal:</b> " . $tanggal_indo . "\n";
                 $pesan .= "🕐 <b>Jam Masuk:</b> " . $jam_masuk . "\n";
                 $pesan .= "📍 <b>Lokasi:</b> " . esc($detail_pegawai->nama_lokasi) . "\n\n";
@@ -361,7 +361,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('A4', 'Tanggal Akhir');
         $worksheet->setCellValue('C3', $tanggal_awal);
         $worksheet->setCellValue('C4', $tanggal_akhir);
-        $worksheet->setCellValue('E3', 'Nama Pegawai');
+        $worksheet->setCellValue('E3', 'Nama Pengguna');
         $worksheet->setCellValue('E4', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('F3', $data_pegawai->nama);
         $worksheet->setCellValue('F4', $data_pegawai->nomor_induk);
@@ -467,7 +467,7 @@ class Presensi extends BaseController
 
         // redirect output to client browser
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="O-Present_Rekap Presensi Pegawai_' . $data_pegawai->nama . '_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
+        header('Content-Disposition: attachment;filename="PresenSi_Rekap Presensi Pegawai_' . $data_pegawai->nama . '_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
@@ -555,7 +555,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C4', $tanggal_akhir);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
-        $worksheet->setCellValue('C6', 'NAMA PEGAWAI');
+        $worksheet->setCellValue('C6', 'NAMA PENGGUNA');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
         $worksheet->setCellValue('F6', 'JAM PULANG');
@@ -660,7 +660,7 @@ class Presensi extends BaseController
 
         // redirect output to client browser
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="O-Present_Laporan Presensi Harian_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
+        header('Content-Disposition: attachment;filename="PresenSi_Laporan Presensi Harian_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
@@ -752,7 +752,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C4', $filter_tahun);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
-        $worksheet->setCellValue('C6', 'NAMA PEGAWAI');
+        $worksheet->setCellValue('C6', 'NAMA PENGGUNA');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
         $worksheet->setCellValue('F6', 'JAM PULANG');
@@ -856,7 +856,7 @@ class Presensi extends BaseController
         $nama_bulan = $dateTime->format('F');
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="O-Present_Laporan Presensi Bulanan_' . $nama_bulan . '_' . $filter_tahun . '.xlsx"');
+        header('Content-Disposition: attachment;filename="PresenSi_Laporan Presensi Bulanan_' . $nama_bulan . '_' . $filter_tahun . '.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');

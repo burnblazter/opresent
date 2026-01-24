@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-  <title><?= $title ?> | O-Present</title>
+  <title><?= $title ?> | PresenSi</title>
   <link href="<?= base_url('assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
   <link href="<?= base_url('assets/css/demo.min.css?1684106062') ?>" rel="stylesheet" />
   <link rel="website icon" type="png" href="<?= base_url('assets/img/company/logo.png') ?>">
@@ -23,7 +23,7 @@
     <div class="container container-tight py-4">
       <div class="text-center mb-4">
         <a href="<?= base_url('/') ?>" class="navbar-brand navbar-brand-autodark">
-          <img src="<?= base_url('assets/img/company/logo.png') ?>" height="60" alt="O-Present">
+          <img src="<?= base_url('assets/img/company/logo.png') ?>" height="60" alt="smansa">
         </a>
       </div>
       <div class="card card-md">

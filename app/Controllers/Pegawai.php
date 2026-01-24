@@ -89,7 +89,7 @@ class Pegawai extends BaseController
         $perPage = $pegawaiModel['perPage'];
 
         $data = [
-            'title' => 'Data Pegawai',
+            'title' => 'Data Pengguna',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'data_pegawai' => $data_pegawai,
             'data_jabatan' => $data_jabatan,
@@ -151,7 +151,7 @@ class Pegawai extends BaseController
         $worksheet = $spreadsheet->getActiveSheet();
 
         if ($filter['jabatan'] === '') {
-            $filter['jabatan'] = 'Semua Jabatan';
+            $filter['jabatan'] = 'Semua Unit';
         }
         if ($filter['role'] === '') {
             $filter['role'] = 'Semua Role';
@@ -167,7 +167,7 @@ class Pegawai extends BaseController
         }
 
         $worksheet->setCellValue('A1', 'Data Pegawai');
-        $worksheet->setCellValue('A3', 'Filter Jabatan');
+        $worksheet->setCellValue('A3', 'Filter Unit');
         $worksheet->setCellValue('A4', 'Filter Role Akun');
         $worksheet->setCellValue('A5', 'Filter Status');
         $worksheet->setCellValue('A6', 'Filter Jenis Kelamin');
@@ -180,7 +180,7 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('A9', '#');
         $worksheet->setCellValue('B9', 'NAMA');
         $worksheet->setCellValue('C9', 'NOMOR INDUK');
-        $worksheet->setCellValue('D9', 'JABATAN');
+        $worksheet->setCellValue('D9', 'UNIT');
         $worksheet->setCellValue('E9', 'ROLE AKUN');
         $worksheet->setCellValue('F9', 'USERNAME');
         $worksheet->setCellValue('G9', 'EMAIL');
@@ -259,7 +259,7 @@ class Pegawai extends BaseController
         $worksheet->getStyle('A9:L9')->getFont()->setBold(true);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="O-Present_Data Pegawai_' . date('Y-m-d-His') . '.xlsx"');
+        header('Content-Disposition: attachment;filename="PresenSi_Data Pegawai_' . date('Y-m-d-His') . '.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
@@ -277,7 +277,7 @@ class Pegawai extends BaseController
         }
 
         $data = [
-            'title' => 'Detail Data Pegawai ' . $data_pegawai->nama,
+            'title' => 'Detail Data Pengguna ' . $data_pegawai->nama,
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'data_pegawai' => $data_pegawai,
         ];
@@ -288,9 +288,9 @@ class Pegawai extends BaseController
     public function add(): string
     {    
         $data = [
-            'title' => 'Tambah Data Pegawai/Siswa',
+            'title' => 'Tambah Data Pengguna',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
-            'jabatan' => $this->jabatanModel->getJabatan()['jabatan'],
+            'jabatan' => $this->jabatanModel->getJabatan(false, false, 10, true)['jabatan'],
             'role' => $this->roleModel->findAll(),
             'lokasi' => $this->lokasiModel->get()->getResultArray(),
         ];
@@ -312,7 +312,7 @@ class Pegawai extends BaseController
             'nama' => [
                 'rules' => 'required',
                 'errors' => [
-                    'required' => 'Mohon isi nama pegawai',
+                    'required' => 'Mohon isi nama pengguna',
                 ]
             ],
             'jenis_kelamin' => [
@@ -338,8 +338,8 @@ class Pegawai extends BaseController
             'jabatan' => [
                 'rules' => 'required|numeric',
                 'errors' => [
-                    'required' => 'Mohon isi jabatan pegawai',
-                    'numeric' => 'Mohon pilih jabatan pegawai yang tersedia',
+                    'required' => 'Mohon isi unit pengguna',
+                    'numeric' => 'Mohon pilih unit pengguna yang tersedia',
                 ]
             ],
             'email' => [
@@ -447,10 +447,10 @@ class Pegawai extends BaseController
         }
 
         $data = [
-            'title' => 'Edit Data Pegawai ' . $data_pegawai->nama,
+            'title' => 'Edit Data Pengguna' . $data_pegawai->nama,
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'data_pegawai' => $data_pegawai,
-            'jabatan' => $this->jabatanModel->getJabatan()['jabatan'],
+            'jabatan' => $this->jabatanModel->getJabatan(false, false, 10, true)['jabatan'],
             'role' => $this->roleModel->findAll(),
             'lokasi' => $this->lokasiModel->get()->getResultArray(),
         ];
@@ -497,13 +497,13 @@ class Pegawai extends BaseController
             'nama' => [
                 'rules' => 'required',
                 'errors' => [
-                    'required' => 'Mohon isi nama pegawai',
+                    'required' => 'Mohon isi nama pengguna',
                 ]
             ],
             'jenis_kelamin' => [
                 'rules' => 'required|in_list[Perempuan,Laki-laki]',
                 'errors' => [
-                    'required' => 'Mohon isi jenis kelamin pegawai',
+                    'required' => 'Mohon isi jenis kelamin pengguna',
                     'in_list' => 'Mohon pilih jenis kelamin yang tersedia',
                 ]
             ],
@@ -523,7 +523,7 @@ class Pegawai extends BaseController
             'jabatan' => [
                 'rules' => 'required',
                 'errors' => [
-                    'required' => 'Mohon isi jabatan pegawai',
+                    'required' => 'Mohon isi unit pengguna',
                 ]
             ],
             'email' => [
@@ -636,7 +636,7 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('B1', 'JENIS KELAMIN');
         $worksheet->setCellValue('C1', 'ALAMAT');
         $worksheet->setCellValue('D1', 'NOMOR HANDPHONE');
-        $worksheet->setCellValue('E1', 'JABATAN');
+        $worksheet->setCellValue('E1', 'UNIT');
         $worksheet->setCellValue('F1', 'LOKASI PRESENSI');
         $worksheet->setCellValue('G1', 'ALAMAT EMAIL');
         $worksheet->setCellValue('H1', 'USERNAME');
@@ -769,7 +769,7 @@ class Pegawai extends BaseController
                 // Cari ID jabatan berdasarkan nama - GUNAKAN QUERY BUILDER
                 $jabatanQuery = $db->table('jabatan')->where('jabatan', $jabatan_nama)->get()->getRow();
                 if (!$jabatanQuery) {
-                    $errors[] = "Baris " . ($i + 1) . ": Jabatan '$jabatan_nama' tidak ditemukan";
+                    $errors[] = "Baris " . ($i + 1) . ": Unit '$jabatan_nama' tidak ditemukan";
                     $failed++;
                     continue;
                 }

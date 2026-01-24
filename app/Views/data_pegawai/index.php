@@ -72,7 +72,7 @@
                       <div class="m-3 mt-1">
                         <div class="row g-1 justify-content-evenly w-100">
                           <div class="col-6">
-                            <label for="jabatan" class="form-label d-block">Jabatan</label>
+                            <label for="jabatan" class="form-label d-block">Unit</label>
                             <select name="jabatan" id="jabatan" class="form-select">
                               <option value="" <?= ($filter['jabatan'] == '') ? 'selected' : '' ?>>Tampilkan Semua
                               </option>
@@ -157,7 +157,7 @@
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                   <path d="M12 5l0 14" />
                   <path d="M5 12l14 0" />
-                </svg><span>Tambah Pegawai</span>
+                </svg><span>Tambah</span>
               </a>
               <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#importModal">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
@@ -201,7 +201,7 @@
                   <th>Nomor Induk (NIS/NIP)</th>
                   <th>Nama</th>
                   <th>Username</th>
-                  <th>Jabatan</th>
+                  <th>Unit</th>
                   <th>Role</th>
                   <th>Status</th>
                   <th style="min-width: 150px;">Aksi</th>
@@ -347,7 +347,7 @@
           <div class="mb-3">
             <div class="row g-1 justify-content-evenly w-100">
               <div class="col-6">
-                <label for="jabatan" class="form-label d-block">Jabatan</label>
+                <label for="jabatan" class="form-label d-block">Unit</label>
                 <select name="jabatan" id="jabatan" class="form-select">
                   <option value="" <?= ($filter['jabatan'] == '') ? 'selected' : '' ?>>Tampilkan Semua</option>
                   <?php foreach ($data_jabatan as $opsi) : ?>
@@ -459,7 +459,7 @@ $(document).ready(function() {
               <li>Download template Excel terlebih dahulu</li>
               <li>Isi data sesuai format template</li>
               <li>Kolom <strong>JENIS KELAMIN</strong>: isi "Laki-laki" atau "Perempuan"</li>
-              <li>Kolom <strong>JABATAN</strong>: isi nama jabatan yang sudah ada (contoh: "Siswa")</li>
+              <li>Kolom <strong>UNIT</strong>: isi nama unit yang sudah ada (contoh: "Kelas XII-10")</li>
               <li>Kolom <strong>LOKASI PRESENSI</strong>: isi nama lokasi yang sudah ada</li>
               <li>Kolom <strong>ROLE AKUN</strong>: selalu isi "pegawai"</li>
               <li>Kolom <strong>AKTIVASI SEKARANG</strong>: isi "YA" untuk aktivasi langsung, "TIDAK" untuk aktivasi

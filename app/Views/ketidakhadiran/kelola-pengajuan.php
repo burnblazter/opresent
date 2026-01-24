@@ -45,7 +45,7 @@
                         <path d="M21 21l-6 -6" />
                       </svg>
                     </span>
-                    <input type="text" class="form-control" placeholder="Cari data dari nama pegawai atau deskripsi"
+                    <input type="text" class="form-control" placeholder="Cari data dari nama pengguna atau deskripsi"
                       name="keyword" id="keyword" autocomplete="off" autofocus value="<?= $keyword ?>">
                   </div>
                 </div>
@@ -160,7 +160,7 @@
               <table class="table table-bordered">
                 <tr class="text-center">
                   <th>No</th>
-                  <th>Nama Pegawai</th>
+                  <th>Nama Pengguna</th>
                   <th>Tipe</th>
                   <th>Tanggal Mulai</th>
                   <th>Tanggal Berakhir</th>

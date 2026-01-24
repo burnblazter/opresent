@@ -56,9 +56,11 @@
               </div>
 
               <div class="mb-3">
-                <label class="form-label">Jabatan</label>
-                <select name="jabatan" class="form-select <?= validation_show_error('jabatan') ? 'is-invalid' : '' ?>">
-                  <option value="">---Pilih Jabatan---</option>
+                <label class="form-label">Unit</label>
+                <select name="jabatan"
+                  class="form-select select2 <?= validation_show_error('jabatan') ? 'is-invalid' : '' ?>"
+                  id="select-jabatan-edit">
+                  <option value="">---Pilih Unit---</option>
                   <?php foreach ($jabatan as $option) : ?>
                   <option value="<?= $option->id ?>"
                     <?= old('jabatan', $data_pegawai->id_jabatan) == $option->id ? 'selected' : '' ?>>
@@ -79,7 +81,8 @@
 
               <div class="mb-3">
                 <label class="form-label">Role Akun</label>
-                <select name="role" class="form-select <?= validation_show_error('role') ? 'is-invalid' : '' ?>">
+                <select name="role" class="form-select select2 <?= validation_show_error('role') ? 'is-invalid' : '' ?>"
+                  id="select-role-edit">
                   <option value="">---Pilih Role---</option>
                   <?php foreach ($role as $role_option) : ?>
                   <option value="<?= $role_option['id'] ?>"
@@ -102,7 +105,8 @@
               <div class="mb-3">
                 <label class="form-label">Jenis Kelamin</label>
                 <select name="jenis_kelamin"
-                  class="form-select <?= validation_show_error('jenis_kelamin') ? 'is-invalid' : '' ?>">
+                  class="form-select select2 <?= validation_show_error('jenis_kelamin') ? 'is-invalid' : '' ?>"
+                  id="select-jenis-kelamin-edit">
                   <option value="">---Pilih---</option>
                   <option value="Perempuan"
                     <?= old('jenis_kelamin', $data_pegawai->jenis_kelamin)=='Perempuan'?'selected':'' ?>>Perempuan
@@ -133,7 +137,8 @@
               <div class="mb-3">
                 <label class="form-label">Lokasi Presensi</label>
                 <select name="lokasi_presensi"
-                  class="form-select <?= validation_show_error('lokasi_presensi') ? 'is-invalid' : '' ?>">
+                  class="form-select select2 <?= validation_show_error('lokasi_presensi') ? 'is-invalid' : '' ?>"
+                  id="select-lokasi-edit">
                   <option value="">---Pilih Lokasi---</option>
                   <?php foreach ($lokasi as $lokasi_option) : ?>
                   <option value="<?= $lokasi_option['id'] ?>"
@@ -143,6 +148,27 @@
                   <?php endforeach; ?>
                 </select>
                 <div class="invalid-feedback"><?= validation_show_error('lokasi_presensi') ?></div>
+              </div>
+
+              <!-- BAGIAN UBAH PASSWORD -->
+              <hr class="my-4">
+              <h3 class="card-title mb-3">Ubah Password</h3>
+
+              <div class="mb-3">
+                <label class="form-label">Password Baru</label>
+                <input name="password_baru" type="password"
+                  class="form-control <?= validation_show_error('password_baru') ? 'is-invalid' : '' ?>"
+                  placeholder="Password tidak diubah">
+                <div class="invalid-feedback"><?= validation_show_error('password_baru') ?></div>
+                <small class="form-hint">Kosongkan jika tidak ingin mengubah password</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Konfirmasi Password Baru</label>
+                <input name="konfirmasi_password" type="password"
+                  class="form-control <?= validation_show_error('konfirmasi_password') ? 'is-invalid' : '' ?>"
+                  placeholder="Password tidak diubah">
+                <div class="invalid-feedback"><?= validation_show_error('konfirmasi_password') ?></div>
               </div>
 
             </div>
@@ -155,38 +181,24 @@
         </form>
       </div>
 
-      <!-- RESET PASSWORD (DI DALAM ROW AGAR SEJAJAR) -->
-      <div class="col-lg-8 col-sm-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Reset Password</h3>
-          </div>
-          <form action="<?= base_url('/data-pegawai/reset-password') ?>" method="post">
-            <?= csrf_field() ?>
-            <input type="hidden" name="id_user" value="<?= $data_pegawai->id_user ?>">
-
-            <div class="card-body">
-              <div class="mb-3">
-                <label class="form-label">Password Baru</label>
-                <input name="password_baru" type="password" class="form-control" required>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Konfirmasi Password Baru</label>
-                <input name="konfirmasi_password" type="password" class="form-control" required>
-              </div>
-            </div>
-
-            <div class="card-footer text-end">
-              <button type="submit" class="btn btn-warning">Reset Password</button>
-            </div>
-
-          </form>
-        </div>
-      </div>
-
     </div><!-- END ROW -->
 
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+  $('.select2').select2({
+    placeholder: '--- Pilih Opsi ---',
+    allowClear: true,
+    width: '100%',
+    language: {
+      noResults: function() {
+        return "Tidak ada hasil";
+      }
+    }
+  });
+});
+</script>
+
 <?= $this->endSection() ?>

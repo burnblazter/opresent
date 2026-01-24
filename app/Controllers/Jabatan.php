@@ -35,7 +35,7 @@ class Jabatan extends BaseController
         $perPage = $jabatanModel['perPage'];
 
         $data = [
-            'title' => 'Data Jabatan',
+            'title' => 'Data Unit',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'data_jabatan' => $data_jabatan,
             'currentPage' => $currentPage,
@@ -74,8 +74,8 @@ class Jabatan extends BaseController
             'jabatan' => [
                 'rules' => 'required|is_unique[jabatan.jabatan]',
                 'errors' => [
-                    'required' => 'mohon isi nama jabatan baru',
-                    'is_unique' => 'nama jabatan sudah terdaftar',
+                    'required' => 'Mohon isi nama unit baru',
+                    'is_unique' => 'Nama unit sudah terdaftar',
                 ]
             ],
         ];
@@ -105,7 +105,7 @@ class Jabatan extends BaseController
         }
 
         $data = [
-            'title' => 'Edit Data Jabatan',
+            'title' => 'Edit Data Unit',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'jabatan' => $data_jabatan,
         ];
@@ -119,8 +119,8 @@ class Jabatan extends BaseController
             'jabatan' => [
                 'rules' => 'required|is_unique[jabatan.jabatan]',
                 'errors' => [
-                    'required' => 'mohon isi nama jabatan baru',
-                    'is_unique' => 'nama jabatan sudah terdaftar',
+                    'required' => 'Mohon isi nama unit baru',
+                    'is_unique' => 'Nama unit sudah terdaftar',
                 ]
             ],
         ];

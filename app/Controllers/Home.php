@@ -42,27 +42,4 @@ class Home extends BaseController
 
         return view('home/index', $data);
     }
-
-    public function getWaktu()
-    {
-        $user_profile = $this->usersModel->getUserInfo(user_id());
-        $user_lokasi_presensi = $this->lokasiModel->getWhere(['nama_lokasi' => $user_profile->lokasi_presensi])->getFirstRow();
-
-        if (in_array($user_lokasi_presensi->zona_waktu, timezone_identifiers_list())) {
-            date_default_timezone_set($user_lokasi_presensi->zona_waktu);
-        } else {
-            date_default_timezone_set('Asia/Jakarta');
-        }
-
-        $waktu = [
-            'tanggal' => date('j'),
-            'bulan' => date('F'),
-            'tahun' => date('Y'),
-            'jam' => date('H'),
-            'menit' => date('i'),
-            'detik' => date('s')
-        ];
-
-        return $this->response->setJSON($waktu);
-    }
 }

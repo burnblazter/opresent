@@ -79,11 +79,6 @@
             <?= $this->include('partials/footer') ?>
         </div>
     </div>
-    <!-- Libs JS -->
-    <script src="<?= base_url('../assets/libs/apexcharts/dist/apexcharts.min.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('../assets/libs/jsvectormap/dist/js/jsvectormap.min.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('../assets/libs/jsvectormap/dist/maps/world.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('../assets/libs/jsvectormap/dist/maps/world-merc.js?1684106062') ?>" defer></script>
     <!-- Tabler Core -->
     <script src="<?= base_url('../assets/js/tabler.min.js?1684106062') ?>" defer></script>
     <script src="<?= base_url('../assets/js/demo.min.js?1684106062') ?>" defer></script>

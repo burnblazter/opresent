@@ -65,10 +65,10 @@
 
     <h1 class="navbar-brand navbar-brand-autodark d-none-navbar-horizontal pe-0 pe-md-3">
       <a href="<?= base_url() ?>" class="brand-center">
-        <img src="<?= base_url('../assets/img/company/logo.png') ?>" width="110" height="32" alt="O-Present"
+        <img src="<?= base_url('../assets/img/company/logo.png') ?>" width="110" height="32" alt="Smansa"
           class="navbar-brand-image brand-logo" />
 
-        <span class="brand-text">Presensi</span>
+        <span class="brand-text">PresenSi</span>
       </a>
     </h1>
 

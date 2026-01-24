@@ -31,7 +31,7 @@
                   <?= validation_show_error('nomor_induk') ?>
                 </div>
                 <?php endif; ?>
-                <small class="form-hint">Masukkan NIS untuk siswa atau NIP untuk pegawai</small>
+                <small class="form-hint">Masukkan NIS untuk siswa atau NIP untuk pengguna</small>
               </div>
 
               <div class="mb-3 w-100">
@@ -48,8 +48,8 @@
               <div class="mb-3 w-100">
                 <label class="form-label">Jenis Kelamin</label>
                 <select name="jenis_kelamin" type="text"
-                  class="form-select <?= validation_show_error('jenis_kelamin') ? 'is-invalid' : '' ?>"
-                  id="select-users">
+                  class="form-select select2 <?= validation_show_error('jenis_kelamin') ? 'is-invalid' : '' ?>"
+                  id="select-jenis-kelamin">
                   <option value="">---Pilih Jenis Kelamin---</option>
                   <option value="Perempuan" <?= old('jenis_kelamin') === 'Perempuan' ? 'selected' : '' ?>>Perempuan
                   </option>
@@ -85,17 +85,18 @@
                 <?php endif; ?>
               </div>
               <div class="mb-3 w-100">
-                <label class="form-label">Jabatan</label>
+                <label class="form-label">Unit</label>
                 <select name="jabatan" type="text"
-                  class="form-select <?= validation_show_error('jabatan') ? 'is-invalid' : '' ?>" id="select-users">
-                  <option value="">---Pilih Jabatan---</option>
+                  class="form-select select2 <?= validation_show_error('jabatan') ? 'is-invalid' : '' ?>"
+                  id="select-jabatan">
+                  <option value="">---Pilih Unit---</option>
                   <?php if (!empty($jabatan)) : ?>
                   <?php foreach ($jabatan as $option) : ?>
                   <option value="<?= $option->id ?>" <?= old('jabatan') === $option->id ? 'selected' : '' ?>>
                     <?= $option->jabatan ?></option>
                   <?php endforeach; ?>
                   <?php else : ?>
-                  <option value="">Tidak ada pilihan jabatan</option>
+                  <option value="">Tidak ada pilihan unit</option>
                   <?php endif; ?>
                 </select>
                 <?php if (validation_show_error('jabatan')) : ?>
@@ -113,7 +114,8 @@
               <div class="mb-3 w-100">
                 <label class="form-label">Lokasi Presensi</label>
                 <select name="lokasi_presensi" type="text"
-                  class="form-select <?= validation_show_error('lokasi_presensi') ? 'is-invalid' : '' ?>">
+                  class="form-select select2 <?= validation_show_error('lokasi_presensi') ? 'is-invalid' : '' ?>"
+                  id="select-lokasi">
                   <option value="">---Pilih Lokasi Presensi---</option>
                   <?php if (!empty($lokasi)) : ?>
                   <?php foreach ($lokasi as $lokasi_option) : ?>
@@ -132,7 +134,7 @@
                 <?php endif; ?>
               </div>
               <div class="mb-3 w-100">
-                <label class="form-label">Alamat Email Pegawai</label>
+                <label class="form-label">Alamat Email Pengguna</label>
                 <input name="email" type="text"
                   class="form-control <?= validation_show_error('email') ? 'is-invalid' : '' ?>"
                   placeholder="e.g. putricantika@gmail.com" value="<?= old('email') ?>">
@@ -156,7 +158,7 @@
               <div class="mb-3 w-100">
                 <label class="form-label">Role Akun</label>
                 <select name="role" type="text"
-                  class="form-select <?= validation_show_error('role') ? 'is-invalid' : '' ?>">
+                  class="form-select select2 <?= validation_show_error('role') ? 'is-invalid' : '' ?>" id="select-role">
                   <option value="">---Pilih Role---</option>
                   <?php if (!empty($role)) : ?>
                   <?php foreach ($role as $role_option) : ?>
@@ -187,7 +189,7 @@
                   </svg>
                 </label>
                 <select name="aktivasi" id="aktivasi" type="text"
-                  class="form-select <?= validation_show_error('aktivasi') ? 'is-invalid' : '' ?>">
+                  class="form-select select2 <?= validation_show_error('aktivasi') ? 'is-invalid' : '' ?>">
                   <option value="1" <?= old('aktivasi') === "1" ? 'selected' : '' ?>>Aktivasi Nanti</option>
                   <option value="2" <?= old('aktivasi') === "2" ? 'selected' : '' ?>>Aktivasi Instan</option>
                   <option value="3" <?= old('aktivasi') === "3" ? 'selected' : '' ?>>Aktivasi Melalui Email</option>
@@ -236,5 +238,20 @@
     </div>
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+  $('.select2').select2({
+    placeholder: '--- Pilih Opsi ---',
+    allowClear: true,
+    width: '100%',
+    language: {
+      noResults: function() {
+        return "Tidak ada hasil";
+      }
+    }
+  });
+});
+</script>
 
 <?= $this->endSection() ?>

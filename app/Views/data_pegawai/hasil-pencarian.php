@@ -8,7 +8,7 @@
           <th>Nomor Induk</th>
           <th>Nama</th>
           <th>Username</th>
-          <th>Jabatan</th>
+          <th>Unit</th>
           <th>Role</th>
           <th>Status</th>
           <th style="min-width: 150px;">Aksi</th>

@@ -50,25 +50,15 @@
           <form action="<?= url_to('reset-password') ?>" method="post" autocomplete="off" novalidate>
             <?= csrf_field() ?>
 
-            <div class="mb-3">
-              <label class="form-label"><?= lang('Auth.token') ?></label>
-              <input name="token" type="text"
-                class="form-control <?php if (session('errors.token')) : ?>is-invalid<?php endif ?>"
-                placeholder="<?= lang('Auth.token') ?>" value="<?= old('token', $token ?? '') ?>" autocomplete="off">
-              <div class="invalid-feedback">
-                <?= session('errors.token') ?>
-              </div>
-            </div>
+            <!-- Hidden token field -->
+            <input type="hidden" name="token" value="<?= old('token', $token ?? '') ?>">
 
+            <!-- Email field - disabled/readonly -->
             <div class="mb-3">
               <label class="form-label"><?= lang('Auth.email') ?></label>
-              <input name="email" type="email"
-                class="form-control <?php if (session('errors.email')) : ?>is-invalid<?php endif ?>"
-                placeholder="<?= lang('Auth.email') ?>" aria-describedby="emailHelp"
-                placeholder="<?= lang('Auth.email') ?>" value="<?= old('email') ?>" autocomplete="off">
-              <div class="invalid-feedback">
-                <?= session('errors.email') ?>
-              </div>
+              <input type="email" class="form-control" value="<?= isset($email) ? $email : '' ?>" disabled
+                style="background-color: #e2e8f0; cursor: not-allowed; color: #64748b;">
+              <small class="text-muted d-block mt-1">This email is associated with your account</small>
             </div>
 
             <div class="mb-3">

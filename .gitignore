@@ -2,8 +2,9 @@
 # Operating Specific Junk Files
 #-------------------------
 
-# Test project
-.test
+# Local test project
+faceapi
+humanjs
 
 # OS X
 .DS_Store

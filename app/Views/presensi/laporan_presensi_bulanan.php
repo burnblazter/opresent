@@ -69,7 +69,7 @@
                 <tr class="text-center">
                   <th>No</th>
                   <th>Nomor Induk (NIS/NIP)</th>
-                  <th>Nama Pengguna</th>
+                  <th>Nama</th>
                   <th>Tanggal</th>
                   <th>Jam Masuk</th>
                   <th>Foto Masuk</th>

@@ -14,7 +14,7 @@
               <div class="table-responsive">
                 <table class="table table-bordered">
                   <tr>
-                    <th>Nama Pengguna</th>
+                    <th>Nama</th>
                     <td><?= $data_ketidakhadiran->nama ?></td>
                   </tr>
                   <tr>

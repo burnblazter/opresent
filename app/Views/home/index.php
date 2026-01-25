@@ -186,18 +186,22 @@
 </div>
 
 <script>
-// Timezone dari server
-const timezone = '<?= $user_lokasi_presensi->zona_waktu ?>';
+// Server time sebagai patokan (Unix timestamp)
+let serverTime = <?= $server_time ?>;
+const timezone = '<?= $timezone ?>';
 
 const monthNames = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
 
+// Sync waktu client dengan server
+const clientTime = Math.floor(Date.now() / 1000);
+const timeDiff = serverTime - clientTime;
+
 function updateClock() {
-  // Buat date object dengan timezone yang sesuai
-  const now = new Date(new Date().toLocaleString("en-US", {
-    timeZone: timezone
-  }));
+  // Hitung waktu berdasarkan server time + elapsed time
+  const currentServerTime = Math.floor(Date.now() / 1000) + timeDiff;
+  const now = new Date(currentServerTime * 1000);
 
   const tanggal = now.getDate();
   const bulan = monthNames[now.getMonth()];
@@ -253,7 +257,6 @@ function updateClock() {
 
 document.addEventListener('DOMContentLoaded', function() {
   updateClock();
-  // Update setiap detik, tapi client-side aja
   setInterval(updateClock, 1000);
 });
 

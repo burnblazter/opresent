@@ -684,7 +684,7 @@ class Ketidakhadiran extends BaseController
         $worksheet->setCellValue('F4', $filter['status']);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
-        $worksheet->setCellValue('C6', 'NAMA PENGGUNA');
+        $worksheet->setCellValue('C6', 'NAMA');
         $worksheet->setCellValue('D6', 'TIPE');
         $worksheet->setCellValue('E6', 'TANGGAL MULAI');
         $worksheet->setCellValue('F6', 'TANGGAL BERAKHIR');

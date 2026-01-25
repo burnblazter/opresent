@@ -5,7 +5,7 @@
       <table class="table table-bordered">
         <tr class="text-center">
           <th>No</th>
-          <th>Nama Pengguna</th>
+          <th>Nama</th>
           <th>Tipe</th>
           <th>Tanggal Mulai</th>
           <th>Tanggal Berakhir</th>

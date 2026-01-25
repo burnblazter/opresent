@@ -171,31 +171,24 @@
 </div>
 
 <script>
-// Timezone dari server (defaultnya Asia/Jakarta untuk admin)
-const timezone = '<?= isset($user_lokasi_presensi->zona_waktu) ? $user_lokasi_presensi->zona_waktu : 'Asia/Jakarta' ?>';
+// Server time sebagai patokan (Unix timestamp)
+let serverTime = <?= isset($server_time) ? $server_time : time() ?>;
 
 const namaBulan = [
-  'Januari',
-  'Februari',
-  'Maret',
-  'April',
-  'Mei',
-  'Juni',
-  'Juli',
-  'Agustus',
-  'September',
-  'Oktober',
-  'November',
-  'Desember'
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
 const namaHari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jum\'at', 'Sabtu'];
 
+// Sync waktu client dengan server
+const clientTime = Math.floor(Date.now() / 1000);
+const timeDiff = serverTime - clientTime;
+
 function updateClock() {
-  // Buat date object dengan timezone yang sesuai
-  const now = new Date(new Date().toLocaleString("en-US", {
-    timeZone: timezone
-  }));
+  // Hitung waktu berdasarkan server time + elapsed time
+  const currentServerTime = Math.floor(Date.now() / 1000) + timeDiff;
+  const now = new Date(currentServerTime * 1000);
 
   const hari = namaHari[now.getDay()];
   const tanggal = now.getDate();
@@ -205,7 +198,6 @@ function updateClock() {
   const menit = String(now.getMinutes()).padStart(2, '0');
   const detik = String(now.getSeconds()).padStart(2, '0');
 
-  // Update tampilan
   const hariEl = document.getElementById('hari');
   const tanggalEl = document.getElementById('tanggal');
   const bulanEl = document.getElementById('bulan');
@@ -227,7 +219,6 @@ function updateClock() {
 
 document.addEventListener('DOMContentLoaded', function() {
   updateClock();
-  // Update setiap detik, tapi client-side aja
   setInterval(updateClock, 1000);
 });
 </script>

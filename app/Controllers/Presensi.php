@@ -361,7 +361,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('A4', 'Tanggal Akhir');
         $worksheet->setCellValue('C3', $tanggal_awal);
         $worksheet->setCellValue('C4', $tanggal_akhir);
-        $worksheet->setCellValue('E3', 'Nama Pengguna');
+        $worksheet->setCellValue('E3', 'Nama');
         $worksheet->setCellValue('E4', 'Nomor Induk (NIS/NIP)');
         $worksheet->setCellValue('F3', $data_pegawai->nama);
         $worksheet->setCellValue('F4', $data_pegawai->nomor_induk);
@@ -555,7 +555,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C4', $tanggal_akhir);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
-        $worksheet->setCellValue('C6', 'NAMA PENGGUNA');
+        $worksheet->setCellValue('C6', 'NAMA');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
         $worksheet->setCellValue('F6', 'JAM PULANG');
@@ -752,7 +752,7 @@ class Presensi extends BaseController
         $worksheet->setCellValue('C4', $filter_tahun);
         $worksheet->setCellValue('A6', '#');
         $worksheet->setCellValue('B6', 'Nomor Induk (NIS/NIP)');
-        $worksheet->setCellValue('C6', 'NAMA PENGGUNA');
+        $worksheet->setCellValue('C6', 'NAMA');
         $worksheet->setCellValue('D6', 'TANGGAL MASUK');
         $worksheet->setCellValue('E6', 'JAM MASUK');
         $worksheet->setCellValue('F6', 'JAM PULANG');

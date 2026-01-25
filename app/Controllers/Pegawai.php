@@ -595,7 +595,7 @@ class Pegawai extends BaseController
             $groupModel->removeUserFromGroup($id_user, (int)$role_db);
         }
 
-        session()->setFlashdata('berhasil', 'Data pegawai ' . $data_pegawai_db->nama . ' berhasil diedit');
+        session()->setFlashdata('berhasil', 'Data pengguna ' . $data_pegawai_db->nama . ' berhasil diedit');
         return redirect()->to('/data-pegawai');
     }
 
@@ -613,7 +613,7 @@ class Pegawai extends BaseController
             unlink('assets/img/user_profile/' . $foto_db);
         }
 
-        session()->setFlashdata('berhasil', 'Foto pegawai ' . $pegawai_db->nama . ' berhasil dihapus');
+        session()->setFlashdata('berhasil', 'Foto pengguna ' . $pegawai_db->nama . ' berhasil dihapus');
         return redirect()->to(base_url('/data-pegawai/edit/' . $username));
     }
 
@@ -621,7 +621,7 @@ class Pegawai extends BaseController
     {
         $this->pegawaiModel->delete($id);
 
-        session()->setFlashdata('berhasil', 'Data Pegawai Berhasil Dihapus');
+        session()->setFlashdata('berhasil', 'Data Pengguna Berhasil Dihapus');
         return redirect()->to('/data-pegawai');
     }
 
@@ -661,19 +661,19 @@ class Pegawai extends BaseController
         $worksheet->setCellValue('B2', 'Laki-laki');
         $worksheet->setCellValue('C2', 'Jl. Example No. 123');
         $worksheet->setCellValue('D2', '081234567890');
-        $worksheet->setCellValue('E2', 'Siswa');
+        $worksheet->setCellValue('E2', 'Kelas XII-10');
         $worksheet->setCellValue('F2', 'SMA Negeri 1 Balikpapan');
         $worksheet->setCellValue('G2', 'john@example.com');
         $worksheet->setCellValue('H2', 'johndoe');
         $worksheet->setCellValue('I2', 'pegawai');
         $worksheet->setCellValue('J2', 'YA');
-        $worksheet->setCellValue('K2', 'password123');
+        $worksheet->setCellValue('K2', 'kucingberlari');
         $worksheet->setCellValue('L2', '21781');
         
         $worksheet->getStyle('A4:A10')->getFont()->setItalic(true);
 
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="Template_Import_Pegawai.xlsx"');
+        header('Content-Disposition: attachment;filename="Template_Import_Pengguna.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = new Xlsx($spreadsheet);

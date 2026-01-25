@@ -26,6 +26,14 @@ class Home extends BaseController
     {
         $user_profile = $this->usersModel->getUserInfo(user_id());
         $user_lokasi = $this->lokasiModel->getWhere(['nama_lokasi' => $user_profile->lokasi_presensi])->getFirstRow();
+        
+        // Set timezone dulu
+        if (in_array($user_lokasi->zona_waktu, timezone_identifiers_list())) {
+            date_default_timezone_set($user_lokasi->zona_waktu);
+        } else {
+            date_default_timezone_set('Asia/Jakarta');
+        }
+        
         $presensi_masuk = $this->presensiModel->cekPresensiMasuk($user_profile->id_pegawai, date('Y-m-d'));
         $jumlah_presensi_masuk = $this->presensiModel->cekPresensiMasuk($user_profile->id_pegawai, date('Y-m-d'), true);
         $status_ketidakhadiran = $this->ketidakhadiranModel->getDataIzinHariIni($user_profile->id_pegawai);
@@ -38,6 +46,8 @@ class Home extends BaseController
             'jam_pulang' => $user_lokasi->jam_pulang,
             'data_presensi_masuk' => $presensi_masuk,
             'status_ketidakhadiran' =>  $status_ketidakhadiran,
+            'server_time' => time(), // Kirim Unix timestamp dari server
+            'timezone' => $user_lokasi->zona_waktu,
         ];
 
         return view('home/index', $data);

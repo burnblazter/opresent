@@ -66,6 +66,9 @@
                       <a href="<?= base_url('/lokasi-presensi') ?>" class="dropdown-item">
                         Data Lokasi Presensi
                       </a>
+                      <a href="<?= base_url('/hari-libur') ?>" class="dropdown-item">
+                        Data Hari Libur
+                      </a>
                     </div>
                   </div>
                   <div class="dropend">

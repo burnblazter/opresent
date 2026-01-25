@@ -6,16 +6,25 @@ use CodeIgniter\Model;
 
 class PegawaiModel extends Model
 {
-    protected $db, $builder;
     protected $table = 'pegawai';
     protected $primaryKey = 'id';
+    
+    // PERBAIKAN 1: Tambahkan returnType agar findAll() tidak error
+    protected $returnType = 'array'; 
+    
     protected $allowedFields = ['nomor_induk', 'nama', 'jenis_kelamin', 'alamat', 'no_handphone', 'id_jabatan', 'id_lokasi_presensi', 'foto'];
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+    
+    // Properti builder & db sebenarnya sudah dihandle parent, tapi kita biarkan jika Anda memakainya manual
+    protected $db, $builder;
 
     public function __construct()
     {
+        // PERBAIKAN 2: Panggil parent constructor untuk inisialisasi sistem Model
+        parent::__construct(); 
+        
         $this->db = \Config\Database::connect();
         $this->builder = $this->db->table('pegawai');
     }
@@ -34,7 +43,7 @@ class PegawaiModel extends Model
         $this->builder->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id');
         $this->builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan');
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi');
-        $this->builder->orderBy('nama', 'ASC'); // SORT BY NAMA - LEBIH MASUK AKAL!
+        $this->builder->orderBy('nama', 'ASC'); 
 
         $total = 0;
 

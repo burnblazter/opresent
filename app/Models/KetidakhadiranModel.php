@@ -6,15 +6,16 @@ use CodeIgniter\Model;
 
 class KetidakhadiranModel extends Model
 {
-    protected $builder;
     protected $table = 'ketidakhadiran';
     protected $primaryKey = 'id';
+    protected $returnType = 'array'; 
     protected $allowedFields = ['id_pegawai', 'tipe_ketidakhadiran', 'tanggal_mulai', 'tanggal_berakhir', 'deskripsi', 'file', 'status_pengajuan', 'catatan_admin'];
     protected $useTimestamps = true;
-    protected $tempReturnType = 'array';
+    protected $builder;
 
     public function __construct()
     {
+        parent::__construct(); // PERBAIKAN: Panggil parent
         $this->db = \Config\Database::connect();
         $this->builder = $this->db->table('ketidakhadiran');
     }
@@ -161,5 +162,20 @@ class KetidakhadiranModel extends Model
         $this->builder->where('tanggal_mulai <', $today);
         $this->builder->where('status_pengajuan', 'PENDING');
         $this->builder->update(['status_pengajuan' => 'REJECTED']);
+    }
+
+    public function getKetidakhadiranByMonth($bulan, $tahun)
+    {
+        $firstDate = "$tahun-$bulan-01";
+        $lastDate = date("Y-m-t", strtotime($firstDate));
+
+        return $this->builder
+            ->where('status_pengajuan', 'APPROVED')
+            ->groupStart()
+                ->where("tanggal_mulai <=", $lastDate)
+                ->where("tanggal_berakhir >=", $firstDate)
+            ->groupEnd()
+            ->get()
+            ->getResultArray();
     }
 }

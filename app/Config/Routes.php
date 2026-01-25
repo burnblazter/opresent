@@ -87,3 +87,7 @@ $routes->get('/data-pegawai/download-template', 'Pegawai::downloadTemplate');
 $routes->post('/data-pegawai/import-excel', 'Pegawai::importExcel');
 $routes->post('/data-pegawai/reset-password', 'Pegawai::resetPassword');
 $routes->get('/data-pegawai/(:any)', 'Pegawai::detail/$1', ['filter' => 'role:admin,head']);
+$routes->get('hari-libur', 'HariLibur::index', ['filter' => 'role:admin,head']);
+$routes->get('hari-libur/tambah', 'HariLibur::tambah', ['filter' => 'role:admin,head']);
+$routes->post('hari-libur/simpan', 'HariLibur::simpan', ['filter' => 'role:admin,head']);
+$routes->delete('hari-libur/hapus/(:num)', 'HariLibur::hapus/$1', ['filter' => 'role:admin,head']);

@@ -7,14 +7,14 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title><?= $title ?> | Presensi</title>
 
-    <link href="<?= base_url('../assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
-    <link href="<?= base_url('../assets/css/tabler-flags.min.css?1684106062') ?>" rel="stylesheet" />
-    <link href="<?= base_url('../assets/css/tabler-payments.min.css?1684106062') ?>" rel="stylesheet" />
-    <link href="<?= base_url('../assets/css/tabler-vendors.min.css?1684106062') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/tabler-flags.min.css?1684106062') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/tabler-payments.min.css?1684106062') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/tabler-vendors.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/custom.css?1684106062') ?>" rel="stylesheet"/>
 
-    <link href="../assets/css/leaflet.css" rel="stylesheet" />
-    <link href="../assets/css/select2.min.css" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/leaflet.css') ?>" rel="stylesheet" />
+    <link href="<?= base_url('assets/css/select2.min.css') ?>" rel="stylesheet" />
 
     <style>
         :root {
@@ -27,7 +27,7 @@
         #map { height: 350px; }
     </style>
 
-    <script src="<?= base_url('../assets/js/darkreader.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/darkreader.min.js') ?>"></script>
 
     <script>
         const drOptions = { brightness: 100, contrast: 100, sepia: 0 };
@@ -75,7 +75,7 @@
         });
     </script>
 
-    <link rel="website icon" type="png" href="<?= base_url('../assets/img/company/logo.png') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('assets/img/company/logo.png') ?>">
     
     <script src="<?= base_url('js/code.jquery.com_jquery-3.7.0.min.js') ?>"></script>
 </head>
@@ -95,15 +95,15 @@
         </div>
     </div>
 
-    <script src="<?= base_url('../assets/js/tabler.min.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('../assets/js/demo.min.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('../assets/js/webcam.min.js') ?>"></script>
-    <script src="<?= base_url('../assets/js/leaflet.js') ?>"></script>
-    <script src="<?= base_url('../assets/js/sweetalert.min.js') ?>"></script>
-    <script src="<?= base_url('../assets/js/select2.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/tabler.min.js?1684106062') ?>" defer></script>
+    <script src="<?= base_url('assets/js/demo.min.js?1684106062') ?>" defer></script>
+    <script src="<?= base_url('assets/js/webcam.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/leaflet.js') ?>"></script>
+    <script src="<?= base_url('assets/js/sweetalert.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/select2.min.js') ?>"></script>
 
     <?php if (session()->getFlashdata('berhasil')) : ?>
         <script>Swal.fire({ title: "Berhasil", text: "<?= session()->getFlashdata('berhasil') ?>", icon: "success" });</script>
     <?php endif; ?>
-    </body>
+</body>
 </html>

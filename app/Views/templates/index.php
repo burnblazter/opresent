@@ -1,12 +1,4 @@
 <!doctype html>
-<!--
-* Tabler - Premium and Open Source dashboard template with responsive and high quality UI.
-* @version 1.0.0-beta19
-* @link https://tabler.io
-* Copyright 2018-2023 The Tabler Authors
-* Copyright 2018-2023 codecalm.net Paweł Kuna
-* Licensed under MIT (https://github.com/tabler/tabler/blob/master/LICENSE)
--->
 <html lang="en">
 
 <head>
@@ -14,120 +6,104 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title><?= $title ?> | Presensi</title>
-    <!-- CSS files -->
+
     <link href="<?= base_url('../assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('../assets/css/tabler-flags.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('../assets/css/tabler-payments.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('../assets/css/tabler-vendors.min.css?1684106062') ?>" rel="stylesheet" />
-    <link href="<?= base_url('../assets/css/demo.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/custom.css?1684106062') ?>" rel="stylesheet"/>
 
+    <link href="../assets/css/leaflet.css" rel="stylesheet" />
+    <link href="../assets/css/select2.min.css" rel="stylesheet" />
+
     <style>
-        @import url('https://rsms.me/inter/inter.css');
-
         :root {
-            --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+            --tblr-font-sans-serif: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
         }
-
         body {
             font-feature-settings: "cv03", "cv04", "cv11";
+            transition: background-color 0.5s ease;
         }
+        #map { height: 350px; }
     </style>
 
-    <!-- WebcamJS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcamjs/1.0.26/webcam.min.js" integrity="sha512-dQIiHSl2hr3NWKKLycPndtpbh5iaHLo6MwrXm7F0FM5e+kL2U16oE9uIwPHUl6fQBeCthiEuV/rzP3MiAB8Vfw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="<?= base_url('../assets/js/darkreader.min.js') ?>"></script>
 
-    <!-- CSS leaflet.js -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script>
+        const drOptions = { brightness: 100, contrast: 100, sepia: 0 };
+        const savedTheme = localStorage.getItem('theme-preference');
+        const sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-    <!-- JavaScript leaflet.js -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
-    <style>
-        #map {
-            height: 350px;
+        if (savedTheme === 'dark' || (!savedTheme && sysDark)) {
+            DarkReader.enable(drOptions);
+        } else {
+            DarkReader.disable();
         }
-    </style>
+        
+        document.addEventListener("DOMContentLoaded", function () {
+            const btnDark = document.getElementById('enable-dark-mode');
+            const btnLight = document.getElementById('enable-light-mode');
 
-    <!-- Website Icon -->
+            function updateUI(isDark) {
+                if(isDark) {
+                    if(btnDark) btnDark.classList.add('d-none');
+                    if(btnLight) btnLight.classList.remove('d-none');
+                } else {
+                    if(btnLight) btnLight.classList.add('d-none');
+                    if(btnDark) btnDark.classList.remove('d-none');
+                }
+            }
+
+            updateUI(DarkReader.isEnabled());
+
+            if(btnDark) {
+                btnDark.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    DarkReader.enable(drOptions);
+                    localStorage.setItem('theme-preference', 'dark');
+                    updateUI(true);
+                });
+            }
+            if(btnLight) {
+                btnLight.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    DarkReader.disable();
+                    localStorage.setItem('theme-preference', 'light');
+                    updateUI(false);
+                });
+            }
+        });
+    </script>
+
     <link rel="website icon" type="png" href="<?= base_url('../assets/img/company/logo.png') ?>">
-
-    <!-- jQuery -->
+    
     <script src="<?= base_url('js/code.jquery.com_jquery-3.7.0.min.js') ?>"></script>
-
-    <!-- Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <body>
-    <script src="<?= base_url('../assets/js/demo-theme.min.js?1684106062') ?>"></script>
-    <div class="page">
-        <!-- Header -->
+    <div class="page d-flex flex-column min-vh-100">
         <?= $this->include('partials/header') ?>
 
-        <!-- Navbar -->
         <?= $this->include('partials/navbar') ?>
 
         <div class="page-wrapper">
-            <!-- Page header -->
             <?= $this->include('partials/page-header') ?>
 
-            <!-- Page body -->
             <?= $this->renderSection('pageBody'); ?>
 
-            <!-- Footer -->
             <?= $this->include('partials/footer') ?>
         </div>
     </div>
-    <!-- Tabler Core -->
+
     <script src="<?= base_url('../assets/js/tabler.min.js?1684106062') ?>" defer></script>
     <script src="<?= base_url('../assets/js/demo.min.js?1684106062') ?>" defer></script>
-
-    <!-- Sweet Alert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="<?= base_url('../assets/js/webcam.min.js') ?>"></script>
+    <script src="<?= base_url('../assets/js/leaflet.js') ?>"></script>
+    <script src="<?= base_url('../assets/js/sweetalert.min.js') ?>"></script>
+    <script src="<?= base_url('../assets/js/select2.min.js') ?>"></script>
 
     <?php if (session()->getFlashdata('berhasil')) : ?>
-        <script>
-            Swal.fire({
-                title: "Berhasil",
-                text: "<?= session()->getFlashdata('berhasil') ?>",
-                icon: "success"
-            });
-        </script>
+        <script>Swal.fire({ title: "Berhasil", text: "<?= session()->getFlashdata('berhasil') ?>", icon: "success" });</script>
     <?php endif; ?>
-
-    <?php if (session()->getFlashdata('gagal')) : ?>
-        <script>
-            Swal.fire({
-                title: "Gagal",
-                text: "<?= session()->getFlashdata('gagal') ?>",
-                icon: "error"
-            });
-        </script>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('warning')) : ?>
-        <script>
-            Swal.fire({
-                title: "Kesalahan Teknis",
-                text: "<?= session()->getFlashdata('warning') ?>",
-                icon: "warning"
-            });
-        </script>
-    <?php endif; ?>
-
-    <?php if (session()->getFlashdata('info')) : ?>
-        <script>
-            Swal.fire({
-                title: "Info",
-                text: "<?= session()->getFlashdata('info') ?>",
-                icon: "info"
-            });
-        </script>
-    <?php endif; ?>
-
-    <!-- Select2 -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-</body>
-
+    </body>
 </html>

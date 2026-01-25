@@ -65,6 +65,7 @@ $routes->post('/ketidakhadiran/excel', 'Ketidakhadiran::dataKetidakhadiranExcel'
 $routes->get('/kelola-ketidakhadiran', 'Ketidakhadiran::kelolaKetidakhadiran', ['filter' => 'role:head']);
 $routes->get('/kelola-ketidakhadiran/(:num)', 'Ketidakhadiran::kelolaKetidakhadiranAksi/$1', ['filter' => 'role:head']);
 $routes->post('/kelola-ketidakhadiran/store', 'Ketidakhadiran::updateStatusKetidakhadiran', ['filter' => 'role:head']);
+$routes->post('kelola-ketidakhadiran/update-file', 'Ketidakhadiran::updateFileKetidakhadiran', ['filter' => 'role:head']);
 $routes->post('/kelola-ketidakhadiran/excel', 'Ketidakhadiran::kelolaKetidakhadiranExcel', ['filter' => 'role:head']);
 $routes->get('/cari-data-ketidakhadiran', 'Ketidakhadiran::pencarianDataKetidakhadiran', ['filter' => 'role:head']);
 

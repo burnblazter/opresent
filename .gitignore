@@ -6,6 +6,9 @@
 faceapi
 humanjs
 
+# Prettier
+.prettierignore
+
 # OS X
 .DS_Store
 .AppleDouble

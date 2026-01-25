@@ -9,7 +9,7 @@ class KetidakhadiranModel extends Model
     protected $builder;
     protected $table = 'ketidakhadiran';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['id_pegawai', 'tipe_ketidakhadiran', 'tanggal_mulai', 'tanggal_berakhir', 'deskripsi', 'file', 'status_pengajuan'];
+    protected $allowedFields = ['id_pegawai', 'tipe_ketidakhadiran', 'tanggal_mulai', 'tanggal_berakhir', 'deskripsi', 'file', 'status_pengajuan', 'catatan_admin'];
     protected $useTimestamps = true;
     protected $tempReturnType = 'array';
 

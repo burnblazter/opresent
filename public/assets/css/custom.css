@@ -41,7 +41,7 @@
   --tblr-primary-rgb: 30, 58, 138;
   --tblr-secondary: #dda518;
   --tblr-secondary-rgb: 51, 65, 85;
-  --custom-bg-cream: #fdfbf7;
+  --custom-bg-cream: #fffef9;
   --custom-bg-surface: #ffffff;
 
   --tblr-font-sans-serif:
@@ -358,4 +358,64 @@ h6,
     width: 100%; /* Full width di HP */
     border-radius: 8px !important; /* Kotak tumpul di HP */
   }
+}
+
+/* === BASE STYLES (Berlaku untuk Mobile & Desktop) === */
+.custom-header {
+  position: relative;
+  background: white;
+  /* Pastikan ada background agar tidak transparan */
+}
+
+.custom-header .brand-center {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.custom-header .brand-text {
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* === DESKTOP ONLY: LOGO DEAD-CENTER === */
+/* Logika ini hanya jalan di layar > 768px */
+@media (min-width: 768px) {
+  /* Jadikan container sebagai patokan koordinat */
+  .custom-header .container-xl {
+    position: relative;
+  }
+
+  /* Logo dicabut dari aliran layout dan ditaruh tepat di tengah container */
+  .custom-header .brand-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    /* Geser titik tengah tepat ke center */
+    z-index: 10;
+  }
+
+  /* Text Presensi tetap di posisi aslinya (kiri) */
+  .custom-header .brand-text {
+    margin-left: 0 !important;
+    /* Reset margin jika perlu */
+  }
+}
+
+/* === MOBILE ONLY === */
+/* Di HP, pastikan margin text rapi karena logo ada di sebelahnya */
+@media (max-width: 767.98px) {
+  .custom-header .brand-text {
+    margin-left: 0.5rem;
+    /* Beri jarak sedikit dari logo */
+  }
+}
+
+/* Pastikan body mengisi penuh */
+body,
+html {
+  height: 100%;
 }

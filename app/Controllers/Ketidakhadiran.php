@@ -274,7 +274,7 @@ class Ketidakhadiran extends BaseController
         // cek validasi
         $rules = [
             'tipe_ketidakhadiran' => [
-                'rules' => 'required|in_list[CUTI,IZIN,SAKIT]',
+                'rules' => 'required|in_list[IZIN,SAKIT]',
                 'errors' => [
                     'required' => 'Tipe ketidakhadiran wajib diisi.',
                     'in_list' => 'Pilih tipe ketidakhadiran yang tersedia.'
@@ -405,7 +405,7 @@ class Ketidakhadiran extends BaseController
         // cek validasi
         $rules = [
             'tipe_ketidakhadiran' => [
-                'rules' => 'required|in_list[CUTI,IZIN,SAKIT]',
+                'rules' => 'required|in_list[IZIN,SAKIT]',
                 'errors' => [
                     'required' => 'Mohon pilih tipe ketidakhadiran.',
                     'in_list' => 'Mohon pilih tipe ketidakhadiran yang tersedia.'
@@ -789,7 +789,7 @@ class Ketidakhadiran extends BaseController
 
         return view('ketidakhadiran/kelola-pengajuan-aksi', $data);
     }
-
+    
     public function updateStatusKetidakhadiran()
     {
         $rules = [
@@ -809,9 +809,85 @@ class Ketidakhadiran extends BaseController
         $this->ketidakhadiranModel->save([
             'id' => $this->request->getVar('id'),
             'status_pengajuan' => $this->request->getVar('status_pengajuan'),
+            'catatan_admin' => $this->request->getVar('catatan_admin'),
         ]);
 
         session()->setFlashdata('berhasil', 'Status Pengajuan Ketidakhadiran berhasil diupdate');
+        return redirect()->to(base_url('/kelola-ketidakhadiran'));
+    }
+
+    public function updateFileKetidakhadiran()
+    {
+        $rules = [
+            'file' => [
+                'rules' => 'uploaded[file]|max_size[file,2048]|mime_in[file,application/pdf]',
+                'errors' => [
+                    'uploaded' => 'File PDF Surat Keterangan wajib diupload.',
+                    'max_size' => 'File PDF harus berukuran kurang dari 2 MB',
+                    'mime_in' => 'File harus berekstensi PDF',
+                ]
+            ]
+        ];
+
+        $id = $this->request->getPost('id');
+
+        if (!$this->validate($rules)) {
+            return redirect()->to('/kelola-ketidakhadiran/' . $id)->withInput();
+        }
+
+        $data_ketidakhadiran = $this->ketidakhadiranModel->find($id);
+        $file = $this->request->getFile('file');
+        
+        $nama_file = 'SuratKeterangan-' . $data_ketidakhadiran['id_pegawai'] . '-' . date('Y-m-d-His') . '.pdf';
+        $file->move(FCPATH . 'assets/file/surat_keterangan_ketidakhadiran/', $nama_file);
+
+        // Hapus file lama
+        if (file_exists('assets/file/surat_keterangan_ketidakhadiran/' . $data_ketidakhadiran['file'])) {
+            unlink('assets/file/surat_keterangan_ketidakhadiran/' . $data_ketidakhadiran['file']);
+        }
+
+        $this->ketidakhadiranModel->save([
+            'id' => $id,
+            'file' => $nama_file,
+        ]);
+
+        session()->setFlashdata('berhasil', 'File surat keterangan berhasil diupdate');
+        return redirect()->to(base_url('/kelola-ketidakhadiran/' . $id));
+    }
+
+    public function massApproval()
+    {
+        $selectedIds = $this->request->getPost('selected_ids');
+        $action = $this->request->getPost('action');
+
+        if (empty($selectedIds)) {
+            session()->setFlashdata('gagal', 'Tidak ada pengajuan yang dipilih');
+            return redirect()->to(base_url('/kelola-ketidakhadiran'));
+        }
+
+        if (!in_array($action, ['APPROVED', 'REJECTED'])) {
+            session()->setFlashdata('gagal', 'Aksi tidak valid');
+            return redirect()->to(base_url('/kelola-ketidakhadiran'));
+        }
+
+        $catatan_admin = $this->request->getPost('catatan_admin_mass');
+        $successCount = 0;
+
+        foreach ($selectedIds as $id) {
+            $data_ketidakhadiran = $this->ketidakhadiranModel->findDataKetidakhadiran($id);
+            
+            // Validasi tanggal sudah tiba
+            if ($data_ketidakhadiran && $data_ketidakhadiran->tanggal_mulai <= date('Y-m-d')) {
+                $this->ketidakhadiranModel->save([
+                    'id' => $id,
+                    'status_pengajuan' => $action,
+                    'catatan_admin' => $catatan_admin,
+                ]);
+                $successCount++;
+            }
+        }
+
+        session()->setFlashdata('berhasil', "$successCount pengajuan berhasil di-update menjadi $action");
         return redirect()->to(base_url('/kelola-ketidakhadiran'));
     }
 }

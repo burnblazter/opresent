@@ -164,10 +164,7 @@
   <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-body">
-        <div class="modal-title">Pekerjaan selesai! Apakah Anda yakin ingin logout?</div>
-        <div>
-          <p class="mb-1">Pastikan kehadiran Anda tercatat. Jika ada yang perlu disesuaikan, beri tahu admin.</p>
-        </div>
+        <div class="modal-title">Apakah Anda yakin ingin logout?</div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Batal</button>

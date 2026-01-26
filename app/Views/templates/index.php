@@ -5,8 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title><?= $title ?> | Presensi</title>
-
+    <title><?= $title ?> | PresenSi</title>
+    <link rel="preload" as="image" href="<?= base_url('assets/img/company/logo.png') ?>">
+    <link rel="icon" type="image/png" href="<?= base_url('assets/img/company/logo.png') ?>">
     <link href="<?= base_url('assets/css/tabler.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/tabler-flags.min.css?1684106062') ?>" rel="stylesheet" />
     <link href="<?= base_url('assets/css/tabler-payments.min.css?1684106062') ?>" rel="stylesheet" />
@@ -74,8 +75,6 @@
             }
         });
     </script>
-
-    <link rel="icon" type="image/png" href="<?= base_url('assets/img/company/logo.png') ?>">
     
     <script src="<?= base_url('js/code.jquery.com_jquery-3.7.0.min.js') ?>"></script>
 </head>

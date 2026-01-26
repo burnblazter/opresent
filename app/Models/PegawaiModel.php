@@ -122,7 +122,10 @@ class PegawaiModel extends Model
     public function getPegawaiById($id_pegawai)
     {
         $builder = $this->db->table('pegawai');
-        $builder->select('pegawai.*, jabatan.jabatan, lokasi_presensi.nama_lokasi, lokasi_presensi.jam_masuk, lokasi_presensi.jam_pulang');
+        $builder->select('pegawai.*, users.id as id_user, users.id_pegawai, users.username, users.active, users.email, auth_groups.name as role, auth_groups.id as role_id, jabatan.jabatan, lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk, lokasi_presensi.jam_pulang');
+        $builder->join('users', 'users.id_pegawai = pegawai.id', 'left');
+        $builder->join('auth_groups_users', 'auth_groups_users.user_id = users.id', 'left');
+        $builder->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id', 'left');
         $builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan', 'left');
         $builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi', 'left');
         $builder->where('pegawai.id', $id_pegawai);

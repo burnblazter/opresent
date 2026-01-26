@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\FaceDescriptorModel;
 use App\Models\RoleModel;
 use App\Models\UsersModel;
 use App\Models\JabatanModel;
@@ -25,6 +26,7 @@ class Pegawai extends BaseController
     protected $permissionModel;
     protected $foto_default;
     protected $auth;
+    protected $faceDescriptorModel;
 
     public function __construct()
     {
@@ -37,6 +39,7 @@ class Pegawai extends BaseController
         $this->permissionModel = new PermissionModel();
         $this->foto_default = 'default.jpg';
         $this->auth = new AuthController();
+        $this->faceDescriptorModel = new faceDescriptorModel();
     }
 
     public function index(): string
@@ -268,12 +271,17 @@ class Pegawai extends BaseController
         exit();
     }
 
-    public function detail($username): string
+    public function detail($id): string
     {
-        $data_pegawai = $this->pegawaiModel->getPegawai($username)['pegawai'];
+        // Check if $id is numeric or username
+        if (is_numeric($id)) {
+            $data_pegawai = $this->pegawaiModel->getPegawaiById($id);
+        } else {
+            $data_pegawai = $this->pegawaiModel->getPegawai($id)['pegawai'];
+        }
 
         if (empty($data_pegawai)) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pegawai ' . $username . ' Tidak Ditemukan');
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pegawai ' . $id . ' Tidak Ditemukan');
         }
 
         $data = [
@@ -438,16 +446,21 @@ class Pegawai extends BaseController
         return redirect()->to('/data-pegawai');
     }
 
-    public function edit($username): string
+    public function edit($id): string
     {
-        $data_pegawai = $this->pegawaiModel->getPegawai($username)['pegawai'];
+        // Check if $id is numeric or username
+        if (is_numeric($id)) {
+            $data_pegawai = $this->pegawaiModel->getPegawaiById($id);
+        } else {
+            $data_pegawai = $this->pegawaiModel->getPegawai($id)['pegawai'];
+        }
 
         if (empty($data_pegawai)) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pegawai ' . $username . ' Tidak Ditemukan');
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pegawai ' . $id . ' Tidak Ditemukan');
         }
 
         $data = [
-            'title' => 'Edit Data Pengguna' . $data_pegawai->nama,
+            'title' => 'Edit Data Pengguna ' . $data_pegawai->nama,
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
             'data_pegawai' => $data_pegawai,
             'jabatan' => $this->jabatanModel->getJabatan(false, false, 10, true)['jabatan'],
@@ -863,6 +876,138 @@ class Pegawai extends BaseController
         }
         
         return redirect()->to('/data-pegawai');
+    }
+
+    // Face Descriptor Management
+    public function manageFaceDescriptors($id_pegawai)
+    {
+        $pegawai = $this->pegawaiModel->find($id_pegawai);
+        
+        if (!$pegawai) {
+            session()->setFlashdata('gagal', 'Data pegawai tidak ditemukan');
+            return redirect()->to(base_url('data-pegawai'));
+        }
+
+        // Convert array to object if needed
+        if (is_array($pegawai)) {
+            $pegawai = (object) $pegawai;
+        }
+
+        $descriptors = $this->faceDescriptorModel->getDescriptorsByPegawai($id_pegawai);
+
+        $data = [
+            'title' => 'Manajemen Face Recognition - ' . $pegawai->nama,
+            'user_profile' => $this->usersModel->getUserInfo(user_id()),
+            'pegawai' => $pegawai,
+            'descriptors' => $descriptors
+        ];
+
+        return view('data_pegawai/face_descriptors', $data);
+    }
+
+    /**
+     * API: Simpan face descriptor baru (dari webcam atau upload)
+     */
+    public function saveFaceDescriptor()
+    {
+        $id_pegawai = $this->request->getPost('id_pegawai');
+        $descriptor = $this->request->getPost('descriptor');
+        $label = $this->request->getPost('label') ?: 'Foto ' . date('Y-m-d H:i:s');
+
+        if (!$descriptor) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Descriptor tidak valid'
+            ]);
+        }
+
+        // ========== FIX: VALIDASI DESCRIPTOR ==========
+        // Decode dari string ke array
+        if (is_string($descriptor)) {
+            $descriptor = json_decode($descriptor, true);
+        }
+        
+        // Validasi apakah array valid
+        if (!is_array($descriptor) || count($descriptor) < 100) {
+            log_message('error', 'Descriptor invalid - bukan array atau terlalu pendek: ' . count($descriptor));
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Descriptor tidak valid (format salah)'
+            ]);
+        }
+        
+        // Validasi apakah semua elemen adalah angka
+        foreach ($descriptor as $val) {
+            if (!is_numeric($val)) {
+                log_message('error', 'Descriptor contains non-numeric value');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Descriptor mengandung nilai non-numerik'
+                ]);
+            }
+        }
+        
+        log_message('info', 'Saving descriptor with ' . count($descriptor) . ' dimensions');
+
+        try {
+            $this->faceDescriptorModel->save([
+                'id_pegawai' => $id_pegawai,
+                'descriptor' => json_encode($descriptor), // ← Simpan sebagai JSON array
+                'label' => $label,
+                'model_version' => 'human-v1'
+            ]);
+
+            log_message('info', 'Face descriptor saved successfully for pegawai ' . $id_pegawai);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Face descriptor berhasil disimpan'
+            ]);
+        } catch (\Exception $e) {
+            log_message('error', 'Error save face descriptor: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Gagal menyimpan face descriptor: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function updateDescriptorLabel()
+    {
+        $id = $this->request->getPost('id');
+        $label = $this->request->getPost('label');
+
+        if (!$label) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Label tidak boleh kosong'
+            ]);
+        }
+
+        try {
+            $this->faceDescriptorModel->updateLabel($id, $label);
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Label berhasil diperbarui'
+            ]);
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Gagal memperbarui label'
+            ]);
+        }
+    }
+
+    public function deleteDescriptor($id)
+    {
+        try {
+            $this->faceDescriptorModel->delete($id);
+            session()->setFlashdata('berhasil', 'Face descriptor berhasil dihapus');
+        } catch (\Exception $e) {
+            session()->setFlashdata('gagal', 'Gagal menghapus face descriptor');
+        }
+
+        return redirect()->back();
     }
 
     // Method untuk reset password oleh admin

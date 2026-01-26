@@ -96,7 +96,6 @@
 
     <script src="<?= base_url('assets/js/tabler.min.js?1684106062') ?>" defer></script>
     <script src="<?= base_url('assets/js/demo.min.js?1684106062') ?>" defer></script>
-    <script src="<?= base_url('assets/js/webcam.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/leaflet.js') ?>"></script>
     <script src="<?= base_url('assets/js/sweetalert.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/select2.min.js') ?>"></script>

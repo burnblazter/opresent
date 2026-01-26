@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Models\FaceDescriptorModel;
 use App\Models\HariLiburModel;
 use App\Models\KetidakhadiranModel;
 use DateTime;
@@ -20,6 +21,7 @@ class Presensi extends BaseController
     protected $pegawaiModel;
     protected $ketidakhadiranModel;
     protected $hariLiburModel;
+    protected $faceDescriptorModel;
 
 public function __construct()
     {
@@ -29,6 +31,7 @@ public function __construct()
         $this->pegawaiModel = new PegawaiModel();
         $this->ketidakhadiranModel = new KetidakhadiranModel(); 
         $this->hariLiburModel = new HariLiburModel();
+        $this->faceDescriptorModel = new faceDescriptorModel();
 
         helper(['telegram', 'text']);
     }
@@ -46,19 +49,16 @@ public function __construct()
         $tanggal_masuk = $this->request->getVar('tanggal_masuk');
         $jam_masuk = $this->request->getVar('jam_masuk');
 
-        // Jika user menonaktifkan lokasi, maka arahkan kembali ke halaman home
         if (empty($latitude_pegawai) || empty($longitude_pegawai)) {
             session()->setFlashdata('gagal', 'Lokasi Anda tidak terdeteksi. Mohon aktifkan fitur lokasi di perangkat Anda dan refresh halaman ini.');
             return redirect()->to(base_url());
         }
 
-        // Jika lokasi presensi tidak terdeteksi, maka arahkan kembali ke halaman home
         if (empty($latitude_kantor) || empty($longitude_kantor)) {
             session()->setFlashdata('gagal', 'Lokasi presensi tidak valid. Mohon hubungi Admin.');
             return redirect()->to(base_url());
         }
 
-        // Cek Perbedaan Koordinat Pegawai dengan Lokasi Presensi
         $perbedaan_koordinat = $longitude_pegawai - $longitude_kantor;
 
         if (!$perbedaan_koordinat) {
@@ -95,6 +95,15 @@ public function __construct()
 
     public function simpanPresensiMasuk()
     {
+        // Validasi face recognition
+        $face_verified = $this->request->getPost('face_verified');
+        $face_similarity = $this->request->getPost('face_similarity');
+        
+        if ($face_verified !== 'true' || floatval($face_similarity) < 0.5) {
+            session()->setFlashdata('gagal', 'Verifikasi wajah gagal. Pastikan wajah Anda terlihat jelas dan sudah terdaftar.');
+            return redirect()->to(base_url());
+        }
+
         // Validasi foto
         $foto = $this->request->getPost('image-cam');
         if (empty($foto)) {
@@ -116,7 +125,6 @@ public function __construct()
         $nama_foto = 'masuk-' . date('Y-m-d-H-i-s') . '-' . $username . '.png';
         $folder = FCPATH . 'assets/img/foto_presensi/masuk/';
         
-        // Pastikan folder exist
         if (!is_dir($folder)) {
             mkdir($folder, 0755, true);
         }
@@ -132,7 +140,6 @@ public function __construct()
         $tanggal_masuk = $this->request->getPost('tanggal_masuk');
         $jam_masuk = $this->request->getPost('jam_masuk');
 
-        // Simpan ke Database
         try {
             $this->presensiModel->save([
                 'id_pegawai' => $id_pegawai,
@@ -141,7 +148,6 @@ public function __construct()
                 'foto_masuk' => $nama_foto,
             ]);
         } catch (\Exception $e) {
-            // Hapus foto jika gagal save database
             if (file_exists($file_path)) {
                 unlink($file_path);
             }
@@ -150,15 +156,11 @@ public function __construct()
             return redirect()->to(base_url());
         }
 
-        // ------------------------------------------------------------------
-        // INTEGRASI TELEGRAM NOTIFIKASI
-        // ------------------------------------------------------------------
+        // Telegram notifikasi
         try {
-            // Ambil detail pegawai dengan JOIN (dapat: nama, nomor_induk, jabatan, lokasi, jam_masuk)
             $detail_pegawai = $this->pegawaiModel->getPegawaiById($id_pegawai);
             
             if ($detail_pegawai) {
-                // Tentukan status TEPAT WAKTU atau TERLAMBAT
                 $jam_jadwal = $detail_pegawai->jam_masuk;
                 
                 if (strtotime($jam_masuk) > strtotime($jam_jadwal)) {
@@ -167,34 +169,30 @@ public function __construct()
                     $status_text = 'TEPAT WAKTU ✅';
                 }
                 
-                // Format tanggal Indonesia
                 $tanggal_indo = format_tanggal_indo($tanggal_masuk);
                 
-                // Buat pesan Telegram
-                $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
+                $pesan  = "<b>🟢 PRESENSI MASUK (Face Recognition)</b>\n\n";
                 $pesan .= "👤 <b>Nama:</b> " . esc($detail_pegawai->nama) . "\n";
                 $pesan .= "🆔 <b>Nomor induk:</b> " . esc($detail_pegawai->nomor_induk) . "\n";
                 $pesan .= "💼 <b>Unit:</b> " . esc($detail_pegawai->jabatan) . "\n";
                 $pesan .= "📅 <b>Tanggal:</b> " . $tanggal_indo . "\n";
                 $pesan .= "🕐 <b>Jam Masuk:</b> " . $jam_masuk . "\n";
-                $pesan .= "📍 <b>Lokasi:</b> " . esc($detail_pegawai->nama_lokasi) . "\n\n";
+                // Commented due to privacy concerns
+                // $pesan .= "📍 <b>Lokasi:</b> " . esc($detail_pegawai->nama_lokasi) . "\n";
+                // $pesan .= "🎯 <b>Akurasi Wajah:</b> " . round($face_similarity * 100, 1) . "%\n\n";
                 $pesan .= "<b>Status:</b> " . $status_text;
                 
-                // Kirim notifikasi Telegram
                 $result = send_telegram_notification($pesan);
                 
-                // Log jika gagal (optional, tidak ganggu user)
                 if ($result === false) {
                     log_message('warning', 'Notifikasi Telegram gagal untuk: ' . $detail_pegawai->nama);
                 }
-            } else {
-                log_message('warning', 'Data pegawai ID ' . $id_pegawai . ' tidak ditemukan untuk notifikasi Telegram');
             }
         } catch (\Exception $e) {
             log_message('error', 'Error notifikasi Telegram: ' . $e->getMessage());
         }
 
-        session()->setFlashdata('berhasil', 'Presensi masuk berhasil disimpan');
+        session()->setFlashdata('berhasil', 'Presensi masuk berhasil disimpan dengan verifikasi wajah');
         return redirect()->to(base_url());
     }
 
@@ -256,13 +254,38 @@ public function __construct()
 
     public function simpanPresensiKeluar()
     {
+        $face_verified = $this->request->getPost('face_verified');
+        $face_similarity = $this->request->getPost('face_similarity');
+        
+        // Batas similarity bisa disesuaikan, standar biasanya 0.7 atau 0.8
+        if ($face_verified !== 'true' || floatval($face_similarity) < 0.5) {
+            session()->setFlashdata('gagal', 'Verifikasi wajah gagal. Pastikan wajah Anda terlihat jelas dan sudah terdaftar.');
+            return redirect()->to(base_url());
+        }
+
         $foto = $this->request->getPost('image-cam');
+        if (empty($foto)) {
+            session()->setFlashdata('gagal', 'Foto presensi tidak boleh kosong');
+            return redirect()->to(base_url());
+        }
+
         $foto = str_replace('data:image/jpeg;base64,', '', $foto);
         $foto = base64_decode($foto, true);
 
+        if ($foto === false) {
+            session()->setFlashdata('gagal', 'Format foto tidak valid');
+            return redirect()->to(base_url());
+        }
+
         $username = $this->request->getPost('username');
         $nama_foto = 'keluar-' . date('Y-m-d-H-i-s') . '-' . $username . '.png';
-        $file_path = FCPATH . 'assets/img/foto_presensi/keluar/' . $nama_foto;
+        $folder = FCPATH . 'assets/img/foto_presensi/keluar/';
+        
+        if (!is_dir($folder)) {
+            mkdir($folder, 0755, true);
+        }
+        
+        $file_path = $folder . $nama_foto;
 
         if (!file_put_contents($file_path, $foto)) {
             session()->setFlashdata('gagal', 'Gagal menyimpan foto presensi keluar');
@@ -273,14 +296,23 @@ public function __construct()
         $tanggal_keluar = $this->request->getPost('tanggal_keluar');
         $jam_keluar = $this->request->getPost('jam_keluar');
 
-        $this->presensiModel->save([
-            'id' => $id_presensi,
-            'tanggal_keluar' =>  $tanggal_keluar,
-            'jam_keluar' => $jam_keluar,
-            'foto_keluar' => $nama_foto,
-        ]);
+        try {
+            $this->presensiModel->save([
+                'id' => $id_presensi, 
+                'tanggal_keluar' =>  $tanggal_keluar,
+                'jam_keluar' => $jam_keluar,
+                'foto_keluar' => $nama_foto,
+            ]);
+        } catch (\Exception $e) {
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+            log_message('error', 'Gagal simpan presensi keluar: ' . $e->getMessage());
+            session()->setFlashdata('gagal', 'Gagal menyimpan presensi keluar');
+            return redirect()->to(base_url());
+        }
 
-        session()->setFlashdata('berhasil', 'Presensi keluar berhasil disimpan');
+        session()->setFlashdata('berhasil', 'Presensi keluar berhasil disimpan dengan verifikasi wajah');
         return redirect()->to(base_url());
     }
 
@@ -1173,5 +1205,107 @@ public function __construct()
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit();
+    }
+
+    /**
+     * API: Ambil semua face descriptors untuk recognition
+     */
+    public function getFaceDescriptors()
+    {
+        // Hanya user dengan group 3 (pegawai) yang bisa akses
+        // if (!in_groups(3)) {
+        //     return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(403);
+        // }
+
+        $descriptors = $this->faceDescriptorModel->getAllActiveDescriptors();
+        
+        $result = [];
+        foreach ($descriptors as $desc) {
+            // ========== FIX: DECODE DESCRIPTOR DENGAN VALIDASI ==========
+            $descriptorArray = json_decode($desc->descriptor, true);
+            
+            // Validasi hasil decode
+            if (!is_array($descriptorArray)) {
+                log_message('error', 'Invalid descriptor for ID ' . $desc->id . ' - not an array');
+                continue; // Skip descriptor yang corrupt
+            }
+            
+            if (count($descriptorArray) < 100) {
+                log_message('error', 'Invalid descriptor for ID ' . $desc->id . ' - too short: ' . count($descriptorArray));
+                continue; // Skip descriptor yang terlalu pendek
+            }
+            
+            // Pastikan semua nilai numerik
+            $isValid = true;
+            foreach ($descriptorArray as $val) {
+                if (!is_numeric($val)) {
+                    log_message('error', 'Invalid descriptor for ID ' . $desc->id . ' - contains non-numeric');
+                    $isValid = false;
+                    break;
+                }
+            }
+            
+            if (!$isValid) continue;
+            
+            $result[] = [
+                'id' => $desc->id,
+                'id_pegawai' => $desc->id_pegawai,
+                'nama' => $desc->nama,
+                'nomor_induk' => $desc->nomor_induk,
+                'descriptor' => $descriptorArray, // ← Sudah dalam bentuk array
+                'label' => $desc->label
+            ];
+        }
+
+        log_message('info', 'Returning ' . count($result) . ' valid descriptors');
+        
+        return $this->response->setJSON($result);
+    }
+
+    /**
+     * Verify face recognition sebelum simpan presensi
+     */
+    public function verifyFace()
+    {
+        // Cek user sudah login
+        if (!logged_in()) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(403);
+        }
+
+        // TODO: Implement group check setelah testing selesai
+        // if (!in_groups(3)) {
+        //     return $this->response->setJSON(['success' => false, 'message' => 'Forbidden'])->setStatusCode(403);
+        // }
+
+        $descriptor = $this->request->getJSON(true)['descriptor'] ?? null;
+        
+        if (!$descriptor) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Descriptor tidak valid']);
+        }
+
+        // Ambil user saat ini
+        $user_profile = $this->usersModel->getUserInfo(user_id());
+        $id_pegawai = $user_profile->id_pegawai;
+
+        // Ambil descriptor pegawai dari database
+        $saved_descriptors = $this->faceDescriptorModel->getDescriptorsByPegawai($id_pegawai);
+
+        if (empty($saved_descriptors)) {
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Wajah Anda belum terdaftar. Silakan hubungi Admin.'
+            ]);
+        }
+
+        // Response untuk client-side matching
+        $result = [];
+        foreach ($saved_descriptors as $saved) {
+            $result[] = json_decode($saved->descriptor);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'descriptors' => $result
+        ]);
     }
 }

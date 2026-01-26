@@ -261,14 +261,34 @@
                     <?php endif; ?>
                   </td>
                   <td class="text-center">
-                    <a href="<?= base_url('/data-pegawai/edit/' . $pegawai->username) ?>" class="badge bg-warning">
-                      edit
+
+                    <!-- DETAIL -->
+                    <a href="<?= base_url('data-pegawai/' . $pegawai->id) ?>" class="btn btn-sm btn-info">
+                      <i class="ti ti-eye"></i> detail
                     </a>
-                    <a href="#" class="badge bg-danger btn-hapus" data-bs-toggle="modal" data-bs-target="#modal-danger"
-                      data-id="<?= $pegawai->id ?>" data-name="<?= $pegawai->nama ?>">
-                      hapus
+
+                    <!-- EDIT -->
+                    <a href="<?= base_url('data-pegawai/edit/' . $pegawai->id) ?>" class="btn btn-sm btn-warning">
+                      <i class="ti ti-edit"></i> edit
                     </a>
+
+                    <!-- FACE DESCRIPTOR -->
+                    <a href="<?= base_url('data-pegawai/manage-face-descriptors/' . $pegawai->id) ?>"
+                      class="btn btn-sm btn-primary">
+                      <i class="ti ti-face-id"></i> face
+                    </a>
+
+                    <!-- DELETE -->
+                    <form action="<?= base_url('data-pegawai/' . $pegawai->id) ?>" method="post" style="display:inline">
+                      <?= csrf_field() ?>
+                      <input type="hidden" name="_method" value="DELETE">
+                      <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Hapus data ini?')">
+                        <i class="ti ti-trash"></i> hapus
+                      </button>
+                    </form>
+
                   </td>
+
                 </tr>
                 <?php endforeach; ?>
                 <?php else : ?>

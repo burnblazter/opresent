@@ -149,12 +149,6 @@
                     <a href="#" class="badge bg-info btn-preview-map" data-lat="<?= $l->latitude ?>"
                       data-lng="<?= $l->longitude ?>" data-name="<?= $l->nama_lokasi ?>" data-radius="<?= $l->radius ?>"
                       data-bs-toggle="modal" data-bs-target="#mapPreviewModal">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                        <path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
-                        <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0z" />
-                      </svg>
                       peta
                     </a>
                     <a href="<?= base_url('/lokasi-presensi/edit/' . $l->slug) ?>" class="badge bg-warning">
@@ -177,7 +171,8 @@
           </div>
           <div class="card-footer d-flex align-items-center justify-content-between">
             <p class="m-0 text-muted">Showing <span><?= ($perPage * ($currentPage - 1)) + 1 ?></span> to
-              <span><?= min($perPage * $currentPage, $total) ?></span> of <span><?= $total ?></span> entries</p>
+              <span><?= min($perPage * $currentPage, $total) ?></span> of <span><?= $total ?></span> entries
+            </p>
             <?= $pager; ?>
           </div>
         </div>
@@ -333,6 +328,13 @@ $(document).ready(function() {
           attribution: '© OpenStreetMap contributors',
           maxZoom: 19
         }).addTo(previewMap);
+
+        delete L.Icon.Default.prototype._getIconUrl;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: '<?= base_url('assets/img/leaflet/marker-icon-2x.png') ?>',
+          iconUrl: '<?= base_url('assets/img/leaflet/marker-icon.png') ?>',
+          shadowUrl: '<?= base_url('assets/img/leaflet/marker-shadow.png') ?>',
+        });
 
         previewMarker = L.marker([lat, lng]).addTo(previewMap);
         previewCircle = L.circle([lat, lng], {

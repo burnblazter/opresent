@@ -191,6 +191,13 @@ $(document).ready(function() {
     maxZoom: 19
   }).addTo(map);
 
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: '<?= base_url('assets/img/leaflet/marker-icon-2x.png') ?>',
+    iconUrl: '<?= base_url('assets/img/leaflet/marker-icon.png') ?>',
+    shadowUrl: '<?= base_url('assets/img/leaflet/marker-shadow.png') ?>',
+  });
+
   // Add marker
   var marker = L.marker([defaultLat, defaultLng], {
     draggable: true

@@ -3,36 +3,318 @@
 <?= $this->section('pageBody') ?>
 
 <script src="<?= base_url('assets/js/human.js') ?>"></script>
+<script src="<?= base_url('assets/js/heic2any.min.js') ?>"></script>
+<link rel="stylesheet" href="<?= base_url('assets/css/cropper.min.css') ?>" />
+<script src="<?= base_url('assets/js/cropper.min.js') ?>"></script>
 
 <style>
-/* Styling Kartu Wajah */
-.face-card {
-  border: 1px solid #e2e8f0;
-  padding: 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  background: #fff;
+/* --- BASE LAYOUT --- */
+* {
+  box-sizing: border-box;
+}
+
+.page-body {
+  background: #f8fafc;
+  min-height: 100vh;
+  padding: 20px 0;
+}
+
+/* --- CONTAINER UTAMA --- */
+.main-enrollment-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+/* --- TAB STYLING --- */
+.nav-tabs {
+  border-bottom: 2px solid #e5e7eb;
+  background: #f9fafb;
+  padding: 0 20px;
+  margin: 0;
+}
+
+.nav-tabs .nav-item {
+  margin-bottom: -2px;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  color: #6b7280;
+  font-weight: 500;
+  padding: 16px 24px;
   transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: relative;
+  background: transparent;
 }
 
-.face-card:hover {
-  background: #f8f9fa;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+.nav-tabs .nav-link:hover {
+  color: #1e3a8a;
+  background: rgba(30, 58, 138, 0.05);
 }
 
-/* Styling Area Kamera agar "Techy" */
+.nav-tabs .nav-link.active {
+  color: #1e3a8a;
+  background: white;
+  border-bottom: 3px solid #dda518;
+}
+
+.nav-tabs .nav-link svg {
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* --- TAB CONTENT --- */
+.tab-content {
+  padding: 30px;
+  background: white;
+}
+
+/* --- INSTRUCTION BOX --- */
+.instruction-box {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 50%, #dda518 100%);
+  color: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-box h4 {
+  color: white;
+  margin: 0 0 20px 0;
+  font-weight: 600;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.instruction-step {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 14px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+}
+
+.instruction-step:last-child {
+  margin-bottom: 0;
+}
+
+.instruction-step .step-number {
+  background: white;
+  color: #1e3a8a;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-right: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.instruction-step .step-text {
+  flex: 1;
+  line-height: 1.6;
+  padding-top: 4px;
+}
+
+.instruction-step .step-text strong {
+  font-weight: 600;
+}
+
+/* --- UPLOAD SECTION --- */
+.upload-zone {
+  border: 3px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+  background: #f9fafb;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+}
+
+.upload-zone:hover {
+  border-color: #1e3a8a;
+  background: #eff6ff;
+}
+
+.upload-zone.active {
+  border-color: #10b981;
+  background: #ecfdf5;
+}
+
+.upload-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  color: #9ca3af;
+  transition: color 0.3s;
+}
+
+.upload-zone:hover .upload-icon {
+  color: #1e3a8a;
+}
+
+.upload-zone input[type="file"] {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.upload-label-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.upload-hint {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* --- IMAGE EDITOR --- */
+.img-container {
+  max-height: 560px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  overflow: hidden;
+  border-radius: 12px;
+  border: 2px solid #334155;
+  margin-bottom: 24px;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.img-container img {
+  max-width: 100%;
+  display: block;
+}
+
+#upload-detection-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* --- ROTATION CONTROL --- */
+.rotation-wrapper {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.rotation-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rotation-label-text {
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rotation-value {
+  font-weight: 700;
+  color: #dda518;
+  font-size: 1.1rem;
+  min-width: 50px;
+  text-align: right;
+}
+
+.range-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range-slider {
+  flex: 1;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+}
+
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: #dda518;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.range-slider::-webkit-slider-thumb:hover {
+  background: #c89316;
+  transform: scale(1.1);
+}
+
+.range-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: #dda518;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.range-slider::-moz-range-thumb:hover {
+  background: #c89316;
+  transform: scale(1.1);
+}
+
+.range-marker {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* --- WEBCAM SECTION --- */
 #camera-container {
   position: relative;
   width: 100%;
-  max-width: 640px;
-  /* Lebar maksimal agar tidak pecah di layar lebar */
+  max-width: 720px;
   margin: 0 auto;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  background-color: #000;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  background: #000;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 #webcam-video {
@@ -49,66 +331,533 @@
   width: 100%;
   height: 100%;
   transform: scaleX(-1);
+  pointer-events: none;
 }
 
-/* Info Dashboard Admin */
+/* --- TECH STATS --- */
 .tech-stats {
-  display: flex;
-  justify-content: space-around;
-  background: #1e293b;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   color: #00d2ff;
-  padding: 10px;
+  padding: 16px;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 12px 12px;
   margin-top: -4px;
-  /* Nempel ke video */
-  position: relative;
-  z-index: 10;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tech-stat-item {
+  text-align: center;
+  padding: 8px;
+  background: rgba(0, 210, 255, 0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(0, 210, 255, 0.3);
 }
 
 .tech-stat-item strong {
   color: #fff;
+  display: block;
+  font-size: 1.1rem;
+  margin-top: 4px;
 }
 
-.tab-content {
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
+/* --- STATUS ALERTS --- */
+.status-alert {
+  padding: 16px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.status-alert.alert-info {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.status-alert.alert-success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.status-alert.alert-warning {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.status-alert.alert-danger {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* --- FORM ELEMENTS --- */
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.form-control {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  outline: none;
+}
+
+/* --- BUTTONS --- */
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  box-shadow: 0 6px 8px -1px rgba(30, 58, 138, 0.4);
+  transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-outline-secondary {
+  background: transparent;
+  border: 2px solid #d1d5db;
+  color: #6b7280;
+}
+
+.btn-outline-secondary:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.btn-lg {
+  padding: 14px 28px;
+  font-size: 1.05rem;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #d97706;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+/* --- FACE CARDS --- */
+.face-card {
+  border: 2px solid #e5e7eb;
+  padding: 18px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: white;
+  transition: all 0.3s;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.face-card:hover {
+  background: #f9fafb;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-color: #1e3a8a;
+}
+
+.face-card h4 {
+  margin: 0 0 8px 0;
+  color: #1e3a8a;
+  font-size: 1.1rem;
+}
+
+.face-card .badge {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge.bg-green-lt {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* --- UTILITIES --- */
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #6b7280;
+}
+
+.text-primary {
+  color: #1e3a8a;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.align-items-start {
+  align-items: flex-start;
+}
+
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.btn-list {
+  display: flex;
+  gap: 8px;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.pulse-animation {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .tab-content {
+    padding: 20px 16px;
+  }
+
+  .instruction-box {
+    padding: 18px;
+  }
+
+  .tech-stats {
+    grid-template-columns: repeat(2, 1fr);
+    font-size: 0.8rem;
+  }
 }
 </style>
 
 <div class="page-body">
   <div class="container-xl">
+    <!-- Back Button -->
     <div class="row mb-3">
       <div class="col">
         <a href="<?= base_url('data-pegawai') ?>" class="btn btn-secondary">
-          <i class="ti ti-arrow-left"></i> Kembali
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          Kembali
         </a>
       </div>
     </div>
 
+    <!-- Main Enrollment Card -->
     <div class="row">
       <div class="col-12 mb-4">
-        <div class="card">
-          <div class="card-body">
+        <div class="card main-enrollment-card">
+          <div class="card-body" style="padding: 0;">
+            <!-- Tabs -->
             <ul class="nav nav-tabs" id="enrollTabs" role="tablist">
               <li class="nav-item">
-                <a class="nav-link active" id="tab-webcam-link" data-bs-toggle="tab" href="#webcam-tab">
-                  <i class="ti ti-camera"></i> Webcam (Live)
+                <a class="nav-link active" id="tab-upload-link" data-bs-toggle="tab" href="#upload-tab">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                  </svg>
+                  Upload File
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" id="tab-upload-link" data-bs-toggle="tab" href="#upload-tab">
-                  <i class="ti ti-upload"></i> Upload File
+                <a class="nav-link" id="tab-webcam-link" data-bs-toggle="tab" href="#webcam-tab">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                    <circle cx="12" cy="13" r="4"></circle>
+                  </svg>
+                  Webcam Live
                 </a>
               </li>
             </ul>
 
             <div class="tab-content">
-              <div id="webcam-tab" class="tab-pane fade show active">
-                <div id="face-status" class="alert alert-info text-center">
+              <!-- TAB UPLOAD (PRIORITAS PERTAMA) -->
+              <div id="upload-tab" class="tab-pane fade show active">
+                <div class="instruction-box fade-in">
+                  <h4>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    Panduan Upload & Crop Wajah
+                  </h4>
+                  <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Upload foto wajah yang <strong>jelas dan fokus</strong>. Sistem mendukung
+                      JPG, PNG, dan HEIC (iPhone).</div>
+                  </div>
+                  <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Sesuaikan <strong>posisi crop & rotasi</strong>.</div>
+                  </div>
+                  <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Klik tombol <strong>"Potong, Proses & Simpan"</strong> untuk menyimpan face
+                      descriptor.</div>
+                  </div>
+                </div>
+
+                <div id="upload-status" class="status-alert" style="display: none;">
+                  <div id="upload-message"></div>
+                </div>
+
+                <div class="row justify-content-center">
+                  <div class="col-md-10 col-lg-9">
+
+                    <!-- Upload Zone -->
+                    <div class="upload-zone" id="upload-zone">
+                      <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                      </svg>
+                      <div class="upload-label-text">Klik atau Drag File ke Sini</div>
+                      <div class="upload-hint">Format: JPG, PNG, HEIC • Maksimal 10MB</div>
+                      <input type="file" id="file-upload" accept="image/*, .heic">
+                    </div>
+
+                    <!-- Editor Area -->
+                    <div id="editor-area" style="display: none;" class="fade-in">
+                      <div class="mb-3">
+                        <label class="form-label">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="vertical-align: middle; margin-right: 6px;">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                          </svg>
+                          Sesuaikan Posisi Wajah
+                        </label>
+
+                        <div class="img-container">
+                          <img id="image-to-crop" src="">
+                          <canvas id="upload-detection-canvas"></canvas>
+                        </div>
+                      </div>
+
+                      <div class="rotation-wrapper">
+                        <div class="rotation-label">
+                          <span class="rotation-label-text">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round">
+                              <polyline points="23 4 23 10 17 10"></polyline>
+                              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                            </svg>
+                            Koreksi Rotasi
+                          </span>
+                          <span id="rotation-val-display" class="rotation-value">0°</span>
+                        </div>
+                        <div class="range-slider-container">
+                          <span class="range-marker">-45°</span>
+                          <input type="range" class="range-slider" id="rotation-slider" min="-45" max="45" step="1"
+                            value="0">
+                          <span class="range-marker">+45°</span>
+                        </div>
+                        <div class="text-center mt-2">
+                          <button class="btn btn-outline-secondary" onclick="resetRotation()">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round">
+                              <polyline points="1 4 1 10 7 10"></polyline>
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                            Reset Posisi
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="vertical-align: middle; margin-right: 6px;">
+                            <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path>
+                            <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon>
+                          </svg>
+                          Label Foto
+                        </label>
+                        <input type="text" class="form-control" id="upload-label"
+                          placeholder="Contoh: Foto KTP / Selfie" value="Upload <?= date('d/m H:i') ?>">
+                      </div>
+
+                      <button class="btn btn-primary w-100 btn-lg" id="btn-upload-save" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                          <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        Potong, Proses & Simpan
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB WEBCAM -->
+              <div id="webcam-tab" class="tab-pane fade">
+                <div class="instruction-box fade-in">
+                  <h4>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    Panduan Scan Wajah Live
+                  </h4>
+                  <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div class="step-text">Posisikan <strong>satu wajah</strong> dengan jelas di tengah kamera hingga
+                      muncul <strong>kotak hijau</strong>.</div>
+                  </div>
+                  <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div class="step-text">Pastikan pencahayaan cukup dan wajah tidak terhalang objek.</div>
+                  </div>
+                  <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div class="step-text">Klik tombol <strong>"Scan & Simpan Wajah"</strong> saat deteksi optimal.
+                    </div>
+                  </div>
+                </div>
+
+                <div id="face-status" class="status-alert alert-info text-center">
                   <div id="face-message">Memuat model AI...</div>
                 </div>
 
@@ -117,52 +866,49 @@
                     <video id="webcam-video" autoplay playsinline muted></video>
                     <canvas id="webcam-canvas"></canvas>
                   </div>
-                  <div class="tech-stats" id="tech-stats" style="max-width: 640px; margin: 0 auto;">
-                    <div class="tech-stat-item">Age: <strong id="stat-age">-</strong></div>
-                    <div class="tech-stat-item">Gender: <strong id="stat-gender">-</strong></div>
-                    <div class="tech-stat-item">Emotion: <strong id="stat-emotion">-</strong></div>
+                  <div class="tech-stats" id="tech-stats">
+                    <div class="tech-stat-item">
+                      <div>Wajah</div>
+                      <strong id="stat-faces">0</strong>
+                    </div>
+                    <div class="tech-stat-item">
+                      <div>Usia</div>
+                      <strong id="stat-age">-</strong>
+                    </div>
+                    <div class="tech-stat-item">
+                      <div>Gender</div>
+                      <strong id="stat-gender">-</strong>
+                    </div>
+                    <div class="tech-stat-item">
+                      <div>Emosi</div>
+                      <strong id="stat-emotion">-</strong>
+                    </div>
                   </div>
                 </div>
 
                 <div class="row justify-content-center">
                   <div class="col-md-6">
                     <div class="mb-3">
-                      <label class="form-label">Label Foto</label>
+                      <label class="form-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                          style="vertical-align: middle; margin-right: 6px;">
+                          <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path>
+                          <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon>
+                        </svg>
+                        Label Foto
+                      </label>
                       <input type="text" class="form-control" id="webcam-label"
                         placeholder="Contoh: Wajah Depan / Senyum" value="Scan <?= date('d/m H:i') ?>">
                     </div>
                     <button class="btn btn-primary w-100 btn-lg" id="btn-capture-webcam" disabled>
-                      <i class="ti ti-camera"></i> Scan & Simpan Wajah
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div id="upload-tab" class="tab-pane fade">
-                <div id="upload-status" class="alert alert-info" style="display: none;">
-                  <div id="upload-message"></div>
-                </div>
-
-                <div class="row justify-content-center">
-                  <div class="col-md-6">
-                    <div class="mb-3">
-                      <label class="form-label">Pilih Gambar</label>
-                      <input type="file" class="form-control" id="file-upload" accept="image/*">
-                    </div>
-
-                    <div class="mb-3">
-                      <label class="form-label">Label Foto</label>
-                      <input type="text" class="form-control" id="upload-label" placeholder="Contoh: Foto Dari File"
-                        value="Upload <?= date('d/m H:i') ?>">
-                    </div>
-
-                    <div id="upload-preview" class="text-center mb-3" style="display: none;">
-                      <img id="preview-image" src=""
-                        style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #ddd;">
-                    </div>
-
-                    <button class="btn btn-primary w-100" id="btn-upload-save" disabled>
-                      <i class="ti ti-check"></i> Proses & Simpan
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                        </path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                      </svg>
+                      Scan & Simpan Wajah
                     </button>
                   </div>
                 </div>
@@ -171,16 +917,35 @@
           </div>
         </div>
       </div>
+    </div>
 
+    <!-- Database Wajah -->
+    <div class="row">
       <div class="col-12">
         <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Database Wajah Tersimpan (<?= count($descriptors) ?>)</h3>
+          <div class="card-header"
+            style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e5e7eb;">
+            <h3 class="card-title" style="color: #1e3a8a; font-weight: 600;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                style="vertical-align: middle; margin-right: 8px;">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              Database Wajah Tersimpan (<?= count($descriptors) ?>)
+            </h3>
           </div>
-          <div class="card-body">
+          <div class="card-body" style="padding: 24px;">
             <?php if (empty($descriptors)): ?>
-            <div class="alert alert-warning">
-              Belum ada wajah terdaftar untuk pegawai ini.
+            <div class="status-alert alert-warning">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              Belum ada wajah terdaftar untuk pengguna ini!
             </div>
             <?php else: ?>
             <div class="row" id="descriptors-list">
@@ -188,12 +953,20 @@
               <div class="col-md-4 col-sm-6">
                 <div class="face-card">
                   <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <h4 class="mb-1 text-primary"><?= esc($desc->label) ?></h4>
-                      <small class="text-muted d-block">
-                        <i class="ti ti-calendar"></i> <?= date('d M Y, H:i', strtotime($desc->created_at)) ?>
+                    <div style="flex: 1;">
+                      <h4><?= esc($desc->label) ?></h4>
+                      <small class="text-muted d-block" style="margin-bottom: 8px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                          style="vertical-align: middle;">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <?= date('d M Y, H:i', strtotime($desc->created_at)) ?>
                       </small>
-                      <span class="badge bg-green-lt mt-2">Vector ID: <?= $desc->id ?></span>
+                      <span class="badge bg-green-lt">Vector ID: <?= $desc->id ?></span>
                     </div>
                     <div class="btn-list flex-nowrap">
                       <button class="btn btn-icon btn-warning btn-sm" title="Edit Label"
@@ -275,7 +1048,10 @@ const human = new Human.Human(config);
 
 let isModelLoaded = false;
 let webcamStream = null;
-let requestLoop = null; // Untuk menyimpan ID requestAnimationFrame
+let webcamAnimationFrame = null;
+let webcamLastDetection = 0;
+const WEBCAM_DETECTION_INTERVAL = 100; // ms antara detection
+
 const idPegawai = <?= $pegawai->id ?>;
 const video = document.getElementById('webcam-video');
 const canvas = document.getElementById('webcam-canvas');
@@ -286,23 +1062,24 @@ async function initHuman() {
     updateStatus('Memuat model AI...', 'info');
     await human.load();
     await human.warmup();
-
     isModelLoaded = true;
-    updateStatus('Sistem AI Siap. Menunggu Kamera...', 'success');
-
-    // Langsung nyalakan kamera karena tab default adalah webcam
-    await startWebcam();
+    updateStatus('✅ Sistem AI Siap', 'success');
   } catch (error) {
     console.error('Error init Human:', error);
-    updateStatus('Gagal memuat model AI. Refresh halaman.', 'danger');
+    updateStatus('❌ Gagal memuat model AI. Silakan refresh halaman.', 'danger');
   }
 }
 
-// --- LOGIKA WEBCAM & DETEKSI ---
+// ========== WEBCAM SECTION ==========
+
 async function startWebcam() {
-  if (!isModelLoaded) return;
+  if (!isModelLoaded) {
+    await initHuman();
+  }
 
   try {
+    updateStatus('⏳ Mengakses kamera...', 'info');
+
     webcamStream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: {
@@ -316,24 +1093,21 @@ async function startWebcam() {
     });
 
     video.srcObject = webcamStream;
-
-    // Tunggu video play
     await new Promise(resolve => video.onloadeddata = resolve);
     video.play();
 
-    // Sesuaikan ukuran canvas dengan video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
 
     document.getElementById('btn-capture-webcam').disabled = false;
-    updateStatus('✅ Kamera Aktif. Deteksi berjalan...', 'success');
+    updateStatus('✅ Kamera Aktif. Posisikan wajah Anda...', 'success');
 
-    // Mulai Loop Deteksi & Drawing
-    drawingLoop();
+    // Start optimized detection loop
+    webcamDetectionLoop();
 
   } catch (error) {
     console.error('Webcam error:', error);
-    updateStatus('Gagal mengakses webcam. Izinkan akses kamera.', 'danger');
+    updateStatus('❌ Gagal mengakses webcam. Periksa izin kamera.', 'danger');
   }
 }
 
@@ -343,186 +1117,430 @@ function stopWebcam() {
     webcamStream = null;
   }
   video.srcObject = null;
-  cancelAnimationFrame(requestLoop); // Matikan loop processing
 
-  // Bersihkan canvas
+  if (webcamAnimationFrame) {
+    cancelAnimationFrame(webcamAnimationFrame);
+    webcamAnimationFrame = null;
+  }
+
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Reset stats
-  document.getElementById('stat-fps').innerText = "0";
+  document.getElementById('btn-capture-webcam').disabled = true;
+  document.getElementById('stat-faces').innerText = '0';
+  document.getElementById('stat-age').innerText = '-';
+  document.getElementById('stat-gender').innerText = '-';
+  document.getElementById('stat-emotion').innerText = '-';
 }
 
-// --- LOOP UTAMA (DRAWING & STATS) ---
-async function drawingLoop() {
-  if (!video.paused && !video.ended && isModelLoaded) {
+// OPTIMIZED: Throttled detection loop untuk webcam
+async function webcamDetectionLoop() {
+  const now = Date.now();
 
-    // 1. Deteksi
-    const result = await human.detect(video);
+  // Throttle detection untuk mengurangi beban CPU
+  if (now - webcamLastDetection >= WEBCAM_DETECTION_INTERVAL) {
+    webcamLastDetection = now;
 
-    // 2. Gambar Overlay (Keren-kerenan Admin)
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Menggambar hasil deteksi (Face Mesh, Box, dll) menggunakan bawaan Human.js
-    // drawOptions bisa di-tweak warnanya
-    const drawOptions = {
-      color: 'rgba(0, 255, 255, 0.4)', // Warna Cyan ala sci-fi
-      lineWidth: 1,
-      drawLabels: false // Matikan label bawaan human.js, kita pakai custom di bawah
-    };
-    await human.draw.face(canvas, result.face, drawOptions);
-
-    // 3. Update Debug/Stats Info
-    if (result.face && result.face.length > 0) {
-      const face = result.face[0];
-
-      // Gender & Umur
-      document.getElementById('stat-age').innerText = Math.round(face.age) + " Thn";
-      document.getElementById('stat-gender').innerText = face.gender;
-
-      // Emosi
-      if (face.emotion && face.emotion.length > 0) {
-        const emotion = face.emotion[0].emotion; // Emosi tertinggi
-        document.getElementById('stat-emotion').innerText = emotion.toUpperCase();
+    if (!video.paused && !video.ended && isModelLoaded) {
+      try {
+        const result = await human.detect(video);
+        drawWebcamResults(result);
+      } catch (error) {
+        console.error('Detection error:', error);
       }
-
-      document.getElementById('face-message').innerHTML =
-        `✅ Wajah Terdeteksi (Score: ${Math.round(face.boxScore * 100)}%)`;
-      document.getElementById('face-status').className = 'alert alert-success text-center';
-    } else {
-      document.getElementById('face-message').innerHTML = `⚠️ Mencari wajah...`;
-      document.getElementById('face-status').className = 'alert alert-warning text-center';
-      document.getElementById('stat-age').innerText = "-";
-      document.getElementById('stat-gender').innerText = "-";
-      document.getElementById('stat-emotion').innerText = "-";
     }
   }
 
-  // Request frame selanjutnya
-  requestLoop = requestAnimationFrame(drawingLoop);
+  // Continue loop hanya jika webcam masih aktif
+  if (webcamStream && video.srcObject) {
+    webcamAnimationFrame = requestAnimationFrame(webcamDetectionLoop);
+  }
 }
 
-// --- EVENT LISTENER TOMBOL SCAN ---
-document.getElementById('btn-capture-webcam').addEventListener('click', async function() {
-  const label = document.getElementById('webcam-label').value;
+function drawWebcamResults(result) {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  const drawOptions = {
+    color: 'rgba(16, 185, 129, 0.6)',
+    lineWidth: 2,
+    drawLabels: false
+  };
+
+  human.draw.face(canvas, result.face, drawOptions);
+
+  document.getElementById('stat-faces').innerText = result.face ? result.face.length : 0;
+
+  if (result.face && result.face.length > 0) {
+    const face = result.face[0];
+    const confidence = Math.round(face.boxScore * 100);
+
+    document.getElementById('stat-age').innerText = Math.round(face.age) + " Thn";
+    document.getElementById('stat-gender').innerText = face.gender || '-';
+    document.getElementById('stat-emotion').innerText = face.emotion?. [0]?.emotion.toUpperCase() || '-';
+
+    if (result.face.length === 1) {
+      document.getElementById('face-message').innerHTML = `✅ Wajah Terdeteksi (${confidence}%)`;
+      document.getElementById('face-status').className = 'status-alert alert-success text-center';
+    } else {
+      document.getElementById('face-message').innerHTML =
+        `⚠️ Terdeteksi ${result.face.length} wajah. Pastikan hanya 1 wajah!`;
+      document.getElementById('face-status').className = 'status-alert alert-warning text-center';
+    }
+  } else {
+    document.getElementById('face-message').innerHTML = `⚠️ Mencari wajah...`;
+    document.getElementById('face-status').className = 'status-alert alert-warning text-center';
+    document.getElementById('stat-age').innerText = '-';
+    document.getElementById('stat-gender').innerText = '-';
+    document.getElementById('stat-emotion').innerText = '-';
+  }
+}
+
+// Capture dari webcam
+document.getElementById('btn-capture-webcam').addEventListener('click', async function() {
+  const label = document.getElementById('webcam-label').value.trim();
   if (!label) {
-    alert('Masukkan label foto terlebih dahulu!');
+    alert('⚠️ Masukkan label foto terlebih dahulu!');
     return;
   }
 
-  // Pause loop sebentar untuk efek "Capture"
   this.disabled = true;
-  this.innerHTML = '<i class="ti ti-loader"></i> Menganalisa...';
+  this.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pulse-animation">
+      <circle cx="12" cy="12" r="10"></circle>
+    </svg>
+    Menganalisa...
+  `;
 
   try {
-    // Lakukan deteksi sekali lagi khusus untuk capture data presisi
     const result = await human.detect(video);
 
     if (!result.face || result.face.length === 0) {
-      alert('Wajah tidak terdeteksi dengan jelas!');
-      this.disabled = false;
-      this.innerHTML = '<i class="ti ti-camera"></i> Scan & Simpan Wajah';
-      return;
+      throw new Error('❌ Wajah tidak terdeteksi! Posisikan wajah dengan jelas.');
     }
 
     if (result.face.length > 1) {
-      alert('Terdeteksi lebih dari 1 wajah! Pastikan hanya admin/pegawai di frame.');
-      this.disabled = false;
-      this.innerHTML = '<i class="ti ti-camera"></i> Scan & Simpan Wajah';
-      return;
+      throw new Error('❌ Terdeteksi lebih dari 1 wajah! Pastikan hanya ada 1 wajah di frame.');
     }
 
-    const face = result.face[0];
-    const descriptor = Array.from(face.embedding);
-
-    // Validasi
-    if (descriptor.length < 100 || descriptor.some(val => isNaN(val))) {
-      alert('Hasil scan tidak valid. Coba sesuaikan pencahayaan.');
-      this.disabled = false;
-      this.innerHTML = '<i class="ti ti-camera"></i> Scan & Simpan Wajah';
-      return;
-    }
-
-    await saveFaceDescriptor(descriptor, label);
+    await saveFaceDescriptor(Array.from(result.face[0].embedding), label);
 
   } catch (error) {
-    console.error('Capture error:', error);
-    alert('Error: ' + error.message);
+    alert(error.message);
     this.disabled = false;
-    this.innerHTML = '<i class="ti ti-camera"></i> Scan & Simpan Wajah';
+    this.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+        <circle cx="12" cy="13" r="4"></circle>
+      </svg>
+      Scan & Simpan Wajah
+    `;
   }
 });
 
-// --- MANAJEMEN TAB (ON/OFF KAMERA) ---
-// Ketika Tab Webcam diklik -> Nyalakan Kamera
-document.getElementById('tab-webcam-link').addEventListener('shown.bs.tab', function(event) {
-  console.log('Masuk Tab Webcam');
-  startWebcam();
-});
+// ========== UPLOAD SECTION ==========
 
-// Ketika Tab Upload diklik -> Matikan Kamera
-document.getElementById('tab-upload-link').addEventListener('shown.bs.tab', function(event) {
-  console.log('Masuk Tab Upload (Kamera dimatikan)');
-  stopWebcam();
-});
+let cropper = null;
+let cropperCanvas = null;
+let cropperDetectionInterval = null;
+const imageElement = document.getElementById('image-to-crop');
+const rotationSlider = document.getElementById('rotation-slider');
+const rotationDisplay = document.getElementById('rotation-val-display');
+const uploadZone = document.getElementById('upload-zone');
 
-
-// --- BAGIAN UPLOAD FILE (SAMA SEPERTI SEBELUMNYA) ---
+// File upload handler
 document.getElementById('file-upload').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(event) {
-    const img = document.getElementById('preview-image');
-    img.src = event.target.result;
-    document.getElementById('upload-preview').style.display = 'block';
-    document.getElementById('btn-upload-save').disabled = false;
-  };
-  reader.readAsDataURL(file);
+
+  uploadZone.classList.add('active');
+
+  // Check if HEIC
+  if (file.type === "image/heic" || file.name.toLowerCase().endsWith('.heic')) {
+    updateUploadStatus('⏳ Mengonversi HEIC ke JPG...', 'warning');
+
+    heic2any({
+        blob: file,
+        toType: "image/jpeg",
+        quality: 0.8
+      })
+      .then(function(conversionResult) {
+        const url = URL.createObjectURL(conversionResult);
+        setupCropper(url);
+        updateUploadStatus('✅ Konversi berhasil. Sesuaikan posisi wajah.', 'info');
+      })
+      .catch(function(e) {
+        console.error(e);
+        alert('❌ Gagal convert HEIC: ' + e.message);
+        updateUploadStatus('❌ Gagal membaca file HEIC.', 'danger');
+        uploadZone.classList.remove('active');
+      });
+  } else {
+    // Regular image
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      setupCropper(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
 });
 
+// Setup Cropper
+async function setupCropper(imgSrc) {
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+
+  // Stop existing detection
+  stopCropperDetection();
+
+  imageElement.src = imgSrc;
+  document.getElementById('editor-area').style.display = 'block';
+  resetRotationUI();
+
+  cropper = new Cropper(imageElement, {
+    aspectRatio: 1,
+    viewMode: 1,
+    autoCropArea: 0.8,
+    responsive: true,
+    ready: function() {
+      setupCropperOverlay();
+      startCropperDetection();
+    },
+    crop: function() {
+      debouncedCropperDetection();
+    }
+  });
+
+  document.getElementById('btn-upload-save').disabled = false;
+}
+
+// Setup overlay canvas
+function setupCropperOverlay() {
+  const container = document.querySelector('.img-container');
+
+  if (cropperCanvas) {
+    cropperCanvas.remove();
+  }
+
+  cropperCanvas = document.createElement('canvas');
+  cropperCanvas.style.position = 'absolute';
+  cropperCanvas.style.top = '0';
+  cropperCanvas.style.left = '0';
+  cropperCanvas.style.pointerEvents = 'none';
+  cropperCanvas.style.zIndex = '10';
+
+  const cropperContainer = document.querySelector('.cropper-container');
+  if (cropperContainer) {
+    const rect = cropperContainer.getBoundingClientRect();
+    cropperCanvas.width = rect.width;
+    cropperCanvas.height = rect.height;
+    cropperContainer.style.position = 'relative';
+    cropperContainer.appendChild(cropperCanvas);
+  }
+}
+
+// OPTIMIZED: Detection untuk cropper dengan interval, bukan loop terus-menerus
+let cropperDetectionTimeout = null;
+
+function startCropperDetection() {
+  if (!isModelLoaded) return;
+
+  // Initial detection
+  detectFaceOnCropper();
+
+  // Set interval untuk periodic detection (lebih hemat resource)
+  cropperDetectionInterval = setInterval(() => {
+    detectFaceOnCropper();
+  }, 800); // Update setiap 800ms
+}
+
+function stopCropperDetection() {
+  if (cropperDetectionInterval) {
+    clearInterval(cropperDetectionInterval);
+    cropperDetectionInterval = null;
+  }
+
+  if (cropperDetectionTimeout) {
+    clearTimeout(cropperDetectionTimeout);
+    cropperDetectionTimeout = null;
+  }
+}
+
+function debouncedCropperDetection() {
+  clearTimeout(cropperDetectionTimeout);
+  cropperDetectionTimeout = setTimeout(() => {
+    detectFaceOnCropper();
+  }, 300);
+}
+
+async function detectFaceOnCropper() {
+  if (!cropper || !cropperCanvas || !isModelLoaded) return;
+
+  try {
+    const croppedCanvas = cropper.getCroppedCanvas({
+      width: 512,
+      height: 512
+    });
+
+    const result = await human.detect(croppedCanvas);
+
+    const ctx = cropperCanvas.getContext('2d');
+    ctx.clearRect(0, 0, cropperCanvas.width, cropperCanvas.height);
+
+    if (result.face && result.face.length > 0) {
+      const face = result.face[0];
+      const cropBoxData = cropper.getCropBoxData();
+
+      // Draw detection box
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
+
+      const scaleX = cropBoxData.width / 512;
+      const scaleY = cropBoxData.height / 512;
+
+      if (face.box) {
+        const box = {
+          x: cropBoxData.left + (face.box[0] * scaleX),
+          y: cropBoxData.top + (face.box[1] * scaleY),
+          width: face.box[2] * scaleX,
+          height: face.box[3] * scaleY
+        };
+
+        ctx.fillRect(box.x, box.y, box.width, box.height);
+        ctx.strokeRect(box.x, box.y, box.width, box.height);
+      }
+
+      // Draw landmarks
+      if (face.mesh && face.mesh.length > 0) {
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
+        face.mesh.forEach(point => {
+          const x = cropBoxData.left + (point[0] * scaleX);
+          const y = cropBoxData.top + (point[1] * scaleY);
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+      }
+
+      const confidence = Math.round(face.boxScore * 100);
+      const age = Math.round(face.age);
+      const gender = face.gender || '-';
+      const emotion = face.emotion?. [0]?.emotion || 'neutral';
+
+      updateUploadStatus(
+        `✅ Wajah Terdeteksi! (${confidence}%) • Age: ~${age} • ${gender} • ${emotion}`,
+        'success'
+      );
+
+      document.getElementById('btn-upload-save').disabled = false;
+
+    } else {
+      updateUploadStatus('⚠️ Wajah belum terdeteksi. Sesuaikan posisi crop agar wajah terlihat jelas.', 'warning');
+      document.getElementById('btn-upload-save').disabled = true;
+    }
+
+  } catch (error) {
+    console.error('Detection error:', error);
+    updateUploadStatus('⚠️ Sedang menganalisa...', 'info');
+  }
+}
+
+// Rotation slider
+rotationSlider.addEventListener('input', function() {
+  const degree = parseInt(this.value);
+  rotationDisplay.innerText = degree + '°';
+  if (cropper) {
+    cropper.rotateTo(degree);
+    debouncedCropperDetection();
+  }
+});
+
+function resetRotation() {
+  resetRotationUI();
+  if (cropper) {
+    cropper.reset();
+    debouncedCropperDetection();
+  }
+}
+
+function resetRotationUI() {
+  rotationSlider.value = 0;
+  rotationDisplay.innerText = '0°';
+}
+
+// Save upload
 document.getElementById('btn-upload-save').addEventListener('click', async function() {
-  const file = document.getElementById('file-upload').files[0];
-  const label = document.getElementById('upload-label').value;
-  if (!file || !label) {
-    alert('Lengkapi data!');
+  const label = document.getElementById('upload-label').value.trim();
+  if (!cropper || !label) {
+    alert('⚠️ Data tidak lengkap!');
     return;
   }
 
-  this.disabled = true;
-  updateUploadStatus('Sedang memproses AI...', 'info');
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pulse-animation">
+      <circle cx="12" cy="12" r="10"></circle>
+    </svg>
+    Memproses...
+  `;
+  updateUploadStatus('⏳ Mengekstrak face descriptor...', 'info');
 
-  const img = new Image();
-  img.src = document.getElementById('preview-image').src;
+  const croppedCanvas = cropper.getCroppedCanvas({
+    width: 512,
+    height: 512
+  });
 
-  img.onload = async function() {
-    try {
-      const result = await human.detect(img);
-      if (!result.face || result.face.length === 0) {
-        alert('Tidak ada wajah di gambar ini!');
-        document.getElementById('btn-upload-save').disabled = false;
-        return;
-      }
+  try {
+    const result = await human.detect(croppedCanvas);
 
-      // Ambil wajah dengan confidence tertinggi jika ada banyak
-      let bestFace = result.face[0];
-      // Opsional: Loop cari confidence tertinggi jika perlu
-
-      await saveFaceDescriptor(Array.from(bestFace.embedding), label);
-
-      // Reset Form
-      document.getElementById('file-upload').value = '';
-      document.getElementById('upload-preview').style.display = 'none';
-    } catch (e) {
-      alert('Error: ' + e.message);
-      document.getElementById('btn-upload-save').disabled = false;
+    if (!result.face || result.face.length === 0) {
+      throw new Error('❌ Wajah tidak terdeteksi pada area crop! Pastikan crop pas di wajah.');
     }
+
+    if (result.face.length > 1) {
+      throw new Error('❌ Terdeteksi lebih dari 1 wajah! Pastikan hanya ada 1 wajah di area crop.');
+    }
+
+    await saveFaceDescriptor(Array.from(result.face[0].embedding), label);
+
+    // Cleanup
+    document.getElementById('file-upload').value = '';
+    document.getElementById('editor-area').style.display = 'none';
+    uploadZone.classList.remove('active');
+
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+
+    if (cropperCanvas) {
+      cropperCanvas.remove();
+      cropperCanvas = null;
+    }
+
+    stopCropperDetection();
+
+  } catch (e) {
+    alert(e.message);
+    btn.disabled = false;
+    btn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <polyline points="21 15 16 10 5 21"></polyline>
+      </svg>
+      Potong, Proses & Simpan
+    `;
+    updateUploadStatus('❌ ' + e.message, 'danger');
   }
 });
 
-// --- AJAX SAVE FUNCTION ---
+// ========== COMMON FUNCTIONS ==========
+
 async function saveFaceDescriptor(descriptor, label) {
   try {
     const response = await fetch('<?= base_url('data-pegawai/save-face-descriptor') ?>', {
@@ -537,25 +1555,25 @@ async function saveFaceDescriptor(descriptor, label) {
         'label': label
       })
     });
+
     const result = await response.json();
+
     if (result.success) {
-      alert('✅ Berhasil disimpan!');
+      alert('✅ Berhasil menyimpan face descriptor!');
       location.reload();
     } else {
       alert('❌ ' + result.message);
-      location.reload(); // Reload agar token CSRF refresh jika perlu
+      location.reload();
     }
   } catch (error) {
-    alert('Server Error: ' + error.message);
+    alert('❌ Server Error: ' + error.message);
   }
 }
 
-// --- HELPER LAINNYA ---
 async function editLabel(id, currentLabel) {
   const newLabel = prompt('Ubah Label:', currentLabel);
   if (!newLabel || newLabel === currentLabel) return;
-  // ... (Kode ajax update label sama seperti sebelumnya) ...
-  // Saya sarankan pakai fetch simple seperti saveFaceDescriptor di atas
+
   try {
     const response = await fetch('<?= base_url('data-pegawai/update-descriptor-label') ?>', {
       method: 'POST',
@@ -568,31 +1586,54 @@ async function editLabel(id, currentLabel) {
         'label': newLabel
       })
     });
+
     const res = await response.json();
-    if (res.success) location.reload();
-    else alert(res.message);
+    if (res.success) {
+      location.reload();
+    } else {
+      alert('❌ ' + res.message);
+    }
   } catch (e) {
-    alert(e.message);
+    alert('❌ ' + e.message);
   }
 }
 
 function updateStatus(msg, type) {
-  const el = document.getElementById('face-status');
-  el.className = `alert alert-${type} text-center`;
+  document.getElementById('face-status').className = `status-alert alert-${type} text-center`;
   document.getElementById('face-message').innerHTML = msg;
 }
 
 function updateUploadStatus(msg, type) {
   const el = document.getElementById('upload-status');
   el.style.display = 'block';
-  el.className = `alert alert-${type}`;
-  document.getElementById('upload-message').innerText = msg;
+  el.className = `status-alert alert-${type}`;
+  document.getElementById('upload-message').innerHTML = msg;
 }
 
-// Bersihkan memory saat leave page
-window.addEventListener('beforeunload', () => stopWebcam());
+// ========== TAB HANDLERS ==========
 
-// Start
+document.getElementById('tab-webcam-link').addEventListener('shown.bs.tab', () => {
+  stopCropperDetection();
+  startWebcam();
+});
+
+document.getElementById('tab-upload-link').addEventListener('shown.bs.tab', () => {
+  stopWebcam();
+
+  // Resume cropper detection jika cropper aktif
+  if (cropper && !cropperDetectionInterval) {
+    startCropperDetection();
+  }
+});
+
+// ========== CLEANUP ==========
+
+window.addEventListener('beforeunload', () => {
+  stopWebcam();
+  stopCropperDetection();
+});
+
+// ========== INIT ==========
 initHuman();
 </script>
 

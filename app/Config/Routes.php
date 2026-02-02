@@ -46,6 +46,7 @@ $routes->get('/tambah-data-pegawai', 'Pegawai::add', ['filter' => 'role:admin,he
 $routes->post('/data-pegawai/store', 'Pegawai::store', ['filter' => 'role:admin,head']);
 $routes->post('/data-pegawai/update', 'Pegawai::update', ['filter' => 'role:admin,head']);
 $routes->delete('/data-pegawai/(:num)', 'Pegawai::delete/$1', ['filter' => 'role:admin,head']);
+$routes->post('/data-pegawai/bulk-delete', 'Pegawai::bulkDelete', ['filter' => 'role:admin,head']);
 $routes->get('/data-pegawai/edit/(:segment)', 'Pegawai::edit/$1', ['filter' => 'role:admin,head']);
 $routes->get('/data-pegawai/download-template', 'Pegawai::downloadTemplate', ['filter' => 'role:admin,head']);
 $routes->post('/data-pegawai/import-excel', 'Pegawai::importExcel', ['filter' => 'role:admin,head']);

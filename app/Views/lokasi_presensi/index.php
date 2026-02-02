@@ -287,11 +287,14 @@
 </div>
 
 <script>
+// 1. Tambahkan variabel 'previewTileLayer' untuk menampung layer peta
 var previewMap;
 var previewMarker;
 var previewCircle;
+var previewTileLayer;
 
 $(document).ready(function() {
+  // --- Search Handler (Tetap) ---
   $('#keyword').on('keyup', function() {
     $.get('cari-lokasi?keyword=' + $('#keyword').val() + '&tipe=' + $('#tipe').val() + '&waktu=' + $('#waktu')
       .val(),
@@ -300,6 +303,7 @@ $(document).ready(function() {
       })
   })
 
+  // --- Delete Handler (Tetap) ---
   $('body').on('click', '.btn-hapus', function(e) {
     e.preventDefault();
     var nama = $(this).data('name');
@@ -309,7 +313,7 @@ $(document).ready(function() {
     $('#form-hapus').attr('action', '/lokasi-presensi/' + id);
   });
 
-  // Preview Map Handler
+  // --- PREVIEW MAP HANDLER (DIPATCH) ---
   $('body').on('click', '.btn-preview-map', function(e) {
     e.preventDefault();
     var lat = parseFloat($(this).data('lat'));
@@ -319,16 +323,27 @@ $(document).ready(function() {
 
     $('#mapModalTitle').text('Preview Lokasi: ' + name);
 
+    // 2. Cek Tema SAAT TOMBOL DIKLIK (Real-time check)
+    var isDark = document.documentElement.getAttribute('data-darkreader-scheme') === 'dark' ||
+      localStorage.getItem('theme-preference') === 'dark';
+
+    var tileUrl = isDark ?
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' :
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
     // Initialize map on first open
     setTimeout(function() {
       if (!previewMap) {
+        // --- A. INISIALISASI PERTAMA KALI ---
         previewMap = L.map('previewMap').setView([lat, lng], 15);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
+        // Pasang Tile Layer (Simpan ke variabel)
+        previewTileLayer = L.tileLayer(tileUrl, {
+          attribution: '© OpenStreetMap contributors &copy; CARTO',
           maxZoom: 19
         }).addTo(previewMap);
 
+        // Icon Config
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions({
           iconRetinaUrl: '<?= base_url('assets/img/leaflet/marker-icon-2x.png') ?>',
@@ -343,12 +358,23 @@ $(document).ready(function() {
           fillOpacity: 0.2,
           radius: radius
         }).addTo(previewMap);
+
       } else {
-        // Update existing map
+        // --- B. UPDATE JIKA MAP SUDAH ADA ---
         previewMap.setView([lat, lng], 15);
         previewMarker.setLatLng([lat, lng]);
         previewCircle.setLatLng([lat, lng]);
         previewCircle.setRadius(radius);
+
+        // Logic Tukar Layer (Penting agar tidak perlu refresh)
+        // Hapus layer lama, pasang layer baru sesuai tema saat ini
+        if (previewTileLayer) {
+          previewMap.removeLayer(previewTileLayer);
+        }
+        previewTileLayer = L.tileLayer(tileUrl, {
+          attribution: '© OpenStreetMap contributors &copy; CARTO',
+          maxZoom: 19
+        }).addTo(previewMap);
       }
 
       // Fix map display issue

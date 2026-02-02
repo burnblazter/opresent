@@ -42,66 +42,48 @@ class Pegawai extends BaseController
         $this->faceDescriptorModel = new faceDescriptorModel();
     }
 
-    public function index(): string
+public function index(): string
     {
-        $pegawaiModel = $this->pegawaiModel->getPegawai();
-        $data_jabatan = $this->jabatanModel->get()->getResultArray();
-        $data_lokasi = $this->lokasiModel->get()->getResultArray();
-        $data_role = $this->roleModel->findAll();
+        $limit = $this->request->getVar('limit') ? (int)$this->request->getVar('limit') : 10;
         $currentPage = $this->request->getVar('page_pegawai') ? $this->request->getVar('page_pegawai') : 1;
 
         $filter = [
-            'keyword' => $this->request->getGet('keyword'),
-            'jabatan' => $this->request->getGet('jabatan'),
-            'role' => $this->request->getGet('role'),
-            'status' => $this->request->getGet('status'),
-            'jenis-kelamin' => $this->request->getGet('jenis-kelamin'),
-            'lokasi-presensi' => $this->request->getGet('lokasi-presensi'),
+            'keyword' => $this->request->getGet('keyword') ?? '',
+            'jabatan' => $this->request->getGet('jabatan') ?? '',
+            'role' => $this->request->getGet('role') ?? '',
+            'status' => $this->request->getGet('status') ?? '',
+            'jenis-kelamin' => $this->request->getGet('jenis-kelamin') ?? '',
+            'lokasi-presensi' => $this->request->getGet('lokasi-presensi') ?? '',
         ];
 
-        if (!empty($filter)) {
-            if ($filter['keyword'] === null) {
-                $filter['keyword'] = '';
-            }
-            if ($filter['jabatan'] === null) {
-                $filter['jabatan'] = '';
-            }
-            if ($filter['role'] === null) {
-                $filter['role'] = '';
-            }
-            if ($filter['status'] === null) {
-                $filter['status'] = '';
-            }
-            if ($filter['jenis-kelamin'] === null) {
-                $filter['jenis-kelamin'] = '';
-            }
-            if ($filter['lokasi-presensi'] === null) {
-                $filter['lokasi-presensi'] = '';
-            }
-            $pegawaiModel = $this->pegawaiModel->getPegawai(false, $filter);
-        }
+        $pegawaiData = $this->pegawaiModel->getPegawai(false, $filter, false, $limit);
+        $data_jabatan = $this->jabatanModel->get()->getResultArray();
+        $data_lokasi = $this->lokasiModel->get()->getResultArray();
+        $data_role = $this->roleModel->findAll();
 
         $filtered = false;
-        if (($filter['jabatan'] !== null && $filter['jabatan'] !== '') || ($filter['role'] !== null && $filter['role'] !== '') || ($filter['status'] !== null && $filter['status'] !== '') || ($filter['jenis-kelamin'] !== null && $filter['jenis-kelamin'] !== '') || ($filter['lokasi-presensi'] !== null && $filter['lokasi-presensi'] !== '')) {
+        if (
+            ($filter['jabatan'] !== '') || 
+            ($filter['role'] !== '') || 
+            ($filter['status'] !== '') || 
+            ($filter['jenis-kelamin'] !== '') || 
+            ($filter['lokasi-presensi'] !== '')
+        ) {
             $filtered = true;
         }
-
-        $data_pegawai = $pegawaiModel['pegawai'];
-        $pager = $pegawaiModel['links'];
-        $total = $pegawaiModel['total'];
-        $perPage = $pegawaiModel['perPage'];
 
         $data = [
             'title' => 'Data Pengguna',
             'user_profile' => $this->usersModel->getUserInfo(user_id()),
-            'data_pegawai' => $data_pegawai,
+            'data_pegawai' => $pegawaiData['pegawai'],
+            'pager' => $pegawaiData['links'],
+            'total' => $pegawaiData['total'],
+            'perPage' => $pegawaiData['perPage'],
             'data_jabatan' => $data_jabatan,
             'data_lokasi' => $data_lokasi,
             'data_role' => $data_role,
             'currentPage' => $currentPage,
-            'pager' => $pager,
-            'total' => $total,
-            'perPage' => $perPage,
+            'limit' => $limit,
             'isFiltered' => $filtered,
             'filter' => $filter,
         ];
@@ -112,9 +94,10 @@ class Pegawai extends BaseController
     public function pencarianPegawai()
     {
         $currentPage = $this->request->getVar('page_pegawai') ? $this->request->getVar('page_pegawai') : 1;
-
+        $limit = $this->request->getVar('limit') ? (int)$this->request->getVar('limit') : 10;
+    
         $filter = [
-            'keyword' => $this->request->getGet('keyword'),
+            'keyword' => $this->request->getGet('keyword') ?? '',
             'jabatan' => $this->request->getGet('jabatan'),
             'role' => $this->request->getGet('role'),
             'status' => $this->request->getGet('status'),
@@ -122,16 +105,15 @@ class Pegawai extends BaseController
             'lokasi-presensi' => $this->request->getGet('lokasi-presensi'),
         ];
 
-        if (empty($filter['keyword'])) {
-            $filter['keyword'] = '';
-        }
-
+        $result = $this->pegawaiModel->getPegawai(false, $filter, false, $limit);
+        
         $data = [
-            'data_pegawai' => $this->pegawaiModel->getPegawai(false, $filter)['pegawai'],
+            'data_pegawai' => $result['pegawai'],
+            'pager' => $result['links'],
+            'total' => $result['total'],
+            'perPage' => $result['perPage'],
             'currentPage' => $currentPage,
-            'pager' => $this->pegawaiModel->getPegawai(false, $filter)['links'],
-            'total' => $this->pegawaiModel->getPegawai(false, $filter)['total'],
-            'perPage' => $this->pegawaiModel->getPegawai(false, $filter)['perPage'],
+            'limit' => $limit,
         ];
 
         return view('data_pegawai/hasil-pencarian', $data);
@@ -147,8 +129,9 @@ class Pegawai extends BaseController
             'jenis-kelamin' => $this->request->getPost('jenis-kelamin'),
             'lokasi-presensi' => $this->request->getPost('lokasi-presensi'),
         ];
-        $pegawaiModel = $this->pegawaiModel->getPegawai(false, $filter, true);
-        $data_pegawai = $pegawaiModel['pegawai'];
+        
+        $result = $this->pegawaiModel->getPegawai(false, $filter, true);
+        $data_pegawai = $result['pegawai'];
 
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
@@ -1036,5 +1019,30 @@ class Pegawai extends BaseController
 
         session()->setFlashdata('berhasil', 'Password berhasil diubah');
         return redirect()->back();
+    }
+
+    public function bulkDelete()
+    {
+        if ($this->request->isAJAX()) {
+            $ids = $this->request->getPost('ids');
+
+            if (!empty($ids) && is_array($ids)) {
+                try {
+                    $this->pegawaiModel->delete($ids);
+
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => count($ids) . ' data pegawai berhasil dihapus permanen.'
+                    ]);
+                } catch (\Exception $e) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Gagal menghapus data: ' . $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
+        return $this->response->setJSON(['success' => false, 'message' => 'Invalid Request']);
     }
 }

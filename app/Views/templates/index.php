@@ -31,7 +31,7 @@
     <script src="<?= base_url('assets/js/darkreader.min.js') ?>"></script>
 
     <script>
-        const drOptions = { brightness: 100, contrast: 100, sepia: 0 };
+        const drOptions = { brightness: 100, contrast: 100, sepia: 5 };
         const savedTheme = localStorage.getItem('theme-preference');
         const sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 

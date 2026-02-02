@@ -35,23 +35,53 @@
   font-display: swap;
 }
 
-/* Root design  */
+/* ============================================
+   2. ROOT DESIGN - LIGHT MODE DEFAULT
+   ============================================ */
 :root {
   --tblr-primary: #1e3a8a;
   --tblr-primary-rgb: 30, 58, 138;
   --tblr-secondary: #dda518;
-  --tblr-secondary-rgb: 51, 65, 85;
-  --custom-bg-cream: #fffef9;
+  --tblr-secondary-rgb: 221, 165, 24;
+  --custom-bg-cream: rgb(248, 248, 239);
   --custom-bg-surface: #ffffff;
 
   --tblr-font-sans-serif:
     "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --tblr-body-bg: var(--custom-bg-cream);
-  --tblr-body-color: #334155;
+  --tblr-body-color: rgba(38, 38, 36, 1);
   --tblr-border-radius: 16px;
 }
 
-/* 2. GLOBAL BACKGROUND & TYPOGRAPHY */
+/* ============================================
+   3. STYLING KHUSUS DARK READER (MODE NGEJRENG)
+   ============================================ */
+[data-darkreader-scheme="dark"] {
+  --custom-bg-cream: #1a1a1d !important;
+  --custom-bg-surface: #1e1e1e !important;
+  --tblr-body-bg: #121212 !important;
+  --bg-dot-color-1: rgba(248, 248, 239, 0.6) !important;
+  --bg-dot-color-2: rgba(248, 248, 239, 0.35) !important;
+}
+
+/* Pastikan body memaksa render ulang background image */
+[data-darkreader-scheme="dark"] body,
+[data-darkreader-scheme="dark"] .page {
+  background-color: var(--tblr-body-bg) !important;
+
+  background-image:
+    radial-gradient(circle, var(--bg-dot-color-1) 2px, transparent 2px),
+    radial-gradient(circle, var(--bg-dot-color-2) 1.5px, transparent 1.5px) !important;
+
+  /* Opsional: Kalau mau dots lebih padat, kecilkan angkanya (misal 30px) */
+  background-size:
+    40px 40px,
+    60px 60px !important;
+}
+
+/* ============================================
+   4. GLOBAL BACKGROUND & TYPOGRAPHY
+   ============================================ */
 body {
   background-color: var(--custom-bg-cream) !important;
   background-image:
@@ -82,20 +112,22 @@ h6,
   letter-spacing: -0.025em;
 }
 
-/* 3. CARD STYLING */
+/* ============================================
+   5. CARD STYLING
+   ============================================ */
 .card {
-  background: rgba(255, 255, 255, 0.7); /* Semi-transparan */
-  border: 1px solid rgba(255, 255, 255, 0.3); /* Border putih transparan */
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow:
     0 8px 32px rgba(30, 58, 138, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5); /* Shadow + highlight atas */
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
   border-radius: var(--tblr-border-radius);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: visible;
 }
 
 .card:hover {
-  background: rgba(255, 255, 255, 0.85); /* Lebih solid saat hover */
+  background: rgba(255, 255, 255, 0.85);
   box-shadow:
     0 20px 40px rgba(30, 58, 138, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
@@ -103,22 +135,115 @@ h6,
 }
 
 .card-header {
-  background: rgba(255, 255, 255, 0.3); /* Header juga transparan */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(30, 58, 138, 0.1);
   padding: 1.5rem 1.5rem;
 }
 
-/* 4. NAVBAR OVERHAUL */
-.navbar .nav-link:hover,
-.navbar .nav-link.active {
-  color: #dda518 !important; /* Aksen kuning saat hover/aktif */
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+/* ============================================
+   6. NAVBAR MODERN STYLING
+   ============================================ */
+.navbar-expand-md {
+  background: transparent !important;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
-/* 5. BUTTONS & INPUTS */
+.navbar-expand-md .navbar {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+  padding: 0.5rem 1rem;
+  margin: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 16px rgba(30, 58, 138, 0.08);
+}
+
+.navbar-nav {
+  gap: 5px;
+  align-items: center;
+}
+
+.navbar-nav .nav-item {
+  margin: 0;
+}
+
+.navbar-nav .nav-link {
+  padding: 0.6rem 1.2rem !important;
+  border-radius: 50px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: #dda518 !important;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.navbar-nav .nav-link .nav-link-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 2.5;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  border: none;
+  border-radius: 12px;
+  background: #ffffff;
+  margin-top: 15px !important;
+  box-shadow: 0 15px 30px -5px rgba(30, 58, 138, 0.15);
+  padding: 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dropdown-item {
+  border-radius: 8px;
+  padding: 10px 15px;
+  color: #334155;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #fff9e6;
+  color: #1e3a8a;
+}
+
+.dropdown-item.active {
+  background-color: #1e3a8a;
+  color: #fff;
+}
+
+/* Animasi Dropdown */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Logout Button Styling */
+.nav-item:last-child .nav-link[href*="logout"] {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444 !important;
+}
+
+.nav-item:last-child .nav-link[href*="logout"]:hover {
+  background-color: #ef4444;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* ============================================
+   7. BUTTONS & INPUTS
+   ============================================ */
 .btn {
   font-weight: 600;
   padding: 0.6rem 1.2rem;
@@ -131,39 +256,49 @@ h6,
   background-color: #1e3a8a;
   border: none;
   box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+  color: white;
 }
 
 .btn-primary:hover {
-  background-color: #172554; /* Lebih gelap */
+  background-color: #172554;
   box-shadow: 0 6px 16px rgba(30, 58, 138, 0.4);
   transform: scale(1.02);
 }
 
-/* Tombol Secondary (Kuning) */
 .btn-secondary,
 .btn-warning {
   background-color: #dda518 !important;
-  color: #1e3a8a !important; /* Text biru biar kontras */
+  color: #1e3a8a !important;
   border: none;
 }
 
-/* Input Form yang lebih bersih */
+.btn-secondary:hover,
+.btn-warning:hover {
+  filter: brightness(1.1);
+  transform: scale(1.02);
+}
+
+/* Form Controls */
 .form-control,
 .form-select {
-  background-color: #f8fafc; /* Sedikit abu-abu, bukan putih polos */
+  background-color: #f8fafc;
   border: 1px solid #e2e8f0;
   padding: 0.6rem 1rem;
   border-radius: 10px;
+  transition: all 0.2s ease;
 }
 
 .form-control:focus,
 .form-select:focus {
   background-color: #fff;
   border-color: #1e3a8a;
-  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); /* Ring focus biru transparan */
+  box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1);
+  outline: none;
 }
 
-/* 6. TABLE STYLING */
+/* ============================================
+   8. TABLE STYLING
+   ============================================ */
 .table thead th {
   background-color: #f1f5f9;
   color: #1e3a8a;
@@ -177,41 +312,54 @@ h6,
 .table tbody td {
   vertical-align: middle;
   color: #475569;
+  border-color: #e2e8f0;
 }
 
-/* Badge Styling */
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   9. BADGE STYLING
+   ============================================ */
 .badge {
   padding: 6px 10px;
   border-radius: 6px;
   font-weight: 600;
 }
+
 .bg-primary {
   background-color: rgba(30, 58, 138, 0.1) !important;
   color: #1e3a8a !important;
 }
+
 .bg-secondary {
   background-color: rgba(255, 183, 3, 0.15) !important;
   color: #854d0e !important;
 }
+
 .bg-success {
   background-color: rgba(16, 185, 129, 0.1) !important;
   color: #047857 !important;
 }
+
 .bg-danger {
   background-color: rgba(239, 68, 68, 0.1) !important;
   color: #b91c1c !important;
 }
 
-/* 7. CUSTOM SCROLLBAR (Apple-like Premium) */
+/* ============================================
+   10. CUSTOM SCROLLBAR (Premium Apple-like)
+   ============================================ */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(30, 58, 138, 0.03); /* Track sangat subtle */
+  background: rgba(30, 58, 138, 0.03);
   border-radius: 10px;
-  margin: 4px; /* Jarak dari tepi */
+  margin: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -219,152 +367,39 @@ h6,
     180deg,
     rgba(30, 58, 138, 0.4),
     rgba(30, 58, 138, 0.6)
-  ); /* Gradient biru */
+  );
   border-radius: 10px;
-  border: 2px solid transparent; /* Space di tepi */
-  background-clip: padding-box; /* Border jadi spacing */
+  border: 2px solid transparent;
+  background-clip: padding-box;
   transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    180deg,
-    #1e3a8a,
-    #172554
-  ); /* Solid biru saat hover */
-  border-width: 1px; /* Lebih gemuk */
+  background: linear-gradient(180deg, #1e3a8a, #172554);
+  border-width: 1px;
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: #dda518; /* Kuning emas saat di-klik/drag */
+  background: #dda518;
 }
 
-/* Scrollbar Corner (pojok kalau ada horizontal + vertical scroll) */
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* --- MODERN NAVBAR STYLING (Sultan Edition) --- */
-
-/* 1. Container Navbar Utama */
-.navbar-expand-md {
-  background: transparent !important; /* Hapus background bawaan */
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+/* Firefox Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(30, 58, 138, 0.4) rgba(30, 58, 138, 0.03);
 }
 
-.navbar-expand-md .navbar {
-  border-radius: 16px; /* Membuat navbar melengkung */
-  padding: 0.5rem 1rem;
-  margin: 0 1rem; /* Memberi jarak kiri-kanan agar terlihat melayang */
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+/* ============================================
+   11. HEADER CUSTOM STYLING
+   ============================================ */
 
-/* 2. Item Menu (Bentuk Kapsul) */
-.navbar-nav {
-  gap: 5px; /* Jarak antar menu */
-  align-items: center;
-}
-
-.navbar-nav .nav-item {
-  margin: 0;
-}
-
-.navbar-nav .nav-link {
-  padding: 0.6rem 1.2rem !important;
-  border-radius: 50px !important; /* Bentuk Kapsul Sempurna */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 3. Efek Hover & Active (Nyala Emas) */
-.navbar-nav .nav-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px); /* Sedikit naik saat disentuh */
-}
-
-/* 4. Ikon di Navbar */
-.navbar-nav .nav-link .nav-link-icon svg {
-  width: 20px;
-  height: 20px;
-  stroke-width: 2.5; /* Ikon lebih tebal */
-}
-
-/* 5. Dropdown Menu (Popup Modern) */
-.dropdown-menu {
-  border: none;
-  border-radius: 12px;
-  background: #ffffff;
-  margin-top: 15px !important; /* Jarak dari navbar */
-  box-shadow: 0 15px 30px -5px rgba(30, 58, 138, 0.15);
-  padding: 8px;
-}
-
-.dropdown-item {
-  border-radius: 8px;
-  padding: 10px 15px;
-  color: #334155;
-  font-weight: 500;
-}
-
-.dropdown-item:hover {
-  background-color: #fff9e6; /* Background kuning sangat muda */
-  color: #1e3a8a; /* Text biru */
-  transform: translateX(5px); /* Geser kanan sedikit */
-}
-
-.dropdown-item.active {
-  background-color: #1e3a8a;
-  color: #fff;
-}
-
-/* Animasi untuk Dropdown */
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* 6. Tombol Logout (Spesial Merah Soft) */
-/* Kita target nav-item terakhir untuk Logout jika posisinya di akhir */
-.nav-item:last-child .nav-link[href*="logout"] {
-  background-color: rgba(239, 68, 68, 0.15); /* Merah transparan */
-  color: #ff8787 !important;
-}
-
-.nav-item:last-child .nav-link[href*="logout"]:hover {
-  background-color: #ef4444; /* Merah solid saat hover */
-  color: white !important;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
-}
-
-/* --- MOBILE RESPONSIVE FIX --- */
-@media (max-width: 768px) {
-  .navbar-expand-md .navbar {
-    margin: 0;
-    border-radius: 0 0 16px 16px; /* Hanya tumpul bawah di HP */
-  }
-  .navbar-nav {
-    align-items: flex-start;
-    padding-top: 10px;
-  }
-  .navbar-nav .nav-link {
-    width: 100%; /* Full width di HP */
-    border-radius: 8px !important; /* Kotak tumpul di HP */
-  }
-}
-
-/* === BASE STYLES (Berlaku untuk Mobile & Desktop) === */
 .custom-header {
   position: relative;
   background: white;
-  /* Pastikan ada background agar tidak transparan */
 }
 
 .custom-header .brand-center {
@@ -380,42 +415,58 @@ h6,
   letter-spacing: -0.02em;
 }
 
-/* === DESKTOP ONLY: LOGO DEAD-CENTER === */
-/* Logika ini hanya jalan di layar > 768px */
+/* Desktop: Logo Dead-Center */
 @media (min-width: 768px) {
-  /* Jadikan container sebagai patokan koordinat */
   .custom-header .container-xl {
     position: relative;
   }
 
-  /* Logo dicabut dari aliran layout dan ditaruh tepat di tengah container */
   .custom-header .brand-logo {
     position: absolute;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    /* Geser titik tengah tepat ke center */
     z-index: 10;
   }
 
-  /* Text Presensi tetap di posisi aslinya (kiri) */
   .custom-header .brand-text {
     margin-left: 0 !important;
-    /* Reset margin jika perlu */
   }
 }
 
-/* === MOBILE ONLY === */
-/* Di HP, pastikan margin text rapi karena logo ada di sebelahnya */
+/* Mobile: Logo di samping text */
 @media (max-width: 767.98px) {
   .custom-header .brand-text {
     margin-left: 0.5rem;
-    /* Beri jarak sedikit dari logo */
   }
 }
 
-/* Pastikan body mengisi penuh */
+/* ============================================
+   12. MOBILE RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .navbar-expand-md .navbar {
+    margin: 0;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .navbar-nav {
+    align-items: flex-start;
+    padding-top: 10px;
+  }
+
+  .navbar-nav .nav-link {
+    width: 100%;
+    border-radius: 8px !important;
+  }
+}
+
+/* ============================================
+   13. UTILITY CLASSES
+   ============================================ */
 body,
 html {
   height: 100%;
+  margin: 0;
+  padding: 0;
 }

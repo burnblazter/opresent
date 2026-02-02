@@ -2,13 +2,10 @@
 
 <?= $this->section('pageBody') ?>
 
-<!-- Leaflet Library -->
 <script src="<?= base_url('assets/js/leaflet.js') ?>"></script>
 
-<!-- Human.js Library -->
 <script src="<?= base_url('assets/js/human.js') ?>"></script>
 
-<!-- Page body -->
 <div class="page-body">
   <div class="container-xl">
     <div class="row g-3">
@@ -42,6 +39,8 @@
               <input type="hidden" name="image-cam" class="image-tag">
               <input type="hidden" name="face_verified" id="face-verified" value="false">
               <input type="hidden" name="face_similarity" id="face-similarity" value="0">
+              <input type="hidden" name="detected_age" id="detected-age" value="0">
+              <input type="hidden" name="detected_emotion" id="detected-emotion" value="">
               <button class="btn btn-primary mt-3" type="button" id="ambil-foto" disabled>
                 <span id="btn-text">Memuat Kamera...</span>
               </button>
@@ -59,6 +58,8 @@ let isModelLoaded = false;
 let isVerifying = false;
 let faceDatabase = [];
 let detectionInterval = null;
+let currentAge = 0;
+let currentEmotion = 'neutral'; // Default
 
 const human = new Human.Human({
   backend: 'webgl',
@@ -80,6 +81,9 @@ const human = new Human.Human({
     iris: {
       enabled: false
     },
+    antispoof: {
+      enabled: true
+    }
   },
   body: {
     enabled: false
@@ -105,38 +109,64 @@ const emotionMap = {
   disgusted: 'Jijik'
 };
 
+// Cross-browser camera setup
 async function setupCamera() {
   try {
     updateStatus('Meminta izin kamera...', 'info');
     const video = document.getElementById('my_camera');
 
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: {
-          ideal: 640
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Browser Anda tidak mendukung akses kamera.');
+    }
+
+    const constraints = [{
+        video: {
+          width: {
+            ideal: 640
+          },
+          height: {
+            ideal: 480
+          },
+          facingMode: 'user'
         },
-        height: {
-          ideal: 480
-        },
-        facingMode: 'user'
+        audio: false
       },
-      audio: false
-    });
+      {
+        video: {
+          facingMode: 'user'
+        },
+        audio: false
+      },
+      {
+        video: true,
+        audio: false
+      }
+    ];
+
+    let lastError = null;
+    for (const constraint of constraints) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(constraint);
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (!stream) throw lastError || new Error('Tidak dapat mengakses kamera.');
 
     video.srcObject = stream;
-    await new Promise((resolve) => {
-      video.onloadedmetadata = () => {
-        video.play();
-        resolve();
-      };
+
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => video.play().then(resolve).catch(reject);
+      setTimeout(() => reject(new Error('Timeout loading video')), 10000);
     });
 
     console.log('✅ Kamera berhasil diaktifkan');
     return true;
   } catch (error) {
     console.error('❌ Error kamera:', error);
-    updateStatus('Gagal mengaktifkan kamera. Periksa izin browser.', 'danger');
-    alert('Tidak dapat mengakses kamera!\n\n' + error.message);
+    updateStatus('Gagal mengaktifkan kamera: ' + error.message, 'danger');
     return false;
   }
 }
@@ -145,11 +175,9 @@ function captureImage() {
   const video = document.getElementById('my_camera');
   const canvas = document.getElementById('canvas');
   const context = canvas.getContext('2d');
-
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
   return canvas.toDataURL('image/jpeg', 0.9);
 }
 
@@ -158,16 +186,12 @@ async function initHuman() {
     updateStatus('Memuat model AI...', 'info');
     await human.load();
     await human.warmup();
-
-    updateStatus('Memuat data wajah terdaftar...', 'info');
+    updateStatus('Memuat data wajah...', 'info');
     await loadFaceDatabase();
-
     isModelLoaded = true;
-    console.log('✅ Model AI berhasil dimuat');
     checkButtonState();
     startFaceDetection();
   } catch (error) {
-    console.error('❌ Error init Human:', error);
     updateStatus('Gagal memuat model AI. Refresh halaman.', 'danger');
   }
 }
@@ -179,18 +203,14 @@ async function loadFaceDatabase() {
       headers: {
         'X-Requested-With': 'XMLHttpRequest',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-      },
-      credentials: 'same-origin'
+      }
     });
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     const data = await response.json();
     if (data.error) throw new Error(data.error);
-
     faceDatabase = data.filter(item => item.id_pegawai == <?= $user_profile->id_pegawai ?>);
 
     if (faceDatabase.length === 0) {
-      updateStatus('Wajah Anda belum terdaftar. Hubungi Admin.', 'warning');
+      updateStatus('Wajah belum terdaftar. Hubungi Admin.', 'warning');
       document.getElementById('ambil-foto').disabled = true;
       return;
     }
@@ -199,52 +219,58 @@ async function loadFaceDatabase() {
       ...item,
       descriptor: new Float32Array(Object.values(item.descriptor))
     }));
-
-    console.log(`✅ Database loaded: ${faceDatabase.length} face(s)`);
   } catch (error) {
-    console.error('❌ Error loading database:', error);
-    updateStatus('Gagal memuat data wajah. Hubungi Admin.', 'danger');
+    updateStatus('Gagal memuat database wajah.', 'danger');
   }
 }
 
 async function startFaceDetection() {
   const video = document.getElementById('my_camera');
-
   if (!video || !video.srcObject) {
-    console.warn('Video tidak siap, retry...');
     setTimeout(startFaceDetection, 500);
     return;
   }
 
   detectionInterval = setInterval(async () => {
     if (isVerifying) return;
-
     try {
       const result = await human.detect(video);
-
       if (result.face && result.face.length > 0) {
         const face = result.face[0];
-        const match = findBestMatch(face.embedding);
+        const antispoofScore = face.real || 0;
 
-        if (match.score >= 0.5) {
-          const age = Math.round(face.age);
-          const emotion = face.emotion[0] ? emotionMap[face.emotion[0].emotion] : 'Netral';
-          const accuracy = (match.score * 100).toFixed(1);
-          const details = `Akurasi: ${accuracy}% | Usia: ~${age} thn | Emosi: ${emotion}`;
-
-          updateStatus('✅ Wajah terverifikasi!', 'success', details);
-          document.getElementById('face-verified').value = 'true';
-          document.getElementById('face-similarity').value = match.score;
-        } else {
-          updateStatus('⚠️ Wajah tidak dikenali', 'warning', 'Pastikan wajah Anda jelas terlihat');
+        if (antispoofScore < 0.62) {
+          updateStatus('⚠️ Deteksi spoof! Gunakan wajah asli.', 'warning');
           document.getElementById('face-verified').value = 'false';
+          return;
         }
+
+        const match = findBestMatch(face.embedding);
+        if (match.score < 0.62) {
+          updateStatus('⚠️ Akurasi rendah, posisikan wajah dengan benar.', 'warning');
+          document.getElementById('face-verified').value = 'false';
+          return;
+        }
+
+        // Simpan data ke variabel global untuk dipakai saat save
+        currentAge = Math.round(face.age);
+        currentEmotion = face.emotion[0] ? face.emotion[0].emotion : 'neutral';
+
+        const emotionText = emotionMap[currentEmotion] || 'Netral';
+        const details =
+          `Akurasi: ${(match.score * 100).toFixed(1)}% | Usia Deteksi: ~${currentAge} thn | Emosi: ${emotionText}`;
+
+        updateStatus('✅ Wajah terverifikasi!', 'success', details);
+        document.getElementById('face-verified').value = 'true';
+        document.getElementById('face-similarity').value = match.score;
+        document.getElementById('detected-age').value = currentAge;
+        document.getElementById('detected-emotion').value = currentEmotion;
       } else {
         updateStatus('👤 Tidak ada wajah terdeteksi', 'info');
         document.getElementById('face-verified').value = 'false';
       }
     } catch (error) {
-      console.error('Detection error:', error);
+      console.error(error);
     }
   }, 1000);
 }
@@ -254,19 +280,16 @@ function findBestMatch(descriptor) {
     name: 'Unknown',
     score: 0
   };
-
   let bestMatch = {
     name: 'Unknown',
     score: 0
   };
   for (const person of faceDatabase) {
     const score = human.match.similarity(descriptor, person.descriptor);
-    if (score > bestMatch.score) {
-      bestMatch = {
-        name: person.nama,
-        score: score
-      };
-    }
+    if (score > bestMatch.score) bestMatch = {
+      name: person.nama,
+      score: score
+    };
   }
   return bestMatch;
 }
@@ -281,11 +304,9 @@ function checkButtonState() {
 }
 
 document.getElementById('ambil-foto').addEventListener('click', function() {
-  console.log('🔵 Tombol diklik');
-
   const faceVerified = document.getElementById('face-verified').value;
   if (faceVerified !== 'true') {
-    alert('❌ Wajah belum terverifikasi!\n\nPastikan wajah Anda terlihat jelas dan sesuai data terdaftar.');
+    alert('❌ Wajah belum terverifikasi dengan baik!');
     return;
   }
 
@@ -298,21 +319,27 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
 
   try {
     const imageData = captureImage();
-    console.log('✅ Foto berhasil diambil');
-
     document.querySelector('.image-tag').value = imageData;
-    document.getElementById('my_result').innerHTML =
-      '<img src="' + imageData + '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
+    document.getElementById('my_result').innerHTML = '<img src="' + imageData +
+      '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
 
-    console.log('📤 Mengirim form...');
+    // === BAGIAN UTAMA UNTUK FITUR FUNNY MESSAGE ===
+    // Simpan data 'Fun' ke LocalStorage browser pengguna
+    const funData = {
+      age: currentAge,
+      emotion: currentEmotion,
+      date_recorded: '<?= date('Y-m-d') ?>', // Kunci untuk memastikan hanya muncul hari ini
+      timestamp: new Date().getTime()
+    };
+    localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
+    // ==============================================
+
     setTimeout(() => {
       document.getElementById('presensi-form').submit();
     }, 500);
 
   } catch (error) {
-    console.error('❌ Error:', error);
-    alert('Gagal mengambil foto!\n\n' + error.message);
-
+    alert('Gagal mengambil foto: ' + error.message);
     isVerifying = false;
     btn.disabled = false;
     document.getElementById('btn-text').innerText = 'Ambil Gambar & Verifikasi';
@@ -324,11 +351,9 @@ function updateStatus(message, type = 'info', details = '') {
   const statusDiv = document.getElementById('face-status');
   const messageDiv = document.getElementById('face-message');
   const detailsDiv = document.getElementById('face-details');
-
   statusDiv.className = `alert alert-${type}`;
   statusDiv.style.display = 'block';
   messageDiv.innerHTML = message;
-
   if (details) {
     detailsDiv.innerHTML = details;
     detailsDiv.style.display = 'block';
@@ -341,6 +366,7 @@ window.addEventListener('beforeunload', () => {
   if (stream) stream.getTracks().forEach(track => track.stop());
 });
 
+// Map Logic
 let latitude_kantor = <?= $latitude_kantor ?>;
 let longitude_kantor = <?= $longitude_kantor ?>;
 let latitude_pegawai = <?= $latitude_pegawai ?>;
@@ -350,7 +376,7 @@ let radius = <?= $radius ?>;
 var map = L.map('map').setView([latitude_kantor, longitude_kantor], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  attribution: '&copy; OpenStreetMap'
 }).addTo(map);
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -360,25 +386,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: '<?= base_url('assets/img/leaflet/marker-shadow.png') ?>',
 });
 
-var marker = L.marker([latitude_pegawai, longitude_pegawai]).addTo(map).bindPopup("Posisi Anda saat ini.");
-var circle = L.circle([latitude_kantor, longitude_kantor], {
+L.marker([latitude_pegawai, longitude_pegawai]).addTo(map).bindPopup("Posisi Anda");
+L.circle([latitude_kantor, longitude_kantor], {
   color: 'yellow',
   fillColor: '#dda518',
   fillOpacity: 0.5,
   radius: radius
-}).addTo(map).bindPopup("Radius Presensi");
+}).addTo(map);
 
 (async function() {
-  try {
-    console.log('🚀 Memulai inisialisasi...');
-    const cameraOk = await setupCamera();
-    if (!cameraOk) return;
-    await initHuman();
-    console.log('✅ Sistem siap digunakan');
-  } catch (error) {
-    console.error('❌ Init error:', error);
-    updateStatus('Gagal inisialisasi: ' + error.message, 'danger');
-  }
+  await setupCamera();
+  await initHuman();
 })();
 </script>
 <?= $this->endSection() ?>

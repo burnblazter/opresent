@@ -1,4 +1,4 @@
-<footer class="footer footer-transparent d-print-none mt-auto"
+<footer class="footer footer-transparent d-print-none mt-auto footer-fade"
   style="border-top: 0; background: transparent !important;">
   <div class="container-xl">
     <div class="row text-center align-items-center flex-row-reverse">
@@ -17,4 +17,15 @@
   </div>
 </footer>
 
-<script src="<?= base_url('assets/js/bhagaskara.js') ?>"></script>
+<script src="<?= base_url('assets/js/diamond.js') ?>"></script>
+
+<style>
+.footer-fade {
+  opacity: 0.3;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.footer-fade:hover {
+  opacity: 1;
+}
+</style>

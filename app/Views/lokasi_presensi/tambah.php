@@ -173,23 +173,55 @@
 
 <script>
 $(document).ready(function() {
+  // 1. Init Select2
   $('#zona_waktu').select2({
     placeholder: "---Pilih Zona Waktu---",
     allowClear: false,
     width: '100%',
   });
 
-  // Initialize Map - Default: Balikpapan, Indonesia
-  var defaultLat = <?= old('latitude', '-1.2379') ?>;
-  var defaultLng = <?= old('longitude', '116.8289') ?>;
+  // 2. Data Lokasi Awal
+  var defaultLat = <?= old('latitude', $lokasi['latitude']) ?>;
+  var defaultLng = <?= old('longitude', $lokasi['longitude']) ?>;
 
-  var map = L.map('map').setView([defaultLat, defaultLng], 13);
+  // 3. Init Map Container
+  var map = L.map('map').setView([defaultLat, defaultLng], 15);
+  var currentTileLayer = null;
 
-  // Add OpenStreetMap tiles
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors',
-    maxZoom: 19
-  }).addTo(map);
+  function updateMapTheme() {
+    const isDark = document.documentElement.getAttribute('data-darkreader-scheme') === 'dark' ||
+      localStorage.getItem('theme-preference') === 'dark';
+
+    const tileUrl = isDark ?
+      'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' :
+      'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+    if (currentTileLayer) {
+      map.removeLayer(currentTileLayer);
+    }
+
+    // Pasang layer baru
+    currentTileLayer = L.tileLayer(tileUrl, {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19
+    }).addTo(map);
+  }
+
+  updateMapTheme();
+  $(document).on('click', '#enable-dark-mode, #enable-light-mode', function() {
+    setTimeout(updateMapTheme, 100);
+  });
+
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === "data-darkreader-scheme") {
+        updateMapTheme();
+      }
+    });
+  });
+  observer.observe(document.documentElement, {
+    attributes: true
+  });
 
   delete L.Icon.Default.prototype._getIconUrl;
   L.Icon.Default.mergeOptions({
@@ -198,54 +230,47 @@ $(document).ready(function() {
     shadowUrl: '<?= base_url('assets/img/leaflet/marker-shadow.png') ?>',
   });
 
-  // Add marker
   var marker = L.marker([defaultLat, defaultLng], {
     draggable: true
   }).addTo(map);
+  var circle = L.circle([defaultLat, defaultLng], {
+    color: '#206bc4',
+    fillColor: '#206bc4',
+    fillOpacity: 0.2,
+    radius: <?= $lokasi['radius'] ?>
+  }).addTo(map);
 
-  // Update coordinates when marker is dragged
   marker.on('dragend', function(e) {
-    var position = marker.getLatLng();
-    updateCoordinates(position.lat, position.lng);
+    var pos = marker.getLatLng();
+    circle.setLatLng(pos);
+    updateCoordinates(pos.lat, pos.lng);
   });
 
-  // Update coordinates when map is clicked
   map.on('click', function(e) {
     marker.setLatLng(e.latlng);
+    circle.setLatLng(e.latlng);
     updateCoordinates(e.latlng.lat, e.latlng.lng);
   });
 
-  // Function to update input fields
   function updateCoordinates(lat, lng) {
     $('#latitude').val(lat.toFixed(7));
     $('#longitude').val(lng.toFixed(7));
   }
 
-  // Update map when coordinates are manually entered
   $('#latitude, #longitude').on('change', function() {
     var lat = parseFloat($('#latitude').val());
     var lng = parseFloat($('#longitude').val());
-
     if (!isNaN(lat) && !isNaN(lng)) {
       marker.setLatLng([lat, lng]);
-      map.setView([lat, lng], 13);
+      circle.setLatLng([lat, lng]);
+      map.setView([lat, lng], 15);
     }
   });
 
-  // Get user's current location
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-      var userLat = position.coords.latitude;
-      var userLng = position.coords.longitude;
-
-      // Only update if fields are empty or default
-      if ($('#latitude').val() == defaultLat && $('#longitude').val() == defaultLng) {
-        marker.setLatLng([userLat, userLng]);
-        map.setView([userLat, userLng], 15);
-        updateCoordinates(userLat, userLng);
-      }
-    });
-  }
+  $('input[name="radius"]').on('input', function() {
+    var r = parseFloat($(this).val());
+    if (!isNaN(r)) circle.setRadius(r);
+  });
 });
 </script>
 <?= $this->endSection() ?>

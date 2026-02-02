@@ -10,6 +10,7 @@ class UsersModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = ['id_pegawai', 'email', 'username', 'password_hash', 'active', 'activate_hash'];
     protected $useTimestamps = true;
+    protected $returnType = 'object';
 
     public function getUserInfo($userId)
     {

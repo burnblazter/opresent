@@ -3,7 +3,6 @@
 <?= $this->section('pageBody') ?>
 
 <script src="<?= base_url('assets/js/leaflet.js') ?>"></script>
-
 <script src="<?= base_url('assets/js/human.js') ?>"></script>
 
 <div class="page-body">
@@ -29,13 +28,15 @@
                 style="border: 2px solid #ccc; border-radius: 8px;"></video>
               <canvas id="canvas" style="display:none;"></canvas>
             </div>
-            <div class="mt-3"><?= date('d F Y', strtotime($tanggal_masuk)) . ' - ' . $jam_masuk ?></div>
-            <form action="<?= base_url('/presensi-masuk/simpan') ?>" method="post" id="presensi-form">
+            <div class="mt-3"><?= date('d F Y', strtotime($tanggal_keluar)) . ' - ' . $jam_keluar ?></div>
+            <form action="<?= base_url('/presensi-keluar/simpan') ?>" method="post" id="presensi-form">
               <?= csrf_field() ?>
               <input type="hidden" name="username" value="<?= $user_profile->username ?>">
-              <input type="hidden" name="id_pegawai" value="<?= $user_profile->id_pegawai ?>">
-              <input type="hidden" name="tanggal_masuk" value="<?= $tanggal_masuk ?>">
-              <input type="hidden" name="jam_masuk" value="<?= $jam_masuk ?>">
+              <input type="hidden" name="id_presensi" value="<?= $data_presensi_masuk->id ?>">
+              <input type="hidden" name="tanggal_keluar" value="<?= $tanggal_keluar ?>">
+              <input type="hidden" name="jam_keluar" value="<?= $jam_keluar ?>">
+              <input type="hidden" name="latitude_pegawai" value="<?= $latitude_pegawai ?>">
+              <input type="hidden" name="longitude_pegawai" value="<?= $longitude_pegawai ?>">
               <input type="hidden" name="image-cam" class="image-tag">
               <input type="hidden" name="face_verified" id="face-verified" value="false">
               <input type="hidden" name="face_similarity" id="face-similarity" value="0">
@@ -59,7 +60,7 @@ let isVerifying = false;
 let faceDatabase = [];
 let detectionInterval = null;
 let currentAge = 0;
-let currentEmotion = 'neutral'; // Default
+let currentEmotion = 'neutral';
 
 const human = new Human.Human({
   backend: 'webgl',
@@ -109,7 +110,6 @@ const emotionMap = {
   disgusted: 'Jijik'
 };
 
-// Cross-browser camera setup
 async function setupCamera() {
   try {
     updateStatus('Meminta izin kamera...', 'info');
@@ -252,7 +252,6 @@ async function startFaceDetection() {
           return;
         }
 
-        // Simpan data ke variabel global untuk dipakai saat save
         currentAge = Math.round(face.age);
         currentEmotion = face.emotion[0] ? face.emotion[0].emotion : 'neutral';
 
@@ -323,16 +322,15 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
     document.getElementById('my_result').innerHTML = '<img src="' + imageData +
       '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
 
-    // === BAGIAN UTAMA UNTUK FITUR FUNNY MESSAGE ===
-    // Simpan data 'Fun' ke LocalStorage browser pengguna
+    // Simpan data untuk presensi keluar
     const funData = {
       age: currentAge,
       emotion: currentEmotion,
-      date_recorded: '<?= date('Y-m-d') ?>', // Kunci untuk memastikan hanya muncul hari ini
-      timestamp: new Date().getTime()
+      date_recorded: '<?= date('Y-m-d') ?>',
+      timestamp: new Date().getTime(),
+      type: 'out'
     };
-    localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
-    // ==============================================
+    localStorage.setItem('daily_ai_mood_out', JSON.stringify(funData));
 
     setTimeout(() => {
       document.getElementById('presensi-form').submit();
@@ -367,11 +365,11 @@ window.addEventListener('beforeunload', () => {
 });
 
 // Map Logic
-let latitude_kantor = <?= $latitude_kantor ?>;
-let longitude_kantor = <?= $longitude_kantor ?>;
+let latitude_kantor = <?= $user_lokasi_presensi->latitude ?? $latitude_kantor ?>;
+let longitude_kantor = <?= $user_lokasi_presensi->longitude ?? $longitude_kantor ?>;
 let latitude_pegawai = <?= $latitude_pegawai ?>;
 let longitude_pegawai = <?= $longitude_pegawai ?>;
-let radius = <?= $radius ?>;
+let radius = <?= $user_lokasi_presensi->radius ?? $radius ?>;
 
 var map = L.map('map').setView([latitude_kantor, longitude_kantor], 13);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

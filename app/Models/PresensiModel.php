@@ -11,9 +11,11 @@ class PresensiModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = ['id_pegawai', 'tanggal_masuk', 'jam_masuk', 'foto_masuk', 'tanggal_keluar', 'jam_keluar', 'foto_keluar'];
     protected $useTimestamps = true;
+    protected $returnType = 'object';
 
     public function __construct()
     {
+        parent::__construct();    
         $this->db = \Config\Database::connect();
         $this->builder = $this->db->table('presensi');
     }

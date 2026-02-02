@@ -160,7 +160,6 @@
                   class="form-control <?= validation_show_error('password_baru') ? 'is-invalid' : '' ?>"
                   placeholder="Password tidak diubah">
                 <div class="invalid-feedback"><?= validation_show_error('password_baru') ?></div>
-                <small class="form-hint">Kosongkan jika tidak ingin mengubah password</small>
               </div>
 
               <div class="mb-3">
@@ -169,6 +168,7 @@
                   class="form-control <?= validation_show_error('konfirmasi_password') ? 'is-invalid' : '' ?>"
                   placeholder="Password tidak diubah">
                 <div class="invalid-feedback"><?= validation_show_error('konfirmasi_password') ?></div>
+                <small class="form-hint">Kosongkan saja jika tidak ingin mengubah password</small>
               </div>
 
             </div>

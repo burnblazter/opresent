@@ -23,7 +23,13 @@ class Presensi extends BaseController
     protected $hariLiburModel;
     protected $faceDescriptorModel;
 
-public function __construct()
+    // PERBAIKAN: Konstanta untuk validasi
+    private const MAX_DISTANCE_METERS = 10000; // Maksimal 10km untuk mencegah abuse
+    private const MIN_FACE_SIMILARITY = 0.6; // Threshold minimum untuk face recognition
+    private const MAX_IMAGE_SIZE = 5242880; // 5MB dalam bytes
+    private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
+    
+    public function __construct()
     {
         $this->usersModel = new UsersModel();
         $this->lokasiModel = new LokasiPresensiModel();
@@ -31,15 +37,103 @@ public function __construct()
         $this->pegawaiModel = new PegawaiModel();
         $this->ketidakhadiranModel = new KetidakhadiranModel(); 
         $this->hariLiburModel = new HariLiburModel();
-        $this->faceDescriptorModel = new faceDescriptorModel();
+        $this->faceDescriptorModel = new FaceDescriptorModel();
 
         helper(['telegram', 'text']);
     }
 
+    /**
+     * PERBAIKAN: Fungsi helper untuk validasi koordinat
+     */
+    private function validateCoordinates($latitude, $longitude): bool
+    {
+        if (empty($latitude) || empty($longitude)) {
+            return false;
+        }
+
+        $lat = filter_var($latitude, FILTER_VALIDATE_FLOAT);
+        $lng = filter_var($longitude, FILTER_VALIDATE_FLOAT);
+
+        if ($lat === false || $lng === false) {
+            return false;
+        }
+
+        // Validasi range koordinat
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * PERBAIKAN: Fungsi helper untuk menghitung jarak dengan validasi
+     */
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2): ?float
+    {
+        try {
+            // Validasi input
+            $lat1 = floatval($lat1);
+            $lon1 = floatval($lon1);
+            $lat2 = floatval($lat2);
+            $lon2 = floatval($lon2);
+
+            $perbedaan_koordinat = $lon1 - $lon2;
+            
+            $jarak = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + 
+                     cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * 
+                     cos(deg2rad($perbedaan_koordinat));
+            
+            // Cek untuk menghindari domain error pada acos
+            if ($jarak > 1) $jarak = 1;
+            if ($jarak < -1) $jarak = -1;
+            
+            $jarak = acos($jarak);
+            $jarak = rad2deg($jarak);
+            $mil = $jarak * 60 * 1.1515;
+            $km = $mil * 1.609344;
+            $meter = $km * 1000;
+
+            // Validasi hasil perhitungan
+            if ($meter < 0 || $meter > self::MAX_DISTANCE_METERS) {
+                log_message('warning', 'Jarak tidak valid: ' . $meter);
+                return null;
+            }
+
+            return $meter;
+        } catch (\Exception $e) {
+            log_message('error', 'Error menghitung jarak: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * PERBAIKAN: Sanitasi nama file
+     */
+    private function sanitizeFilename($filename): string
+    {
+        // Hapus karakter berbahaya
+        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
+        // Batasi panjang filename
+        $filename = substr($filename, 0, 255);
+        return $filename;
+    }
+
     public function presensiMasuk()
     {
-        $user_profile = $this->usersModel->getUserInfo(user_id());
+        // PERBAIKAN: Validasi user terautentikasi
+        if (!logged_in()) {
+            return redirect()->to(base_url('login'));
+        }
 
+        $user_profile = $this->usersModel->getUserInfo(user_id());
+        
+        if (!$user_profile) {
+            session()->setFlashdata('gagal', 'Data user tidak ditemukan');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Validasi dan sanitasi input
         $latitude_pegawai = $this->request->getVar('latitude_pegawai');
         $longitude_pegawai = $this->request->getVar('longitude_pegawai');
         $latitude_kantor = $this->request->getVar('latitude_kantor');
@@ -49,32 +143,51 @@ public function __construct()
         $tanggal_masuk = $this->request->getVar('tanggal_masuk');
         $jam_masuk = $this->request->getVar('jam_masuk');
 
-        if (empty($latitude_pegawai) || empty($longitude_pegawai)) {
+        // Validasi koordinat pegawai
+        if (!$this->validateCoordinates($latitude_pegawai, $longitude_pegawai)) {
             session()->setFlashdata('gagal', 'Lokasi Anda tidak terdeteksi. Mohon aktifkan fitur lokasi di perangkat Anda dan refresh halaman ini.');
             return redirect()->to(base_url());
         }
 
-        if (empty($latitude_kantor) || empty($longitude_kantor)) {
+        // Validasi koordinat kantor
+        if (!$this->validateCoordinates($latitude_kantor, $longitude_kantor)) {
             session()->setFlashdata('gagal', 'Lokasi presensi tidak valid. Mohon hubungi Admin.');
             return redirect()->to(base_url());
         }
 
-        $perbedaan_koordinat = $longitude_pegawai - $longitude_kantor;
-
-        if (!$perbedaan_koordinat) {
-            session()->setFlashdata('warning', 'Mohon refresh halaman ini.');
+        // PERBAIKAN: Validasi radius
+        $radius = filter_var($radius, FILTER_VALIDATE_FLOAT);
+        if ($radius === false || $radius <= 0 || $radius > 10000) {
+            session()->setFlashdata('gagal', 'Radius presensi tidak valid');
             return redirect()->to(base_url());
         }
 
-        $jarak = sin(deg2rad($latitude_pegawai)) * sin(deg2rad($latitude_kantor)) + cos(deg2rad($latitude_pegawai)) * cos(deg2rad($latitude_kantor)) * cos(deg2rad($perbedaan_koordinat));
-        $jarak = acos($jarak);
-        $jarak = rad2deg($jarak);
-        $mil = $jarak * 60 * 1.1515;
-        $km = $mil * 1.609344;
-        $meter = $km * 1000;
+        // Hitung jarak dengan fungsi yang sudah diperbaiki
+        $meter = $this->calculateDistance(
+            $latitude_pegawai, 
+            $longitude_pegawai,
+            $latitude_kantor, 
+            $longitude_kantor
+        );
+
+        if ($meter === null) {
+            session()->setFlashdata('gagal', 'Gagal menghitung jarak. Silakan coba lagi.');
+            return redirect()->to(base_url());
+        }
 
         if ($meter > $radius) {
-            session()->setFlashdata('gagal', 'Anda berada di luar area kantor');
+            session()->setFlashdata('gagal', 'Anda berada di luar area kantor (' . number_format($meter, 0) . ' meter dari kantor)');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Validasi format tanggal dan jam
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_masuk)) {
+            session()->setFlashdata('gagal', 'Format tanggal tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jam_masuk)) {
+            session()->setFlashdata('gagal', 'Format jam tidak valid');
             return redirect()->to(base_url());
         }
 
@@ -95,24 +208,46 @@ public function __construct()
 
     public function simpanPresensiMasuk()
     {
-        // Validasi face recognition
+        // PERBAIKAN: Validasi CSRF token (sudah built-in di CodeIgniter 4)
+        if (!$this->validate(['csrf_test_name' => 'required'])) {
+            session()->setFlashdata('gagal', 'Token keamanan tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Validasi user terautentikasi
+        if (!logged_in()) {
+            session()->setFlashdata('gagal', 'Anda harus login terlebih dahulu');
+            return redirect()->to(base_url('login'));
+        }
+
+        // PERBAIKAN: Validasi face recognition dengan threshold yang lebih ketat
         $face_verified = $this->request->getPost('face_verified');
         $face_similarity = $this->request->getPost('face_similarity');
         
-        if ($face_verified !== 'true' || floatval($face_similarity) < 0.5) {
+        // Validasi tipe data
+        $face_similarity = filter_var($face_similarity, FILTER_VALIDATE_FLOAT);
+        
+        if ($face_verified !== 'true' || $face_similarity === false || $face_similarity < self::MIN_FACE_SIMILARITY) {
+            log_message('warning', 'Face verification failed. Similarity: ' . $face_similarity);
             session()->setFlashdata('gagal', 'Verifikasi wajah gagal. Pastikan wajah Anda terlihat jelas dan sudah terdaftar.');
             return redirect()->to(base_url());
         }
 
-        // Validasi foto
+        // PERBAIKAN: Validasi dan sanitasi foto
         $foto = $this->request->getPost('image-cam');
         if (empty($foto)) {
             session()->setFlashdata('gagal', 'Foto presensi tidak boleh kosong');
             return redirect()->to(base_url());
         }
 
+        // Validasi format base64
+        if (!preg_match('/^data:image\/(jpeg|png);base64,/', $foto)) {
+            session()->setFlashdata('gagal', 'Format foto tidak valid');
+            return redirect()->to(base_url());
+        }
+
         // Decode foto
-        $foto = str_replace('data:image/jpeg;base64,', '', $foto);
+        $foto = preg_replace('/^data:image\/(jpeg|png);base64,/', '', $foto);
         $foto = base64_decode($foto, true);
         
         if ($foto === false) {
@@ -120,33 +255,114 @@ public function __construct()
             return redirect()->to(base_url());
         }
 
-        // Simpan foto
+        // PERBAIKAN: Validasi ukuran foto
+        if (strlen($foto) > self::MAX_IMAGE_SIZE) {
+            session()->setFlashdata('gagal', 'Ukuran foto terlalu besar (maksimal 5MB)');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Validasi tipe MIME foto
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->buffer($foto);
+        
+        if (!in_array($mime, self::ALLOWED_IMAGE_TYPES)) {
+            session()->setFlashdata('gagal', 'Tipe foto tidak diizinkan');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Sanitasi username dan buat nama file yang aman
         $username = $this->request->getPost('username');
-        $nama_foto = 'masuk-' . date('Y-m-d-H-i-s') . '-' . $username . '.png';
+        $username = $this->sanitizeFilename($username);
+        
+        if (empty($username)) {
+            session()->setFlashdata('gagal', 'Username tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        $nama_foto = 'masuk-' . date('Y-m-d-His') . '-' . $username . '.png';
+        $nama_foto = $this->sanitizeFilename($nama_foto);
+        
         $folder = FCPATH . 'assets/img/foto_presensi/masuk/';
         
+        // PERBAIKAN: Validasi dan buat folder dengan permission yang aman
         if (!is_dir($folder)) {
-            mkdir($folder, 0755, true);
+            if (!mkdir($folder, 0750, true)) {
+                log_message('error', 'Gagal membuat folder: ' . $folder);
+                session()->setFlashdata('gagal', 'Gagal membuat folder penyimpanan');
+                return redirect()->to(base_url());
+            }
         }
         
-        $file_path = $folder . $nama_foto;
+        // PERBAIKAN: Validasi path untuk mencegah path traversal
+        $file_path = realpath($folder) . DIRECTORY_SEPARATOR . $nama_foto;
+        
+        if (strpos($file_path, realpath($folder)) !== 0) {
+            log_message('error', 'Path traversal attempt detected: ' . $file_path);
+            session()->setFlashdata('gagal', 'Path file tidak valid');
+            return redirect()->to(base_url());
+        }
         
         if (!file_put_contents($file_path, $foto)) {
+            log_message('error', 'Gagal menulis file: ' . $file_path);
             session()->setFlashdata('gagal', 'Gagal menyimpan foto presensi masuk');
             return redirect()->to(base_url());
         }
 
+        // PERBAIKAN: Validasi ID pegawai
         $id_pegawai = $this->request->getPost('id_pegawai');
+        $id_pegawai = filter_var($id_pegawai, FILTER_VALIDATE_INT);
+        
+        if ($id_pegawai === false || $id_pegawai <= 0) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'ID pegawai tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Validasi tanggal dan jam
         $tanggal_masuk = $this->request->getPost('tanggal_masuk');
         $jam_masuk = $this->request->getPost('jam_masuk');
 
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_masuk)) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'Format tanggal tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jam_masuk)) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'Format jam tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // PERBAIKAN: Cek apakah sudah presensi hari ini
+        $cek_presensi = $this->presensiModel->where([
+            'id_pegawai' => $id_pegawai,
+            'tanggal_masuk' => $tanggal_masuk
+        ])->first();
+
+        if ($cek_presensi) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'Anda sudah melakukan presensi masuk hari ini');
+            return redirect()->to(base_url());
+        }
+
         try {
+            // PERBAIKAN: Gunakan transaction untuk data consistency
+            $this->presensiModel->db->transStart();
+            
             $this->presensiModel->save([
                 'id_pegawai' => $id_pegawai,
                 'tanggal_masuk' => $tanggal_masuk,
                 'jam_masuk' => $jam_masuk,
                 'foto_masuk' => $nama_foto,
             ]);
+            
+            $this->presensiModel->db->transComplete();
+            
+            if ($this->presensiModel->db->transStatus() === false) {
+                throw new \Exception('Transaction failed');
+            }
+            
         } catch (\Exception $e) {
             if (file_exists($file_path)) {
                 unlink($file_path);
@@ -156,7 +372,7 @@ public function __construct()
             return redirect()->to(base_url());
         }
 
-        // Telegram notifikasi
+        // PERBAIKAN: Telegram notifikasi dengan sanitasi data
         try {
             $detail_pegawai = $this->pegawaiModel->getPegawaiById($id_pegawai);
             
@@ -171,15 +387,13 @@ public function __construct()
                 
                 $tanggal_indo = format_tanggal_indo($tanggal_masuk);
                 
-                $pesan  = "<b>🟢 PRESENSI MASUK (Face Recognition)</b>\n\n";
-                $pesan .= "👤 <b>Nama:</b> " . esc($detail_pegawai->nama) . "\n";
-                $pesan .= "🆔 <b>Nomor induk:</b> " . esc($detail_pegawai->nomor_induk) . "\n";
-                $pesan .= "💼 <b>Unit:</b> " . esc($detail_pegawai->jabatan) . "\n";
-                $pesan .= "📅 <b>Tanggal:</b> " . $tanggal_indo . "\n";
-                $pesan .= "🕐 <b>Jam Masuk:</b> " . $jam_masuk . "\n";
-                // Commented due to privacy concerns
-                // $pesan .= "📍 <b>Lokasi:</b> " . esc($detail_pegawai->nama_lokasi) . "\n";
-                // $pesan .= "🎯 <b>Akurasi Wajah:</b> " . round($face_similarity * 100, 1) . "%\n\n";
+                // PERBAIKAN: Escape HTML untuk Telegram
+                $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
+                $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($detail_pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "🆔 <b>Nomor induk:</b> " . htmlspecialchars($detail_pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "💼 <b>Unit:</b> " . htmlspecialchars($detail_pegawai->jabatan, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "📅 <b>Tanggal:</b> " . htmlspecialchars($tanggal_indo, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "🕐 <b>Jam Masuk:</b> " . htmlspecialchars($jam_masuk, ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "<b>Status:</b> " . $status_text;
                 
                 $result = send_telegram_notification($pesan);
@@ -190,55 +404,82 @@ public function __construct()
             }
         } catch (\Exception $e) {
             log_message('error', 'Error notifikasi Telegram: ' . $e->getMessage());
+            // Jangan gagalkan proses jika notifikasi gagal
         }
 
         session()->setFlashdata('berhasil', 'Presensi masuk berhasil disimpan dengan verifikasi wajah');
         return redirect()->to(base_url());
     }
 
-    public function presensiKeluar()
+ public function presensiKeluar()
     {
-        $user_profile = $this->usersModel->getUserInfo(user_id());
-        $presensi_masuk = $this->presensiModel->cekPresensiMasuk($user_profile->id_pegawai, date('Y-m-d'));
+        // 1. Cek Login
+        if (!logged_in()) {
+            return redirect()->to(base_url('login'));
+        }
 
+        // 2. Ambil Data User
+        $user_profile = $this->usersModel->getUserInfo(user_id());
+        
+        if (!$user_profile) {
+            session()->setFlashdata('gagal', 'Data user tidak ditemukan');
+            return redirect()->to(base_url());
+        }
+
+        // 3. AMBIL DATA LOKASI KANTOR (Ini yang bikin error "Undefined variable user_lokasi_presensi")
+        $user_lokasi_presensi = $this->lokasiModel->where('nama_lokasi', $user_profile->lokasi_presensi)->first();
+        
+        if (!$user_lokasi_presensi) {
+            session()->setFlashdata('gagal', 'Data lokasi presensi user tidak ditemukan');
+            return redirect()->to(base_url());
+        }
+
+        // 4. Cek Presensi Masuk Hari Ini
+        $tanggal_hari_ini = date('Y-m-d');
+        $presensi_masuk = $this->presensiModel->cekPresensiMasuk($user_profile->id_pegawai, $tanggal_hari_ini);
+        
+        // Handle jika belum presensi masuk (biar view tidak error saat akses properti object)
+        if (!$presensi_masuk) {
+            $presensi_masuk = (object) [
+                'id' => 0,
+                'tanggal_masuk' => '0000-00-00', // Dummy date
+                'tanggal_keluar' => '0000-00-00'
+            ];
+            $jumlah_presensi_masuk = 0;
+        } else {
+            $jumlah_presensi_masuk = 1;
+        }
+
+        // 5. Cek Status Izin/Sakit (Ini yang bikin error "Undefined variable status_ketidakhadiran")
+        $cek_izin = $this->ketidakhadiranModel->where([
+            'id_pegawai' => $user_profile->id_pegawai,
+            'tanggal_mulai <=' => $tanggal_hari_ini,
+            'tanggal_berakhir >=' => $tanggal_hari_ini,
+            'status_pengajuan' => 'APPROVED'
+        ])->first();
+        
+        $status_ketidakhadiran = $cek_izin ? 1 : 0;
+
+        // 6. Siapkan Data Input dari Form (jika ada refresh/redirect)
         $latitude_pegawai = $this->request->getVar('latitude_pegawai');
         $longitude_pegawai = $this->request->getVar('longitude_pegawai');
         $latitude_kantor = $this->request->getVar('latitude_kantor');
         $longitude_kantor = $this->request->getVar('longitude_kantor');
         $radius = $this->request->getVar('radius');
-        $zona_waktu = $this->request->getVar('zona_waktu');
         $tanggal_keluar = $this->request->getPost('tanggal_keluar');
         $jam_keluar = $this->request->getPost('jam_keluar');
 
-        // Jika user menonaktifkan lokasi, maka arahkan kembali ke halaman home
-        if (empty($latitude_pegawai) || empty($longitude_pegawai)) {
-            session()->setFlashdata('gagal', 'Lokasi Anda tidak terdeteksi. Mohon aktifkan fitur lokasi di perangkat Anda dan refresh halaman ini.');
-            return redirect()->to(base_url());
-        }
-
-        // Jika lokasi presensi tidak terdeteksi, maka arahkan kembali ke halaman home
-        if (empty($latitude_kantor) || empty($longitude_kantor)) {
-            session()->setFlashdata('gagal', 'Lokasi presensi tidak valid. Mohon hubungi Admin.');
-            return redirect()->to(base_url());
-        }
-
-        // Cek Perbedaan Koordinat Pegawai dengan Lokasi Presensi
-        $perbedaan_koordinat = $longitude_pegawai - $longitude_kantor;
-        $jarak = sin(deg2rad($latitude_pegawai)) * sin(deg2rad($latitude_kantor)) + cos(deg2rad($latitude_pegawai)) * cos(deg2rad($latitude_kantor)) * cos(deg2rad($perbedaan_koordinat));
-        $jarak = acos($jarak);
-        $jarak = rad2deg($jarak);
-        $mil = $jarak * 60 * 1.1515;
-        $km = $mil * 1.609344;
-        $meter = $km * 1000;
-
-        if ($meter > $radius) {
-            session()->setFlashdata('gagal', 'Anda berada di luar area kantor');
-            return redirect()->to(base_url());
-        }
-
+        // 7. DATA LENGKAP UNTUK VIEW
         $data = [
             'title' => 'Presensi Keluar',
             'user_profile' => $user_profile,
+            'user_lokasi_presensi' => $user_lokasi_presensi, // PENTING
+            'status_ketidakhadiran' => $status_ketidakhadiran, // PENTING
+            'jumlah_presensi_masuk' => $jumlah_presensi_masuk, // PENTING
+            'data_presensi_masuk' => $presensi_masuk,
+            'jam_pulang' => $user_lokasi_presensi->jam_pulang, // PENTING
+            
+            // Variabel pendukung form/view
             'latitude_pegawai' => $latitude_pegawai,
             'longitude_pegawai' => $longitude_pegawai,
             'latitude_kantor' => $latitude_kantor,
@@ -246,7 +487,10 @@ public function __construct()
             'radius' => $radius,
             'tanggal_keluar' => $tanggal_keluar,
             'jam_keluar' => $jam_keluar,
-            'data_presensi_masuk' => $presensi_masuk,
+            
+            // Variabel tambahan untuk menghindari error undefined
+            'tanggal_masuk' => $tanggal_hari_ini, // Solusi error "Undefined variable $tanggal_masuk"
+            'server_time' => time(), // Untuk jam javascript
         ];
 
         return view('presensi/presensi_keluar', $data);
@@ -254,22 +498,42 @@ public function __construct()
 
     public function simpanPresensiKeluar()
     {
+        // Validasi CSRF
+        if (!$this->validate(['csrf_test_name' => 'required'])) {
+            session()->setFlashdata('gagal', 'Token keamanan tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // Validasi user
+        if (!logged_in()) {
+            session()->setFlashdata('gagal', 'Anda harus login terlebih dahulu');
+            return redirect()->to(base_url('login'));
+        }
+
+        // Validasi face recognition
         $face_verified = $this->request->getPost('face_verified');
         $face_similarity = $this->request->getPost('face_similarity');
+        $face_similarity = filter_var($face_similarity, FILTER_VALIDATE_FLOAT);
         
-        // Batas similarity bisa disesuaikan, standar biasanya 0.7 atau 0.8
-        if ($face_verified !== 'true' || floatval($face_similarity) < 0.5) {
+        if ($face_verified !== 'true' || $face_similarity === false || $face_similarity < self::MIN_FACE_SIMILARITY) {
+            log_message('warning', 'Face verification failed on keluar. Similarity: ' . $face_similarity);
             session()->setFlashdata('gagal', 'Verifikasi wajah gagal. Pastikan wajah Anda terlihat jelas dan sudah terdaftar.');
             return redirect()->to(base_url());
         }
 
+        // Validasi foto
         $foto = $this->request->getPost('image-cam');
         if (empty($foto)) {
             session()->setFlashdata('gagal', 'Foto presensi tidak boleh kosong');
             return redirect()->to(base_url());
         }
 
-        $foto = str_replace('data:image/jpeg;base64,', '', $foto);
+        if (!preg_match('/^data:image\/(jpeg|png);base64,/', $foto)) {
+            session()->setFlashdata('gagal', 'Format foto tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        $foto = preg_replace('/^data:image\/(jpeg|png);base64,/', '', $foto);
         $foto = base64_decode($foto, true);
 
         if ($foto === false) {
@@ -277,32 +541,122 @@ public function __construct()
             return redirect()->to(base_url());
         }
 
+        // Validasi ukuran foto
+        if (strlen($foto) > self::MAX_IMAGE_SIZE) {
+            session()->setFlashdata('gagal', 'Ukuran foto terlalu besar (maksimal 5MB)');
+            return redirect()->to(base_url());
+        }
+
+        // Validasi MIME type
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->buffer($foto);
+        
+        if (!in_array($mime, self::ALLOWED_IMAGE_TYPES)) {
+            session()->setFlashdata('gagal', 'Tipe foto tidak diizinkan');
+            return redirect()->to(base_url());
+        }
+
+        // Sanitasi username dan nama file
         $username = $this->request->getPost('username');
-        $nama_foto = 'keluar-' . date('Y-m-d-H-i-s') . '-' . $username . '.png';
+        $username = $this->sanitizeFilename($username);
+        
+        if (empty($username)) {
+            session()->setFlashdata('gagal', 'Username tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        $nama_foto = 'keluar-' . date('Y-m-d-His') . '-' . $username . '.png';
+        $nama_foto = $this->sanitizeFilename($nama_foto);
+        
         $folder = FCPATH . 'assets/img/foto_presensi/keluar/';
         
         if (!is_dir($folder)) {
-            mkdir($folder, 0755, true);
+            if (!mkdir($folder, 0750, true)) {
+                log_message('error', 'Gagal membuat folder: ' . $folder);
+                session()->setFlashdata('gagal', 'Gagal membuat folder penyimpanan');
+                return redirect()->to(base_url());
+            }
         }
         
-        $file_path = $folder . $nama_foto;
+        // Validasi path
+        $file_path = realpath($folder) . DIRECTORY_SEPARATOR . $nama_foto;
+        
+        if (strpos($file_path, realpath($folder)) !== 0) {
+            log_message('error', 'Path traversal attempt detected: ' . $file_path);
+            session()->setFlashdata('gagal', 'Path file tidak valid');
+            return redirect()->to(base_url());
+        }
 
         if (!file_put_contents($file_path, $foto)) {
+            log_message('error', 'Gagal menulis file: ' . $file_path);
             session()->setFlashdata('gagal', 'Gagal menyimpan foto presensi keluar');
             return redirect()->to(base_url());
         }
 
+        // Validasi ID presensi
         $id_presensi = $this->request->getPost('id_presensi');
+        $id_presensi = filter_var($id_presensi, FILTER_VALIDATE_INT);
+        
+        if ($id_presensi === false || $id_presensi <= 0) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'ID presensi tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // Validasi tanggal dan jam
         $tanggal_keluar = $this->request->getPost('tanggal_keluar');
         $jam_keluar = $this->request->getPost('jam_keluar');
 
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal_keluar)) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'Format tanggal tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        if (!preg_match('/^\d{2}:\d{2}:\d{2}$/', $jam_keluar)) {
+            if (file_exists($file_path)) unlink($file_path);
+            session()->setFlashdata('gagal', 'Format jam tidak valid');
+            return redirect()->to(base_url());
+        }
+
+        // Validasi jam pulang - pastikan sudah waktunya
+        $user_profile = $this->usersModel->getUserInfo(user_id());
+        $user_lokasi = $this->lokasiModel->getWhere(['nama_lokasi' => $user_profile->lokasi_presensi])->getFirstRow();
+        
+        // Set timezone sesuai lokasi user
+        if (in_array($user_lokasi->zona_waktu, timezone_identifiers_list())) {
+            date_default_timezone_set($user_lokasi->zona_waktu);
+        } else {
+            date_default_timezone_set('Asia/Jakarta');
+        }
+        
+        // Cek apakah jam saat ini sudah >= jam pulang
+        $jam_sekarang = strtotime(date('H:i:s'));
+        $jam_pulang_target = strtotime($user_lokasi->jam_pulang);
+        
+        if ($jam_sekarang < $jam_pulang_target) {
+            if (file_exists($file_path)) unlink($file_path);
+            $selisih_menit = round(($jam_pulang_target - $jam_sekarang) / 60);
+            session()->setFlashdata('gagal', "Belum waktunya pulang. Tunggu {$selisih_menit} menit lagi.");
+            return redirect()->to(base_url());
+        }
+
         try {
+            $this->presensiModel->db->transStart();
+            
             $this->presensiModel->save([
                 'id' => $id_presensi, 
-                'tanggal_keluar' =>  $tanggal_keluar,
+                'tanggal_keluar' => $tanggal_keluar,
                 'jam_keluar' => $jam_keluar,
                 'foto_keluar' => $nama_foto,
             ]);
+            
+            $this->presensiModel->db->transComplete();
+            
+            if ($this->presensiModel->db->transStatus() === false) {
+                throw new \Exception('Transaction failed');
+            }
+            
         } catch (\Exception $e) {
             if (file_exists($file_path)) {
                 unlink($file_path);

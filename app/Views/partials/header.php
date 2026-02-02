@@ -75,42 +75,15 @@
 
 <style>
 .brand-text-custom {
-  font-weight: 600;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
-  display: inline-block;
-  color: var(--tblr-body-color);
-  position: relative;
-  text-decoration: none;
+  font-weight: 500;
+  font-size: 1.1rem;
+  letter-spacing: 0.3px;
 }
 
 .brand-highlight {
-  font-weight: 800;
-  background: linear-gradient(135deg, var(--tblr-primary), var(--tblr-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-weight: 700;
+  color: #dda518;
   position: relative;
-  display: inline-block;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.brand-highlight::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  right: -12px;
-  width: 14px;
-  height: 14px;
-
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23f59f00'%3E%3Cpath d='M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transform: scale(0) rotate(-45deg);
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  z-index: 1;
 }
 
 .brand-highlight::after {
@@ -118,12 +91,10 @@
   position: absolute;
   bottom: -2px;
   left: 0;
-  width: 0%;
+  width: 100%;
   height: 2px;
-  background: var(--tblr-secondary);
-  border-radius: 10px;
-  transition: width 0.3s ease-out;
-  opacity: 0.8;
+  background: linear-gradient(90deg, #1e3a8a, #dda518);
+  border-radius: 2px;
 }
 
 .brand-center:hover .brand-highlight {

@@ -15,7 +15,7 @@ class KetidakhadiranModel extends Model
 
     public function __construct()
     {
-        parent::__construct(); // PERBAIKAN: Panggil parent
+        parent::__construct();
         $this->db = \Config\Database::connect();
         $this->builder = $this->db->table('ketidakhadiran');
     }

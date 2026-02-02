@@ -13,9 +13,11 @@ class LokasiPresensiModel extends Model
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
+    protected $returnType = 'object';
 
     public function __construct()
     {
+        parent::__construct();    
         $this->db = \Config\Database::connect();
         $this->builder = $this->db->table('lokasi_presensi');
     }

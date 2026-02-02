@@ -454,13 +454,14 @@ public function index(): string
         return view('data_pegawai/edit', $data);
     }
 
-    public function update()
+public function update()
     {
         $username_db = $this->request->getVar('username_db');
         $data_pegawai_db = $this->pegawaiModel->getPegawai($username_db)['pegawai'];
         $email_db = $data_pegawai_db->email;
         $nomor_induk_db = $data_pegawai_db->nomor_induk;
         $nomor_induk_input = $this->request->getVar('nomor_induk');
+    
         if ($nomor_induk_db == $nomor_induk_input) {
             $rules_nomor_induk = 'required|max_length[50]';
         } else {
@@ -492,66 +493,58 @@ public function index(): string
             ],
             'nama' => [
                 'rules' => 'required',
-                'errors' => [
-                    'required' => 'Mohon isi nama pengguna',
-                ]
+                'errors' => ['required' => 'Mohon isi nama pengguna']
             ],
             'jenis_kelamin' => [
                 'rules' => 'required|in_list[Perempuan,Laki-laki]',
-                'errors' => [
-                    'required' => 'Mohon isi jenis kelamin pengguna',
-                    'in_list' => 'Mohon pilih jenis kelamin yang tersedia',
-                ]
+                'errors' => ['required' => 'Mohon isi jenis kelamin pengguna']
             ],
             'alamat' => [
                 'rules' => 'required',
-                'errors' => [
-                    'required' => 'Mohon isi alamat domisili pegawai',
-                ]
+                'errors' => ['required' => 'Mohon isi alamat domisili pegawai']
             ],
             'no_handphone' => [
                 'rules' => 'required|regex_match[/^(?:\+62|62|0)(?:\d{8,15})$/]',
-                'errors' => [
-                    'required' => 'Mohon isi nomor telepon pegawai',
-                    'regex_match' => 'Mohon isi nomor telepon dengan 8-15 digit',
-                ]
+                'errors' => ['required' => 'Mohon isi nomor telepon', 'regex_match' => 'Format nomor telepon salah']
             ],
             'jabatan' => [
                 'rules' => 'required',
-                'errors' => [
-                    'required' => 'Mohon isi unit pengguna',
-                ]
+                'errors' => ['required' => 'Mohon isi unit pengguna']
             ],
             'email' => [
                 'rules' => $rules_email,
-                'errors' => [
-                    'required' => 'Mohon isi alamat email pegawai',
-                    'valid_email' => 'Mohon isi alamat email yang valid',
-                    'is_unique' => 'Alamat email sudah terdaftar',
-                ]
+                'errors' => ['required' => 'Mohon isi email', 'valid_email' => 'Email tidak valid', 'is_unique' => 'Email sudah terdaftar']
             ],
             'lokasi_presensi' => [
                 'rules' => 'required',
-                'errors' => [
-                    'required' => 'Mohon isi lokasi untuk presensi pegawai',
-                ]
+                'errors' => ['required' => 'Mohon isi lokasi presensi']
             ],
             'username' => [
                 'rules' => $rules_username,
-                'errors' => [
-                    'required' => 'Mohon isi username untuk akun pegawai',
-                    'is_unique' => 'Username sudah terdaftar',
-                    'min_length' => 'Username harus terdiri dari 5-30 karakter',
-                    'max_length' => 'Username harus terdiri dari 5-30 karakter'
-                ],
+                'errors' => ['required' => 'Mohon isi username', 'is_unique' => 'Username sudah dipakai']
             ],
             'role' => [
                 'rules' => 'required',
-                'errors' => [
-                    'required' => 'Mohon isi role untuk akun pegawai',
-                ]
+                'errors' => ['required' => 'Mohon isi role']
             ]
         ];
+
+        $password_baru = $this->request->getVar('password_baru');
+        
+        if (!empty($password_baru)) {
+            $rules['password_baru'] = [
+                'rules' => 'min_length[8]',
+                'errors' => [
+                    'min_length' => 'Password minimal 8 karakter'
+                ]
+            ];
+            $rules['konfirmasi_password'] = [
+                'rules' => 'matches[password_baru]',
+                'errors' => [
+                    'matches' => 'Konfirmasi password tidak sesuai'
+                ]
+            ];
+        }
 
         if (!$this->validate($rules)) {
             return redirect()->to('/data-pegawai/edit/' . $username_db)->withInput();
@@ -573,20 +566,28 @@ public function index(): string
         $username =  $this->request->getVar('username');
         $id_user = $this->request->getVar('id_user');
 
-        $this->usersModel->save([
+        $userData = [
             'id' => $id_user,
             'id_pegawai' => $id_pegawai,
             'email' => $email,
             'username' => $username,
-        ]);
+        ];
+
+        if (!empty($password_baru)) {
+            $password_hash = $this->usersModel->hashPassword($password_baru);
+            $userData['password_hash'] = $password_hash;
+            
+            // If user inactive and password is changed by admin, set active to 1
+            $userData['active'] = 1; 
+        }
+
+        $this->usersModel->save($userData);
 
         $role = $this->request->getVar('role');
         $role_db = $this->request->getVar('role_db');
 
         if ($role !== $role_db) {
-            // Mendapatkan instance model Group milik myth/auth
             $groupModel = new \Myth\Auth\Models\GroupModel();
-
             $groupModel->addUserToGroup($id_user, (int)$role);
             $groupModel->removeUserFromGroup($id_user, (int)$role_db);
         }

@@ -748,7 +748,7 @@ class Presensi extends BaseController
         $spreadsheet = new Spreadsheet();
         $worksheet = $spreadsheet->getActiveSheet();
 
-        $worksheet->setCellValue('A1', 'Rekap Presensi Pegawai');
+        $worksheet->setCellValue('A1', 'Rekap Presensi Pengguna');
         $worksheet->setCellValue('A3', 'Tanggal Awal');
         $worksheet->setCellValue('A4', 'Tanggal Akhir');
         $worksheet->setCellValue('C3', $tanggal_awal);
@@ -859,7 +859,7 @@ class Presensi extends BaseController
 
         // redirect output to client browser
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment;filename="PresenSi_Rekap Presensi Pegawai_' . $data_pegawai->nama . '_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
+        header('Content-Disposition: attachment;filename="PresenSi_Rekap Presensi Pengguna_' . $data_pegawai->nama . '_' . date('Y-m-d', strtotime($tanggal_awal)) . '_' . date('Y-m-d', strtotime($tanggal_akhir)) . '.xlsx"');
         header('Cache-Control: max-age=0');
 
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');

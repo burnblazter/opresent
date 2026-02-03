@@ -297,13 +297,14 @@ let faceDatabase = [];
 let detectionInterval = null;
 let currentAge = 0;
 let currentEmotion = 'neutral';
+let currentSimilarity = 0;
 
 // Head Movement Verification State
 let headMovementState = {
-  required: null, // 'up', 'down', 'left', 'right'
+  required: null,
   completed: false,
   detectionCount: 0,
-  requiredCount: 15, // Harus terdeteksi 15 frame berturut-turut
+  requiredCount: 15,
   initialRotation: null
 };
 
@@ -313,7 +314,7 @@ const human = new Human.Human({
   face: {
     enabled: true,
     detector: {
-      rotation: true // Enable rotation detection
+      rotation: true
     },
     mesh: {
       enabled: true
@@ -328,7 +329,7 @@ const human = new Human.Human({
       enabled: false
     },
     antispoof: {
-      enabled: false // Disabled - diganti dengan head movement
+      enabled: false
     }
   },
   body: {
@@ -378,11 +379,184 @@ const headMovementInstructions = {
   }
 };
 
-// Pilih gerakan acak saat halaman dimuat
 function selectRandomMovement() {
   const movements = ['up', 'down', 'left', 'right'];
   headMovementState.required = movements[Math.floor(Math.random() * movements.length)];
   console.log('✅ Gerakan yang diperlukan:', headMovementState.required);
+}
+
+// Fungsi untuk menampilkan instruksi permission dengan detail
+function showPermissionInstructions(type, error) {
+  let title = '';
+  let html = '';
+
+  if (type === 'camera') {
+    title = '📷 Akses Kamera Diperlukan';
+
+    // Deteksi jenis error
+    if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      html = `
+        <div style="text-align: left;">
+          <p><strong>Anda memblokir akses kamera.</strong></p>
+          <p>Untuk mengaktifkan kembali:</p>
+          <ol style="margin: 10px 0; padding-left: 20px;">
+            <li>Klik ikon <strong>🔒 gembok</strong> atau <strong>ℹ️ info</strong> di address bar browser</li>
+            <li>Cari pengaturan <strong>"Kamera"</strong></li>
+            <li>Ubah dari <strong>"Blokir"</strong> menjadi <strong>"Izinkan"</strong></li>
+            <li>Refresh halaman ini (F5)</li>
+          </ol>
+          <hr>
+          <p style="font-size: 12px; color: #666;">
+            <strong>Browser Anda:</strong> ${navigator.userAgent.includes('Chrome') ? 'Chrome' : navigator.userAgent.includes('Firefox') ? 'Firefox' : navigator.userAgent.includes('Safari') ? 'Safari' : 'Lainnya'}
+          </p>
+        </div>
+      `;
+    } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+      html = `
+        <div style="text-align: left;">
+          <p><strong>Kamera tidak ditemukan!</strong></p>
+          <p>Kemungkinan penyebab:</p>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Kamera tidak terhubung ke perangkat</li>
+            <li>Driver kamera belum terinstal</li>
+            <li>Kamera sedang digunakan aplikasi lain</li>
+          </ul>
+          <p><strong>Solusi:</strong></p>
+          <ol style="margin: 10px 0; padding-left: 20px;">
+            <li>Pastikan kamera terhubung dengan baik</li>
+            <li>Tutup aplikasi lain yang menggunakan kamera (Zoom, Teams, dll)</li>
+            <li>Restart browser Anda</li>
+          </ol>
+        </div>
+      `;
+    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+      html = `
+        <div style="text-align: left;">
+          <p><strong>Kamera tidak dapat diakses!</strong></p>
+          <p>Kamera mungkin sedang digunakan oleh aplikasi lain.</p>
+          <p><strong>Solusi:</strong></p>
+          <ol style="margin: 10px 0; padding-left: 20px;">
+            <li>Tutup semua aplikasi yang menggunakan kamera</li>
+            <li>Restart browser</li>
+            <li>Jika masih bermasalah, restart komputer Anda</li>
+          </ol>
+        </div>
+      `;
+    } else {
+      html = `
+        <div style="text-align: left;">
+          <p><strong>Terjadi kesalahan:</strong> ${error.message}</p>
+          <p><strong>Solusi umum:</strong></p>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li>Refresh halaman (F5)</li>
+            <li>Pastikan browser mendukung kamera</li>
+            <li>Coba gunakan browser Chrome/Firefox terbaru</li>
+          </ul>
+        </div>
+      `;
+    }
+  } else if (type === 'location') {
+    title = '📍 Akses Lokasi Diperlukan';
+    html = `
+      <div style="text-align: left;">
+        <p><strong>Anda memblokir akses lokasi.</strong></p>
+        <p>Untuk mengaktifkan kembali:</p>
+        <ol style="margin: 10px 0; padding-left: 20px;">
+          <li>Klik ikon <strong>🔒 gembok</strong> di address bar</li>
+          <li>Cari pengaturan <strong>"Lokasi"</strong></li>
+          <li>Ubah menjadi <strong>"Izinkan"</strong></li>
+          <li>Refresh halaman (F5)</li>
+        </ol>
+        <p style="margin-top: 10px;"><em>Lokasi diperlukan untuk memverifikasi Anda berada di area sekolah.</em></p>
+      </div>
+    `;
+  }
+
+  Swal.fire({
+    icon: 'warning',
+    title: title,
+    html: html,
+    confirmButtonText: 'Saya Mengerti',
+    confirmButtonColor: '#1e3a8a',
+    width: '600px',
+    customClass: {
+      popup: 'text-start'
+    }
+  });
+}
+
+// Fungsi untuk menampilkan transparansi AI
+function showAITransparency() {
+  const similarity = (currentSimilarity * 100).toFixed(1);
+  const registeredFaces = faceDatabase.length;
+
+  let status = '';
+  let statusColor = '';
+
+  if (currentSimilarity >= 0.75) {
+    status = 'Sangat Cocok ✅';
+    statusColor = '#28a745';
+  } else if (currentSimilarity >= 0.62) {
+    status = 'Cocok ✓';
+    statusColor = '#ffc107';
+  } else {
+    status = 'Tidak Cocok ❌';
+    statusColor = '#dc3545';
+  }
+
+  Swal.fire({
+    title: '🤖 Transparansi AI',
+    html: `
+      <div style="text-align: left;">
+        <h5 style="margin-top: 0; color: #1e3a8a;">📊 Hasil Verifikasi Wajah</h5>
+        
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+          <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${status}</span></p>
+          <p style="margin: 5px 0;"><strong>Tingkat Kecocokan:</strong> ${similarity}%</p>
+          <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0;">
+            <div style="background: ${statusColor}; height: 100%; width: ${similarity}%; transition: width 0.3s;"></div>
+          </div>
+        </div>
+        
+        <h5 style="color: #1e3a8a;">ℹ️ Cara Kerja Sistem</h5>
+        <ol style="font-size: 14px; line-height: 1.6;">
+          <li><strong>Deteksi Wajah:</strong> AI mendeteksi wajah Anda dari kamera</li>
+          <li><strong>Verifikasi Gerakan:</strong> Anda diminta melakukan gerakan kepala untuk memastikan bukan foto/video</li>
+          <li><strong>Pencocokan:</strong> Wajah Anda dicocokkan dengan ${registeredFaces} data wajah terdaftar atas nama Anda</li>
+          <li><strong>Scoring:</strong> Sistem memberikan skor 0-100% berdasarkan kemiripan fitur wajah</li>
+        </ol>
+        
+        <div style="background: #e7f3ff; padding: 10px; border-left: 4px solid #0d6efd; margin: 15px 0;">
+          <p style="margin: 0; font-size: 13px;"><strong>💡 Standar Kecocokan:</strong></p>
+          <ul style="margin: 5px 0; font-size: 13px; padding-left: 20px;">
+            <li>75-100%: Sangat Cocok (Identitas pasti)</li>
+            <li>62-74%: Cocok (Identitas terverifikasi)</li>
+            <li>0-61%: Tidak Cocok (Ditolak sistem)</li>
+          </ul>
+        </div>
+        
+        <h5 style="color: #1e3a8a;">📸 Data Terdeteksi</h5>
+        <ul style="font-size: 14px; line-height: 1.6;">
+          <li><strong>Usia Estimasi:</strong> ~${currentAge} tahun</li>
+          <li><strong>Emosi:</strong> ${emotionMap[currentEmotion] || 'Netral'}</li>
+          <li><strong>Wajah Terdaftar:</strong> ${registeredFaces} data</li>
+        </ul>
+        
+        <hr>
+        <p style="font-size: 12px; color: #6c757d; margin: 10px 0;">
+          <strong>Privasi:</strong> Data wajah Anda terenkripsi dan hanya digunakan untuk verifikasi presensi.
+          Sistem tidak menyimpan foto/video Anda.
+        </p>
+      </div>
+    `,
+    confirmButtonText: 'Mengerti',
+    confirmButtonColor: '#1e3a8a',
+    width: '650px',
+    showCloseButton: true,
+    customClass: {
+      popup: 'text-start'
+    }
+  });
 }
 
 async function setupCamera() {
@@ -391,7 +565,10 @@ async function setupCamera() {
     const video = document.getElementById('my_camera');
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('Browser Anda tidak mendukung akses kamera.');
+      const notSupportedError = new Error(
+        'Browser Anda tidak mendukung akses kamera. Gunakan Chrome, Firefox, atau Edge terbaru.');
+      showPermissionInstructions('camera', notSupportedError);
+      throw notSupportedError;
     }
 
     const constraints = [{
@@ -428,7 +605,10 @@ async function setupCamera() {
       }
     }
 
-    if (!stream) throw lastError || new Error('Tidak dapat mengakses kamera.');
+    if (!stream) {
+      showPermissionInstructions('camera', lastError);
+      throw lastError || new Error('Tidak dapat mengakses kamera.');
+    }
 
     video.srcObject = stream;
 
@@ -441,7 +621,7 @@ async function setupCamera() {
     return true;
   } catch (error) {
     console.error('❌ Error kamera:', error);
-    updateStatus('Gagal mengaktifkan kamera: ' + error.message, 'danger');
+    updateStatus('Gagal mengaktifkan kamera. Lihat panduan di atas.', 'danger');
     return false;
   }
 }
@@ -465,7 +645,6 @@ async function initHuman() {
     await loadFaceDatabase();
     isModelLoaded = true;
 
-    // Select random movement
     selectRandomMovement();
     showHeadMovementInstruction();
 
@@ -473,6 +652,22 @@ async function initHuman() {
     startFaceDetection();
   } catch (error) {
     updateStatus('Gagal memuat model AI. Refresh halaman.', 'danger');
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Model AI Gagal Dimuat',
+      html: `
+        <p>Terjadi kesalahan saat memuat model AI.</p>
+        <p><strong>Solusi:</strong></p>
+        <ol style="text-align: left; padding-left: 20px;">
+          <li>Refresh halaman ini (tekan F5)</li>
+          <li>Periksa koneksi internet Anda</li>
+          <li>Kosongkan cache browser</li>
+          <li>Gunakan browser Chrome/Firefox terbaru</li>
+        </ol>
+      `,
+      confirmButtonColor: '#1e3a8a'
+    });
   }
 }
 
@@ -492,6 +687,23 @@ async function loadFaceDatabase() {
     if (faceDatabase.length === 0) {
       updateStatus('Wajah belum terdaftar. Hubungi Admin.', 'warning');
       document.getElementById('ambil-foto').disabled = true;
+
+      Swal.fire({
+        icon: 'warning',
+        title: 'Wajah Belum Terdaftar',
+        html: `
+          <p>Data wajah Anda belum tersedia di sistem.</p>
+          <p><strong>Langkah selanjutnya:</strong></p>
+          <ol style="text-align: left; padding-left: 20px;">
+            <li>Hubungi administrator/HRD</li>
+            <li>Minta untuk didaftarkan ke sistem face recognition</li>
+            <li>Proses pendaftaran biasanya memerlukan foto wajah dari berbagai sudut</li>
+          </ol>
+          <p style="margin-top: 15px;"><em>Setelah terdaftar, Anda bisa langsung menggunakan presensi wajah.</em></p>
+        `,
+        confirmButtonColor: '#1e3a8a'
+      });
+
       return;
     }
 
@@ -499,8 +711,26 @@ async function loadFaceDatabase() {
       ...item,
       descriptor: new Float32Array(Object.values(item.descriptor))
     }));
+
+    console.log(`✅ Berhasil memuat ${faceDatabase.length} data wajah terdaftar`);
   } catch (error) {
     updateStatus('Gagal memuat database wajah.', 'danger');
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Database Gagal Dimuat',
+      html: `
+        <p>Tidak dapat memuat data wajah dari server.</p>
+        <p><strong>Kemungkinan penyebab:</strong></p>
+        <ul style="text-align: left; padding-left: 20px;">
+          <li>Koneksi internet terputus</li>
+          <li>Server sedang maintenance</li>
+          <li>Session login Anda expired</li>
+        </ul>
+        <p><strong>Solusi:</strong> Refresh halaman atau login ulang.</p>
+      `,
+      confirmButtonColor: '#1e3a8a'
+    });
   }
 }
 
@@ -517,7 +747,6 @@ function showHeadMovementInstruction() {
 
   instructionDiv.style.display = 'block';
 
-  // Show progress
   document.getElementById('verification-progress').style.display = 'block';
   updateProgressIcon('progress-face', 'active');
 }
@@ -540,13 +769,11 @@ function updateProgressIcon(id, status) {
   }
 }
 
-// --- KONFIGURASI VISUAL ---
-// CONFIG: WARNA CLEAN & MODERN
 const visualConfig = {
-  colorGuide: 'rgba(255, 255, 255, 0.4)', // Lingkaran panduan (Putih transparan)
-  colorDot: '#dda518', // Dot penunjuk arah (Cyan cerah)
-  colorSuccess: '#ffffff', // Hijau sukses
-  colorText: '#FFFFFF', // Teks putih
+  colorGuide: 'rgba(255, 255, 255, 0.4)',
+  colorDot: '#dda518',
+  colorSuccess: '#ffffff',
+  colorText: '#FFFFFF',
   lineWidth: 3
 };
 
@@ -563,17 +790,14 @@ function drawAnimatedInstruction(ctx, w, h, direction) {
   let label = "";
   let arrowIcon = "";
 
-  // === PERBAIKAN ARAH DI SINI ===
-  // Karena ctx.scale(-1, 1) di bawah menormalkan canvas:
-  // Kiri = Negatif X, Kanan = Positif X
   switch (direction) {
     case 'right':
-      dotX = -moveAmount; // KE KIRI (Negatif)
+      dotX = -moveAmount;
       label = "TOLEH KIRI";
       arrowIcon = "⬅️";
       break;
     case 'left':
-      dotX = moveAmount; // KE KANAN (Positif)
+      dotX = moveAmount;
       label = "TOLEH KANAN";
       arrowIcon = "➡️";
       break;
@@ -591,10 +815,8 @@ function drawAnimatedInstruction(ctx, w, h, direction) {
 
   ctx.save();
   ctx.translate(centerX, centerY);
-
   ctx.scale(-1, 1);
 
-  // 1. Lingkaran Panduan
   ctx.beginPath();
   ctx.arc(0, 0, radius, 0, Math.PI * 2);
   ctx.strokeStyle = visualConfig.colorGuide;
@@ -603,13 +825,11 @@ function drawAnimatedInstruction(ctx, w, h, direction) {
   ctx.stroke();
   ctx.setLineDash([]);
 
-  // 2. Dot Animasi
   ctx.beginPath();
   ctx.arc(dotX, dotY, 8, 0, Math.PI * 2);
   ctx.fillStyle = visualConfig.colorDot;
   ctx.fill();
 
-  // Ekor Dot
   ctx.beginPath();
   ctx.moveTo(0, 0);
   ctx.lineTo(dotX, dotY);
@@ -617,7 +837,6 @@ function drawAnimatedInstruction(ctx, w, h, direction) {
   ctx.lineWidth = 4;
   ctx.stroke();
 
-  // 3. Teks & Icon
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillStyle = visualConfig.colorText;
@@ -625,8 +844,8 @@ function drawAnimatedInstruction(ctx, w, h, direction) {
   ctx.font = "40px Arial";
   let iconX = 0,
     iconY = 0;
-  if (direction === 'left') iconX = -(radius + 40); // Icon Kiri di Kiri
-  if (direction === 'right') iconX = radius + 40; // Icon Kanan di Kanan
+  if (direction === 'left') iconX = -(radius + 40);
+  if (direction === 'right') iconX = radius + 40;
   if (direction === 'up') iconY = -(radius + 40);
   if (direction === 'down') iconY = radius + 40;
 
@@ -645,7 +864,6 @@ function drawFancyOverlay(face) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Gambar Instruksi jika belum selesai
   if (!headMovementState.completed && headMovementState.required) {
     drawAnimatedInstruction(ctx, canvas.width, canvas.height, headMovementState.required);
   }
@@ -660,37 +878,39 @@ function drawFancyOverlay(face) {
   const w = box[2] * scaleX;
   const h = box[3] * scaleY;
 
-  // Warna Kotak
   const color = headMovementState.completed ? visualConfig.colorSuccess : 'rgba(255, 255, 255, 0.5)';
 
-  // GAMBAR KOTAK FOKUS (ROUNDED RECTANGLE SEDERHANA)
   ctx.strokeStyle = color;
   ctx.lineWidth = 2;
 
-  // Gambar 4 Sudut saja (Lebih clean daripada kotak full)
   const lineLen = 20;
   ctx.beginPath();
-  // Top Left
   ctx.moveTo(x, y + lineLen);
   ctx.lineTo(x, y);
   ctx.lineTo(x + lineLen, y);
-  // Top Right
   ctx.moveTo(x + w - lineLen, y);
   ctx.lineTo(x + w, y);
   ctx.lineTo(x + w, y + lineLen);
-  // Bottom Right
   ctx.moveTo(x + w, y + h - lineLen);
   ctx.lineTo(x + w, y + h);
   ctx.lineTo(x + w - lineLen, y + h);
-  // Bottom Left
   ctx.moveTo(x, y + h - lineLen);
   ctx.lineTo(x, y + h);
   ctx.lineTo(x + lineLen, y + h);
   ctx.stroke();
+
+  // Tampilkan skor kecocokan real-time jika sudah selesai gerakan
+  if (headMovementState.completed && currentSimilarity > 0) {
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = currentSimilarity >= 0.62 ? "#28a745" : "#dc3545";
+    ctx.textAlign = "center";
+    ctx.fillText(`${(currentSimilarity * 100).toFixed(1)}%`, -(w / 2 + x), y - 10);
+    ctx.restore();
+  }
 }
 
-
-// 3. LOGIC CEK GERAKAN (UPDATED WITH YAW INDICATOR)
 function checkHeadMovement(face) {
   drawFancyOverlay(face);
 
@@ -714,9 +934,8 @@ function checkHeadMovement(face) {
 
   const pitchDiff = pitch - headMovementState.initialRotation.pitch;
   const yawDiff = yaw - headMovementState.initialRotation.yaw;
-  const threshold = 15; // Balikin ke 15 biar gak terlalu sensitif
+  const threshold = 15;
 
-  // Debug Info (Clean)
   if (!headMovementState.completed) {
     const canvas = document.getElementById('face-overlay-canvas');
     const ctx = canvas.getContext('2d');
@@ -725,29 +944,23 @@ function checkHeadMovement(face) {
     ctx.font = "12px sans-serif";
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.textAlign = "right";
-    // Posisi X jadi negatif karena scale -1
     ctx.fillText(`Y: ${yawDiff.toFixed(0)}° P: ${pitchDiff.toFixed(0)}°`, -10, 20);
     ctx.restore();
   }
 
   let isCorrectMovement = false;
 
-  // === PERBAIKAN LOGIKA DETEKSI (STANDAR HUMAN.JS) ===
   switch (headMovementState.required) {
     case 'up':
-      // Dongak: Pitch Negatif (Nilai mengecil)
       isCorrectMovement = pitchDiff < -threshold;
       break;
     case 'down':
-      // Tunduk: Pitch Positif (Nilai membesar)
       isCorrectMovement = pitchDiff > threshold;
       break;
     case 'left':
-      // Toleh Kiri: Yaw Positif (Nilai membesar)
       isCorrectMovement = yawDiff > threshold;
       break;
     case 'right':
-      // Toleh Kanan: Yaw Negatif (Nilai mengecil)
       isCorrectMovement = yawDiff < -threshold;
       break;
   }
@@ -755,7 +968,6 @@ function checkHeadMovement(face) {
   if (isCorrectMovement) {
     headMovementState.detectionCount++;
 
-    // Progress Ring Visual
     const canvas = document.getElementById('face-overlay-canvas');
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
@@ -815,6 +1027,8 @@ async function startFaceDetection() {
         updateProgressIcon('progress-match', 'active');
 
         const match = findBestMatch(face.embedding);
+        currentSimilarity = match.score;
+
         if (match.score < 0.62) {
           updateStatus('⚠️ Akurasi rendah, posisikan wajah dengan benar.', 'warning');
           document.getElementById('face-verified').value = 'false';
@@ -837,6 +1051,7 @@ async function startFaceDetection() {
       } else {
         updateStatus('👤 Tidak ada wajah terdeteksi', 'info');
         document.getElementById('face-verified').value = 'false';
+        currentSimilarity = 0;
 
         const canvas = document.getElementById('face-overlay-canvas');
         const ctx = canvas.getContext('2d');
@@ -884,12 +1099,35 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
   const faceVerified = document.getElementById('face-verified').value;
 
   if (!headMovementState.completed) {
-    alert('❌ Selesaikan verifikasi gerakan kepala terlebih dahulu!');
+    Swal.fire({
+      icon: 'warning',
+      title: 'Verifikasi Belum Selesai',
+      text: 'Selesaikan verifikasi gerakan kepala terlebih dahulu!',
+      confirmButtonColor: '#1e3a8a'
+    });
     return;
   }
 
   if (faceVerified !== 'true') {
-    alert('❌ Wajah belum terverifikasi dengan baik!');
+    Swal.fire({
+      icon: 'error',
+      title: 'Wajah Belum Terverifikasi',
+      html: `
+        <p>Wajah belum terverifikasi dengan baik.</p>
+        <p><strong>Tips:</strong></p>
+        <ul style="text-align: left; padding-left: 20px;">
+          <li>Pastikan wajah Anda terlihat jelas</li>
+          <li>Cukup pencahayaan (tidak terlalu gelap/terang)</li>
+          <li>Posisi tegak menghadap kamera</li>
+          <li>Tidak menggunakan masker/kacamata hitam</li>
+        </ul>
+        <button onclick="showAITransparency()" class="btn btn-sm btn-outline-primary mt-2">
+          🤖 Lihat Detail AI
+        </button>
+      `,
+      confirmButtonColor: '#1e3a8a',
+      confirmButtonText: 'Coba Lagi'
+    });
     return;
   }
 
@@ -909,17 +1147,36 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
     const funData = {
       age: currentAge,
       emotion: currentEmotion,
+      similarity: currentSimilarity,
       date_recorded: '<?= date('Y-m-d') ?>',
       timestamp: new Date().getTime()
     };
     localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
 
-    setTimeout(() => {
-      document.getElementById('presensi-form').submit();
-    }, 500);
+    Swal.fire({
+      icon: 'success',
+      title: 'Foto Berhasil Diambil',
+      html: `
+        <p>Mengirim data presensi...</p>
+        <p style="font-size: 13px; color: #6c757d; margin-top: 10px;">
+          Kecocokan: ${(currentSimilarity * 100).toFixed(1)}%
+        </p>
+      `,
+      timer: 1500,
+      showConfirmButton: false,
+      didClose: () => {
+        document.getElementById('presensi-form').submit();
+      }
+    });
 
   } catch (error) {
-    alert('Gagal mengambil foto: ' + error.message);
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Mengambil Foto',
+      text: error.message,
+      confirmButtonColor: '#1e3a8a'
+    });
+
     isVerifying = false;
     btn.disabled = false;
     document.getElementById('btn-text').innerText = 'Ambil Gambar & Verifikasi';
@@ -935,7 +1192,8 @@ function updateStatus(message, type = 'info', details = '') {
   statusDiv.style.display = 'block';
   messageDiv.innerHTML = message;
   if (details) {
-    detailsDiv.innerHTML = details;
+    detailsDiv.innerHTML = details +
+      ' <a href="javascript:void(0)" onclick="showAITransparency()" style="font-size: 12px; margin-left: 10px;">🤖 Detail AI</a>';
     detailsDiv.style.display = 'block';
   } else {
     detailsDiv.style.display = 'none';
@@ -953,7 +1211,6 @@ let latitude_pegawai = <?= $latitude_pegawai ?>;
 let longitude_pegawai = <?= $longitude_pegawai ?>;
 let radius = <?= $radius ?>;
 
-// Function to get tile layer URL based on theme
 function getTileLayerUrl() {
   const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
     document.documentElement.getAttribute('data-darkreader-scheme') === 'dark' ||
@@ -966,13 +1223,11 @@ function getTileLayerUrl() {
 
 var map = L.map('map').setView([latitude_kantor, longitude_kantor], 15);
 
-// Initial tile layer
 var tileLayer = L.tileLayer(getTileLayerUrl(), {
   maxZoom: 19,
   attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
-// Custom marker icons
 var userIcon = L.divIcon({
   className: 'custom-marker',
   html: '<div style="background-color: #dc3545; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
@@ -987,7 +1242,6 @@ var officeIcon = L.divIcon({
   iconAnchor: [10, 10]
 });
 
-// Add markers
 L.marker([latitude_pegawai, longitude_pegawai], {
     icon: userIcon
   })
@@ -1000,7 +1254,6 @@ L.marker([latitude_kantor, longitude_kantor], {
   .addTo(map)
   .bindPopup("<b>🏫 Lokasi Sekolah</b>");
 
-// Add radius circle
 L.circle([latitude_kantor, longitude_kantor], {
   color: '#198754',
   fillColor: '#198754',
@@ -1008,14 +1261,12 @@ L.circle([latitude_kantor, longitude_kantor], {
   radius: radius
 }).addTo(map);
 
-// Fit bounds to show both markers
 var group = new L.featureGroup([
   L.marker([latitude_pegawai, longitude_pegawai]),
   L.marker([latitude_kantor, longitude_kantor])
 ]);
 map.fitBounds(group.getBounds().pad(0.1));
 
-// Update map theme when theme changes
 function updateMapTheme() {
   const newUrl = getTileLayerUrl();
   map.removeLayer(tileLayer);
@@ -1025,7 +1276,6 @@ function updateMapTheme() {
   }).addTo(map);
 }
 
-// Watch for theme changes
 const observer = new MutationObserver(function(mutations) {
   mutations.forEach(function(mutation) {
     if (mutation.type === 'attributes') {
@@ -1041,7 +1291,6 @@ observer.observe(document.documentElement, {
 
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateMapTheme);
 
-// Initialize
 (async function() {
   await setupCamera();
   await initHuman();

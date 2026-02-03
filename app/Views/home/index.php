@@ -29,6 +29,45 @@
   padding: 15px;
 }
 
+.ai-prediction-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ai-prediction-item {
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.ai-prediction-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #6c757d;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ai-prediction-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #1e3a8a;
+}
+
+.ai-prediction-emoji {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
 /* GPS Status Indicator */
 .gps-status {
   margin: 15px 0;
@@ -336,19 +375,30 @@
                 <path d="M9 12l2 2l4 -4" />
               </svg>
             </div>
-            <h4 class="my-3">Presensi Masuk <span class="d-block text-primary">Berhasil!</span></h4>
+            <h4 class="my-3">Presensi Masuk <span class="d-block text-success">Berhasil!</span></h4>
 
             <div id="ai-joke-container-in" class="ai-joke-box" style="display: none;">
-              <div class="text-muted small text-uppercase fw-bold mb-2">Mood Pagi Ini</div>
+              <div class="text-muted small text-uppercase fw-bold mb-2">🤖 Prediksi AI</div>
               <div id="ai-emoji-in" style="font-size: 2.5rem; line-height: 1;"></div>
-              <p id="ai-message-in" class="mt-2 mb-1 text-dark fw-medium"></p>
-              <div class="text-muted small mt-1" style="font-size: 0.75rem;">(Deteksi Usia: <span
-                  id="ai-age-in">0</span> thn)</div>
+              <p id="ai-message-in" class="mt-2 mb-2 text-dark fw-medium"></p>
 
-              <div class="mt-2 border-top pt-1">
-                <small class="text-muted fst-italic" style="font-size: 0.65rem; display:block; line-height: 1.2;">
-                  *Note: Umur & ekspresi cuma tebak-tebakan AI buat seru-seruan aja ya! Jangan baper, aslinya kamu cakep
-                  kok. 😉
+              <!-- Grid untuk Usia dan Ekspresi -->
+              <div class="ai-prediction-grid">
+                <div class="ai-prediction-item">
+                  <div class="ai-prediction-label">Prediksi Usia</div>
+                  <div class="ai-prediction-value"><span id="ai-age-in">0</span> thn</div>
+                </div>
+                <div class="ai-prediction-item">
+                  <div class="ai-prediction-label">Prediksi Ekspresi</div>
+                  <div class="ai-prediction-emoji" id="ai-emotion-emoji-in">😐</div>
+                  <div class="ai-prediction-value" id="ai-emotion-in" style="font-size: 0.85rem;">Netral</div>
+                </div>
+              </div>
+
+              <div class="mt-3 border-top pt-2">
+                <small class="text-muted fst-italic" style="font-size: 0.65rem; display:block; line-height: 1.3;">
+                  ⚠️ <strong>Disclaimer:</strong> Prediksi usia & ekspresi cuma tebakan AI buat fun aja! Akurasi bisa
+                  meleset jauh. Jangan baper ya! 😉
                 </small>
               </div>
             </div>
@@ -414,15 +464,26 @@
             <h4 class="my-3">Presensi Pulang <span class="d-block text-success">Berhasil!</span></h4>
 
             <div id="ai-joke-container-out" class="ai-joke-box" style="display: none;">
-              <div class="text-muted small text-uppercase fw-bold mb-2">Vibes Pulang Sekolah</div>
+              <div class="text-muted small text-uppercase fw-bold mb-2">🤖 Prediksi AI</div>
               <div id="ai-emoji-out" style="font-size: 2.5rem; line-height: 1;"></div>
-              <p id="ai-message-out" class="mt-2 mb-1 text-dark fw-medium"></p>
-              <div class="text-muted small mt-1" style="font-size: 0.75rem;">(Deteksi Usia: <span
-                  id="ai-age-out">0</span> thn)</div>
+              <p id="ai-message-out" class="mt-2 mb-2 text-dark fw-medium"></p>
 
-              <div class="mt-2 border-top pt-1">
-                <small class="text-muted fst-italic" style="font-size: 0.65rem; display:block; line-height: 1.2;">
-                  *Note: Umur & ekspresi cuma tebak-tebakan AI buat seru-seruan aja ya! Jangan baper, have fun! ✌️
+              <!-- Grid untuk Usia dan Ekspresi -->
+              <div class="ai-prediction-grid">
+                <div class="ai-prediction-item">
+                  <div class="ai-prediction-label">Prediksi Usia</div>
+                  <div class="ai-prediction-value"><span id="ai-age-out">0</span> thn</div>
+                </div>
+                <div class="ai-prediction-item">
+                  <div class="ai-prediction-label">Prediksi Ekspresi</div>
+                  <div class="ai-prediction-emoji" id="ai-emotion-emoji-out">😐</div>
+                  <div class="ai-prediction-value" id="ai-emotion-out" style="font-size: 0.85rem;">Netral</div>
+                </div>
+              </div>
+
+              <div class="mt-3 border-top pt-2">
+                <small class="text-muted fst-italic" style="font-size: 0.65rem; display:block; line-height: 1.3;">
+                  ⚠️ <strong>Disclaimer:</strong> Prediksi AI ini cuma untuk hiburan! Bisa salah total. Have fun! ✌️
                 </small>
               </div>
             </div>
@@ -528,14 +589,12 @@ const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Jul
   "November", "Desember"
 ];
 
-// Data lokasi kantor dari server
 const officeLocation = {
   lat: parseFloat(<?= json_encode($user_lokasi_presensi->latitude) ?>),
   lng: parseFloat(<?= json_encode($user_lokasi_presensi->longitude) ?>),
   radius: parseFloat(<?= json_encode($user_lokasi_presensi->radius) ?>)
 };
 
-// GPS State Management
 const gpsState = {
   in: {
     isDetecting: false,
@@ -578,9 +637,8 @@ function sanitizeText(text) {
   return text.replace(/[<>\"']/g, '');
 }
 
-// Hitung jarak menggunakan Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // Radius bumi dalam meter
+  const R = 6371000;
   const φ1 = lat1 * Math.PI / 180;
   const φ2 = lat2 * Math.PI / 180;
   const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -591,10 +649,9 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-  return R * c; // Jarak dalam meter
+  return R * c;
 }
 
-// Toggle Map Visibility
 function toggleMap(type) {
   const mapContainer = document.getElementById(`map-container-${type}`);
   const toggleText = document.getElementById(`map-toggle-text-${type}`);
@@ -614,9 +671,7 @@ function toggleMap(type) {
   }
 }
 
-// Initialize Leaflet Map dengan Dark Theme Support
 function getTileLayerUrl() {
-  // Check dark theme in real-time
   const isDark = document.documentElement.getAttribute('data-darkreader-scheme') === 'dark' ||
     localStorage.getItem('theme-preference') === 'dark';
 
@@ -629,21 +684,17 @@ function initializeMap(type) {
   const mapId = `map-${type}`;
   const mapContainer = document.getElementById(mapId);
 
-  // Cek apakah container sudah ada
   if (!mapContainer) {
     console.error(`Map container dengan ID '${mapId}' tidak ditemukan`);
     return;
   }
 
-  // Pastikan container visible
   if (mapContainer.offsetParent === null) {
     console.warn(`Map container '${mapId}' tidak visible atau hidden`);
   }
 
-  // Create map centered on office location
   gpsState[type].map = L.map(mapId).setView([officeLocation.lat, officeLocation.lng], 16);
 
-  // Add tile layer dengan theme detection
   const tileUrl = getTileLayerUrl();
   gpsState[type].tileLayer = L.tileLayer(tileUrl, {
     attribution: '© OpenStreetMap contributors &copy; CARTO',
@@ -652,8 +703,6 @@ function initializeMap(type) {
 
   gpsState[type].tileLayer.addTo(gpsState[type].map);
 
-
-  // Add office marker (blue)
   gpsState[type].officeMarker = L.marker([officeLocation.lat, officeLocation.lng], {
     icon: L.divIcon({
       className: 'custom-marker',
@@ -665,7 +714,6 @@ function initializeMap(type) {
 
   gpsState[type].officeMarker.bindPopup('<b>🏫 Lokasi Sekolah</b><br>Titik presensi').openPopup();
 
-  // Add radius circle (green, semi-transparent)
   gpsState[type].radiusCircle = L.circle([officeLocation.lat, officeLocation.lng], {
     color: '#198754',
     fillColor: '#198754',
@@ -675,12 +723,10 @@ function initializeMap(type) {
 
   gpsState[type].radiusCircle.bindPopup(`Radius presensi: ${officeLocation.radius} meter`);
 
-  // Add user marker if location already detected
   if (gpsState[type].currentLat && gpsState[type].currentLng) {
     updateUserMarker(type, gpsState[type].currentLat, gpsState[type].currentLng);
   }
 
-  // Fix map rendering issue
   setTimeout(() => {
     gpsState[type].map.invalidateSize();
   }, 100);
@@ -702,16 +748,13 @@ function updateMapTheme() {
   });
 }
 
-// Update user marker on map
 function updateUserMarker(type, lat, lng) {
   if (!gpsState[type].map) return;
 
-  // Remove old marker if exists
   if (gpsState[type].userMarker) {
     gpsState[type].map.removeLayer(gpsState[type].userMarker);
   }
 
-  // Add new user marker (red)
   gpsState[type].userMarker = L.marker([lat, lng], {
     icon: L.divIcon({
       className: 'custom-marker',
@@ -760,15 +803,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Mulai memantau tag <html>
   observer.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ['class', 'data-theme', 'data-bs-theme',
-      'data-darkreader-scheme'
-    ]
+    attributeFilter: ['class', 'data-theme', 'data-bs-theme', 'data-darkreader-scheme']
   });
 
-  // 2. Listener jika user mengubah settingan tema dari OS/Browser langsung
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateMapTheme);
 });
 
@@ -873,7 +912,6 @@ function updateLocationInfo(type, lat, lng, distance) {
   }
 }
 
-
 function initializeGPS(type) {
   if (gpsState[type].isDetecting) return;
 
@@ -928,20 +966,16 @@ function handleGPSSuccess(type, position, watchId) {
   if (latEl) latEl.value = lat.toFixed(8);
   if (lngEl) lngEl.value = lng.toFixed(8);
 
-  // Save current position
   gpsState[type].currentLat = lat;
   gpsState[type].currentLng = lng;
 
   gpsState[type].isReady = true;
   gpsState[type].accuracy = accuracy;
 
-  // Calculate distance
   const distance = calculateDistance(lat, lng, officeLocation.lat, officeLocation.lng);
 
-  // Update location info
   updateLocationInfo(type, lat, lng, distance);
 
-  // Update map if already initialized
   if (gpsState[type].map) {
     updateUserMarker(type, lat, lng);
   }
@@ -1039,7 +1073,6 @@ document.getElementById('form-keluar')?.addEventListener('submit', function(e) {
     return false;
   }
 
-  // Cek jam pulang juga (perbandingan string HH:MM:SS)
   const jamSekarang = new Date((Math.floor(Date.now() / 1000) + timeDiff) * 1000);
   const jamSekarangStr = String(jamSekarang.getHours()).padStart(2, '0') + ':' +
     String(jamSekarang.getMinutes()).padStart(2, '0') + ':' +

@@ -10,212 +10,634 @@ function sanitizeText(text) {
 function generateJoke(age, emotion, type) {
   const jokes = {
     in: [
+      // HAPPY - Masuk
       {
         e: "happy",
-        t: "Senyumnya cerah banget! Pasti PR udah kelar nih.",
+        t: "Senyumnya cerah banget! Semangat belajarnya kelihatan nih.",
         i: "😎",
       },
       {
         e: "happy",
-        t: "Bahagia amat, dapet uang saku tambahan ya?",
-        i: "🤑",
+        t: "Ceria amat pagi ini, pasti tidurnya nyenyak ya?",
+        i: "😊",
       },
       {
         e: "happy",
-        t: "Cieee yang semangat mau ketemu doi di kelas.",
-        i: "😍",
+        t: "Energy positif detected! Siap produktif hari ini.",
+        i: "⚡",
       },
       {
         e: "happy",
-        t: "Full senyum! Siap menghadapi pelajaran Matematika?",
-        i: "📐",
+        t: "Mantap! Vibes-nya udah siap ngegas belajar.",
+        i: "🚀",
       },
       {
         e: "happy",
-        t: "Vibes-nya positif banget, jangan lupa piket kelas ya.",
-        i: "🧹",
+        t: "Bahagia gini terus dong setiap hari!",
+        i: "✨",
+      },
+      {
+        e: "happy",
+        t: "Senyum pagi bikin hari makin indah!",
+        i: "🌟",
+      },
+      {
+        e: "happy",
+        t: "Full semangat! Ayo raih mimpi-mimpimu!",
+        i: "🎯",
+      },
+      {
+        e: "happy",
+        t: "Positive vibes! Siap jadi yang terbaik hari ini.",
+        i: "💪",
+      },
+      {
+        e: "happy",
+        t: "Cieee yang ceria, pasti ada kabar baik nih.",
+        i: "🎊",
+      },
+      {
+        e: "happy",
+        t: "Bahagia itu menular lho, keep smiling!",
+        i: "😄",
+      },
+      {
+        e: "happy",
+        t: "Mood bagus = Produktivitas tinggi. Gas terus!",
+        i: "🔥",
+      },
+      {
+        e: "happy",
+        t: "Senyum manis pagi hari, pasti hari ini beruntung!",
+        i: "🍀",
+      },
+
+      // ANGRY - Masuk
+      {
+        e: "angry",
+        t: "Waduh, take a deep breath dulu yuk. Semua pasti baik-baik aja.",
+        i: "🌬️",
       },
       {
         e: "angry",
-        t: "Waduh, pagi-pagi jangan emosi bestie, nanti cepet tua.",
-        i: "😤",
+        t: "Santai bestie, hari ini pasti lebih baik kok.",
+        i: "🙏",
       },
       {
         e: "angry",
-        t: "Muka ditekuk aja. Belum sarapan atau lupa ngerjain tugas?",
-        i: "🍜",
+        t: "Sabar ya, semua masalah ada solusinya.",
+        i: "💭",
       },
       {
         e: "angry",
-        t: "Sabar... Macet di jalan emang bikin darting.",
-        i: "🚗",
+        t: "Keep calm and stay positive!",
+        i: "✌️",
       },
       {
         e: "angry",
-        t: "Jangan galak-galak, nanti ditunjuk guru maju ke depan loh.",
-        i: "👩‍🏫",
+        t: "Jangan dibawa stres, nanti susah fokus belajarnya.",
+        i: "🧘",
       },
+      {
+        e: "angry",
+        t: "Hari yang berat? Tenang, kamu pasti bisa kok!",
+        i: "💪",
+      },
+      {
+        e: "angry",
+        t: "Tarik napas, hembuskan pelan. Better now?",
+        i: "🌈",
+      },
+      {
+        e: "angry",
+        t: "Sabar ya, masih pagi kok. Semoga harinya membaik!",
+        i: "☀️",
+      },
+
+      // SAD - Masuk
       {
         e: "sad",
-        t: "Jangan sad boy/sad girl gitu dong. Semangat belajarnya!",
+        t: "Jangan down gitu dong, semangat belajarnya!",
         i: "🥺",
       },
       {
         e: "sad",
-        t: "Ngantuk atau galau? Cuci muka dulu gih biar seger.",
-        i: "💧",
+        t: "Kamu hebat! Pasti bisa melewati hari ini.",
+        i: "💙",
       },
       {
         e: "sad",
-        t: "Tenang bestie, badai pasti berlalu (termasuk ulangan harian).",
+        t: "Tenang bestie, everything will be okay.",
         i: "🌈",
       },
       {
         e: "sad",
-        t: "Kenapa murung? Topi dasi lengkap kan? Aman kok.",
-        i: "🎩",
+        t: "Cuaca mendung? Hati jangan ikutan mendung ya!",
+        i: "⛅",
+      },
+      {
+        e: "sad",
+        t: "Semangat! Setiap hari adalah kesempatan baru.",
+        i: "🌅",
+      },
+      {
+        e: "sad",
+        t: "Jangan sedih, kamu nggak sendiri kok!",
+        i: "🤗",
+      },
+      {
+        e: "sad",
+        t: "Tough times don't last, tough people do!",
+        i: "💪",
+      },
+      {
+        e: "sad",
+        t: "Senyum dulu, nanti juga ketawa sendiri.",
+        i: "😊",
+      },
+      {
+        e: "sad",
+        t: "Bad day doesn't mean bad life. Keep going!",
+        i: "🚶",
+      },
+      {
+        e: "sad",
+        t: "Setiap masalah pasti ada jalan keluarnya.",
+        i: "🛤️",
+      },
+
+      // NEUTRAL - Masuk
+      {
+        e: "neutral",
+        t: "Mode fokus: ON. Mantap!",
+        i: "🎯",
       },
       {
         e: "neutral",
-        t: "Mode serius: ON. Fokus banget nih kayaknya.",
+        t: "Chill aja ya, santai tapi pasti.",
+        i: "😌",
+      },
+      {
+        e: "neutral",
+        t: "Standar mode activated. Ayo gas belajarnya!",
+        i: "📚",
+      },
+      {
+        e: "neutral",
+        t: "Calm and composed. Good energy!",
+        i: "🧘",
+      },
+      {
+        e: "neutral",
+        t: "Kalem banget, siap konsentrasi penuh nih.",
+        i: "🎧",
+      },
+      {
+        e: "neutral",
+        t: "Santai tapi serius. Balance is key!",
+        i: "⚖️",
+      },
+      {
+        e: "neutral",
+        t: "Flat face but big brain. Let's go!",
+        i: "🧠",
+      },
+      {
+        e: "neutral",
+        t: "Poker face mode. Siap menghadapi apa aja.",
         i: "😐",
       },
       {
         e: "neutral",
-        t: "Nyawanya belum kumpul semua ya? Ngopi dulu di kantin.",
-        i: "☕",
+        t: "Tenang, dalam, fokus. Itu kuncinya!",
+        i: "🔑",
       },
+
+      // SURPRISED - Masuk
       {
-        e: "neutral",
-        t: "Datar amat mukanya, kayak tanggal tua.",
-        i: "📅",
-      },
-      {
-        e: "neutral",
-        t: "Santai bro, hari ini jamkos (semoga).",
-        i: "🤞",
+        e: "surprised",
+        t: "Woah! Ada apa nih?",
+        i: "😲",
       },
       {
         e: "surprised",
-        t: "Kaget kenapa? Lupa bawa buku paket?",
-        i: "📚",
+        t: "Kaget kenapa? Tenang, semua aman kok!",
+        i: "🤭",
       },
       {
         e: "surprised",
-        t: "Melotot gitu liat apa? Ada razia rambut ya?",
-        i: "💇",
+        t: "Shock therapy pagi hari? Hehe.",
+        i: "⚡",
+      },
+      {
+        e: "surprised",
+        t: "Plot twist pagi ini ya? Stay calm!",
+        i: "🎬",
+      },
+      {
+        e: "surprised",
+        t: "Mata melotot gitu, dapat kabar apa nih?",
+        i: "👀",
+      },
+      {
+        e: "surprised",
+        t: "Surprised but make it positive vibes!",
+        i: "✨",
+      },
+
+      // FEAR - Masuk
+      {
+        e: "fear",
+        t: "Jangan nervous, kamu pasti bisa!",
+        i: "💪",
       },
       {
         e: "fear",
-        t: "Tegang amat, belum ngerjain PR ya?",
-        i: "📝",
+        t: "Take it easy, satu langkah demi satu langkah.",
+        i: "👣",
       },
       {
         e: "fear",
-        t: "Jangan takut, guru killer hari ini rapat kok (mungkin).",
-        i: "🤫",
+        t: "Tegang? Deep breath, you got this!",
+        i: "🌬️",
+      },
+      {
+        e: "fear",
+        t: "Jangan worry, semua akan baik-baik saja.",
+        i: "🙏",
+      },
+      {
+        e: "fear",
+        t: "Percaya diri! Kamu lebih hebat dari yang kamu kira.",
+        i: "⭐",
+      },
+      {
+        e: "fear",
+        t: "Nervous is normal, tapi jangan sampe lupa napas ya!",
+        i: "😅",
+      },
+
+      // ANY - Masuk (Universal)
+      {
+        e: "any",
+        t: "Selamat pagi! Semoga harimu menyenangkan.",
+        i: "🌅",
       },
       {
         e: "any",
-        t: "Selamat Pagi! Jangan lupa berdoa sebelum belajar.",
+        t: "Good morning! Ready to learn something new?",
+        i: "📖",
+      },
+      {
+        e: "any",
+        t: "Pagi yang indah untuk belajar!",
+        i: "☀️",
+      },
+      {
+        e: "any",
+        t: "Selamat datang! Ayo mulai hari dengan semangat.",
+        i: "🎉",
+      },
+      {
+        e: "any",
+        t: "Hi! Jangan lupa senyum hari ini ya.",
+        i: "😊",
+      },
+      {
+        e: "any",
+        t: "Yuk masuk! Ilmu menanti untuk dipelajari.",
+        i: "🎓",
+      },
+      {
+        e: "any",
+        t: "Hadir tepat waktu! Good job!",
+        i: "⏰",
+      },
+      {
+        e: "any",
+        t: "Welcome! Siap jadi versi terbaik hari ini?",
+        i: "🌟",
+      },
+      {
+        e: "any",
+        t: "Pagi! Jangan lupa sarapan dan minum air ya.",
+        i: "🥤",
+      },
+      {
+        e: "any",
+        t: "Selamat belajar! Semoga ilmunya berkah.",
         i: "🙏",
       },
       {
         e: "any",
-        t: "Gas masuk kelas! Keburu bel bunyi.",
-        i: "🔔",
+        t: "Ayo masuk! Masa depan cerah menanti.",
+        i: "🌈",
+      },
+      {
+        e: "any",
+        t: "Semangat! Setiap hari adalah kesempatan baru.",
+        i: "💫",
+      },
+      {
+        e: "any",
+        t: "Hai! Sudah siap belajar hari ini?",
+        i: "✅",
+      },
+      {
+        e: "any",
+        t: "Good vibes only! Let's make today count.",
+        i: "✨",
+      },
+      {
+        e: "any",
+        t: "Selamat pagi! Jangan lupa berdoa sebelum belajar.",
+        i: "🤲",
       },
     ],
+
     out: [
+      // HAPPY - Pulang
       {
         e: "happy",
-        t: "Akhirnya bel surga berbunyi! Hati-hati di jalan.",
+        t: "Akhirnya pulang! Hati-hati di jalan ya.",
         i: "🎉",
       },
       {
         e: "happy",
-        t: "Senyum kemenangan setelah seharian belajar.",
+        t: "Senyum kemenangan! Hari yang produktif!",
         i: "🏆",
       },
       {
         e: "happy",
-        t: "Bahagia banget mau nongkrong atau mau tidur?",
-        i: "💤",
+        t: "Happy ending! Selamat beristirahat.",
+        i: "😊",
       },
       {
         e: "happy",
-        t: "Pulang! Saatnya push rank atau drakoran.",
-        i: "🎮",
+        t: "Bahagia banget, pasti hari ini menyenangkan!",
+        i: "💕",
       },
       {
         e: "happy",
-        t: "Full senyum, pasti nggak ada PR buat besok.",
-        i: "✨",
+        t: "Good job today! Time to relax.",
+        i: "🌟",
       },
       {
-        e: "angry",
-        t: "Capek ya? Jangan marah-marah, mending beli seblak.",
-        i: "🔥",
+        e: "happy",
+        t: "Pulang dengan senyuman, besok semangat lagi!",
+        i: "😄",
       },
       {
-        e: "angry",
-        t: "Kusut amat. Motor bensinnya abis?",
-        i: "⛽",
-      },
-      {
-        e: "angry",
-        t: "Sabar bestie, besok libur (kalau hari Sabtu).",
-        i: "📅",
-      },
-      {
-        e: "sad",
-        t: "Lelah letih lesu? Kasur di rumah sudah memanggil.",
-        i: "🛌",
-      },
-      {
-        e: "sad",
-        t: "Jangan sedih, besok ketemu doi lagi kok.",
+        e: "happy",
+        t: "Ceria terus! Sampai jumpa besok.",
         i: "👋",
       },
       {
-        e: "sad",
-        t: "Tugas numpuk? Nangis bentar, abis itu kerjain.",
+        e: "happy",
+        t: "Sukses hari ini! Besok lebih sukses lagi.",
+        i: "📈",
+      },
+      {
+        e: "happy",
+        t: "Full happiness! Keep that energy!",
+        i: "⚡",
+      },
+      {
+        e: "happy",
+        t: "Senang banget, pasti dapat nilai bagus ya?",
+        i: "💯",
+      },
+
+      // ANGRY - Pulang
+      {
+        e: "angry",
+        t: "Hari yang berat ya? Istirahat yang cukup!",
+        i: "😌",
+      },
+      {
+        e: "angry",
+        t: "Sabar ya, besok pasti lebih baik.",
+        i: "🌈",
+      },
+      {
+        e: "angry",
+        t: "Take a break, refresh your mind!",
+        i: "🧘",
+      },
+      {
+        e: "angry",
+        t: "Udah capek? Pulang, istirahat, reset!",
+        i: "🔄",
+      },
+      {
+        e: "angry",
+        t: "Tomorrow is a new day. Stay strong!",
         i: "💪",
       },
       {
-        e: "neutral",
-        t: "Muka lelah tapi lega. Bye-bye sekolah!",
-        i: "🏫",
-      },
-      {
-        e: "neutral",
-        t: "Otw pulang. Jangan mampir-mampir kalau belum izin ortu.",
+        e: "angry",
+        t: "Santai dulu di rumah, besok semangat lagi!",
         i: "🏠",
       },
+
+      // SAD - Pulang
+      {
+        e: "sad",
+        t: "Semoga besok lebih baik ya. Keep fighting!",
+        i: "💙",
+      },
+      {
+        e: "sad",
+        t: "Istirahat yang cukup, besok pasti lebih baik.",
+        i: "😊",
+      },
+      {
+        e: "sad",
+        t: "Jangan sedih, kamu sudah hebat hari ini!",
+        i: "⭐",
+      },
+      {
+        e: "sad",
+        t: "Tough day? Tomorrow will be better!",
+        i: "🌅",
+      },
+      {
+        e: "sad",
+        t: "Pulang dulu, charge energy, besok gas lagi!",
+        i: "🔋",
+      },
+      {
+        e: "sad",
+        t: "It's okay to have bad days. Rest well!",
+        i: "🤗",
+      },
+      {
+        e: "sad",
+        t: "Jangan down, besok kesempatan baru menanti!",
+        i: "🌟",
+      },
+      {
+        e: "sad",
+        t: "Semangat! Setiap akhir adalah awal yang baru.",
+        i: "🎯",
+      },
+
+      // NEUTRAL - Pulang
       {
         e: "neutral",
-        t: "Flat banget, butuh healing secepatnya.",
-        i: "🌴",
+        t: "Hari yang standar. See you tomorrow!",
+        i: "👋",
+      },
+      {
+        e: "neutral",
+        t: "Pulang dulu, besok semangat lagi!",
+        i: "🚶",
+      },
+      {
+        e: "neutral",
+        t: "Chill aja. Sampai jumpa besok!",
+        i: "😌",
+      },
+      {
+        e: "neutral",
+        t: "Another day done. Good job!",
+        i: "✅",
+      },
+      {
+        e: "neutral",
+        t: "Selesai sudah. Waktunya istirahat.",
+        i: "⏰",
+      },
+      {
+        e: "neutral",
+        t: "Flat but fine. Rest well!",
+        i: "😐",
+      },
+      {
+        e: "neutral",
+        t: "Hari biasa, hasil luar biasa. Mantap!",
+        i: "👍",
+      },
+
+      // SURPRISED - Pulang
+      {
+        e: "surprised",
+        t: "Woah! Apa yang terjadi hari ini?",
+        i: "😲",
       },
       {
         e: "surprised",
-        t: "Baru sadar kalau besok ulangan harian?",
-        i: "📖",
+        t: "Surprise ending! Cerita dong besok!",
+        i: "🎬",
+      },
+      {
+        e: "surprised",
+        t: "Kaget kenapa? Semoga kabar baik ya!",
+        i: "✨",
+      },
+      {
+        e: "surprised",
+        t: "Plot twist di akhir hari? Interesting!",
+        i: "🤔",
+      },
+
+      // FEAR - Pulang
+      {
+        e: "fear",
+        t: "Santai, sudah waktunya pulang kok. Aman!",
+        i: "🏠",
       },
       {
         e: "fear",
-        t: "Buru-buru amat, takut dicariin emak?",
-        i: "🏃",
+        t: "Jangan khawatir, besok pasti bisa!",
+        i: "💪",
+      },
+      {
+        e: "fear",
+        t: "Take it easy, everything will be fine!",
+        i: "🌈",
+      },
+      {
+        e: "fear",
+        t: "Nervous? Istirahat dulu, besok lebih siap!",
+        i: "😌",
+      },
+
+      // ANY - Pulang (Universal)
+      {
+        e: "any",
+        t: "Terima kasih sudah belajar hari ini!",
+        i: "🙏",
       },
       {
         e: "any",
-        t: "Terima kasih sudah belajar hari ini! Safe trip home.",
+        t: "Selamat sore! Hati-hati di jalan ya.",
         i: "🛵",
       },
       {
         e: "any",
-        t: "Langsung pulang ya, jangan tawuran!",
-        i: "☮️",
+        t: "Good job today! See you tomorrow.",
+        i: "👋",
+      },
+      {
+        e: "any",
+        t: "Sampai jumpa! Istirahat yang cukup ya.",
+        i: "😊",
+      },
+      {
+        e: "any",
+        t: "Pulang dengan selamat! Sampai besok.",
+        i: "🏠",
+      },
+      {
+        e: "any",
+        t: "Great effort today! Rest well.",
+        i: "⭐",
+      },
+      {
+        e: "any",
+        t: "Selamat beristirahat! Besok ketemu lagi.",
+        i: "💤",
+      },
+      {
+        e: "any",
+        t: "Hari yang produktif! Proud of you.",
+        i: "🎯",
+      },
+      {
+        e: "any",
+        t: "Time to go home! Stay safe.",
+        i: "🚸",
+      },
+      {
+        e: "any",
+        t: "Jangan lupa review pelajaran hari ini ya!",
+        i: "📚",
+      },
+      {
+        e: "any",
+        t: "Selamat jalan! Jaga kesehatan.",
+        i: "💊",
+      },
+      {
+        e: "any",
+        t: "Bye! Semoga mimpi indah nanti malam.",
+        i: "🌙",
+      },
+      {
+        e: "any",
+        t: "Sudah waktunya pulang. Be safe!",
+        i: "✌️",
+      },
+      {
+        e: "any",
+        t: "Hari ini selesai, besok lebih baik!",
+        i: "🌅",
+      },
+      {
+        e: "any",
+        t: "Well done! Recharge and come back stronger.",
+        i: "🔋",
       },
     ],
   }

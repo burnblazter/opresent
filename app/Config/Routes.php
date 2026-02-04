@@ -9,11 +9,11 @@ use CodeIgniter\Router\RouteCollection;
 // ============================================================================
 // HOME & DASHBOARD
 // ============================================================================
-$routes->get('/', 'Home::index', ['filter' => 'role:admin,pegawai']);
+$routes->get('/', 'Home::index', ['filter' => 'role:admin,pegawai,helper']);
 $routes->post('/waktu', 'Home::getWaktu');
 $routes->get('/waktu', fn() => redirect()->to('/'));
 
-$routes->get('/admin', 'Admin::index', ['filter' => 'role:admin,head']);
+$routes->get('/admin', 'Admin::index', ['filter' => 'role:admin,head,helper']);
 
 // ============================================================================
 // JABATAN
@@ -41,25 +41,25 @@ $routes->get('/cari-lokasi', 'LokasiPresensi::pencarianLokasi', ['filter' => 'ro
 // ============================================================================
 // DATA PEGAWAI
 // ============================================================================
-$routes->get('/data-pegawai', 'Pegawai::index', ['filter' => 'role:admin,head']);
-$routes->get('/tambah-data-pegawai', 'Pegawai::add', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/store', 'Pegawai::store', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/update', 'Pegawai::update', ['filter' => 'role:admin,head']);
-$routes->delete('/data-pegawai/(:num)', 'Pegawai::delete/$1', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/bulk-delete', 'Pegawai::bulkDelete', ['filter' => 'role:admin,head']);
-$routes->get('/data-pegawai/edit/(:segment)', 'Pegawai::edit/$1', ['filter' => 'role:admin,head']);
-$routes->get('/data-pegawai/download-template', 'Pegawai::downloadTemplate', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/import-excel', 'Pegawai::importExcel', ['filter' => 'role:admin,head']);
+$routes->get('/data-pegawai', 'Pegawai::index', ['filter' => 'role:admin,head,helper']);
+$routes->get('/tambah-data-pegawai', 'Pegawai::add', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/store', 'Pegawai::store', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/update', 'Pegawai::update', ['filter' => 'role:admin,head,helper']);
+$routes->delete('/data-pegawai/(:num)', 'Pegawai::delete', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/bulk-delete', 'Pegawai::bulkDelete', ['filter' => 'role:admin,head,helper']);
+$routes->get('/data-pegawai/edit/(:segment)', 'Pegawai::edit/$1', ['filter' => 'role:admin,head,helper']);
+$routes->get('/data-pegawai/download-template', 'Pegawai::downloadTemplate', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/import-excel', 'Pegawai::importExcel', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/reset-password', 'Pegawai::resetPassword', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/excel', 'Pegawai::dataPegawaiExcel', ['filter' => 'role:admin,head']);
-$routes->get('/data-pegawai/manage-face-descriptors/(:num)', 'Pegawai::manageFaceDescriptors/$1', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/save-face-descriptor', 'Pegawai::saveFaceDescriptor', ['filter' => 'role:admin,head']);
-$routes->post('/data-pegawai/update-descriptor-label', 'Pegawai::updateDescriptorLabel', ['filter' => 'role:admin,head']);
-$routes->get('/data-pegawai/delete-descriptor/(:num)', 'Pegawai::deleteDescriptor/$1', ['filter' => 'role:admin,head']);
-$routes->get('/data-pegawai/(:segment)', 'Pegawai::detail/$1', ['filter' => 'role:admin,head']);
+$routes->post('/data-pegawai/excel', 'Pegawai::dataPegawaiExcel', ['filter' => 'role:admin,head,helper']);
+$routes->get('/data-pegawai/manage-face-descriptors/(:num)', 'Pegawai::manageFaceDescriptors/$1', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/save-face-descriptor', 'Pegawai::saveFaceDescriptor', ['filter' => 'role:admin,head,helper']);
+$routes->post('/data-pegawai/update-descriptor-label', 'Pegawai::updateDescriptorLabel', ['filter' => 'role:admin,head,helper']);
+$routes->get('/data-pegawai/delete-descriptor/(:num)', 'Pegawai::deleteDescriptor/$1', ['filter' => 'role:admin,head,helper']);
+$routes->get('/data-pegawai/(:segment)', 'Pegawai::detail/$1', ['filter' => 'role:admin,head,helper']);
 
-$routes->get('/cari-pegawai', 'Pegawai::pencarianPegawai', ['filter' => 'role:admin,head']);
-$routes->post('/hapus-foto/(:segment)', 'Pegawai::hapusFoto/$1', ['filter' => 'role:admin,head']);
+$routes->get('/cari-pegawai', 'Pegawai::pencarianPegawai', ['filter' => 'role:admin,head,helper']);
+$routes->post('/hapus-foto/(:segment)', 'Pegawai::hapusFoto/$1', ['filter' => 'role:admin,head,helper']);
 
 // ============================================================================
 // PRESENSI
@@ -70,8 +70,8 @@ $routes->post('/presensi-masuk/simpan', 'Presensi::simpanPresensiMasuk');
 $routes->post('/presensi-keluar', 'Presensi::presensiKeluar');
 $routes->post('/presensi-keluar/simpan', 'Presensi::simpanPresensiKeluar');
 
-$routes->get('/rekap-presensi', 'Presensi::rekapPresensiPegawai', ['filter' => 'role:admin,pegawai']);
-$routes->post('/rekap-presensi/excel', 'Presensi::rekapPresensiPegawaiExcel', ['filter' => 'role:admin,pegawai']);
+$routes->get('/rekap-presensi', 'Presensi::rekapPresensiPegawai', ['filter' => 'role:admin,pegawai,helper']);
+$routes->post('/rekap-presensi/excel', 'Presensi::rekapPresensiPegawaiExcel', ['filter' => 'role:admin,pegawai,helper']);
 
 $routes->get('/laporan-presensi-harian', 'Presensi::laporanHarian', ['filter' => 'role:admin,head']);
 $routes->post('/laporan-presensi-harian/excel', 'Presensi::laporanHarianExcel', ['filter' => 'role:admin,head']);
@@ -90,25 +90,25 @@ $routes->delete('/ketidakhadiran/(:num)', 'Ketidakhadiran::delete/$1', ['filter'
 $routes->post('/ketidakhadiran/excel', 'Ketidakhadiran::dataKetidakhadiranExcel', ['filter' => 'role:admin,pegawai']);
 $routes->get('/cari-ketidakhadiran', 'Ketidakhadiran::pencarianKetidakhadiranPegawai', ['filter' => 'role:admin,pegawai']);
 
-// HEAD
-$routes->get('/kelola-ketidakhadiran', 'Ketidakhadiran::kelolaKetidakhadiran', ['filter' => 'role:head,admin']);
-$routes->get('/kelola-ketidakhadiran/(:num)', 'Ketidakhadiran::kelolaKetidakhadiranAksi/$1', ['filter' => 'role:head,admin']);
-$routes->post('/kelola-ketidakhadiran/store', 'Ketidakhadiran::updateStatusKetidakhadiran', ['filter' => 'role:head,admin']);
-$routes->post('/kelola-ketidakhadiran/update-file', 'Ketidakhadiran::updateFileKetidakhadiran', ['filter' => 'role:head,admin']);
-$routes->post('/kelola-ketidakhadiran/excel', 'Ketidakhadiran::kelolaKetidakhadiranExcel', ['filter' => 'role:head,admin']);
+// HEAD - Kelola Ketidakhadiran (hanya HEAD yang bisa approve/reject)
+$routes->get('/kelola-ketidakhadiran', 'Ketidakhadiran::kelolaKetidakhadiran', ['filter' => 'role:head']);
+$routes->get('/kelola-ketidakhadiran/(:num)', 'Ketidakhadiran::kelolaKetidakhadiranAksi/$1', ['filter' => 'role:head']);
+$routes->post('/kelola-ketidakhadiran/store', 'Ketidakhadiran::updateStatusKetidakhadiran', ['filter' => 'role:head']);
+$routes->post('/kelola-ketidakhadiran/update-file', 'Ketidakhadiran::updateFileKetidakhadiran', ['filter' => 'role:head']);
+$routes->post('/kelola-ketidakhadiran/excel', 'Ketidakhadiran::kelolaKetidakhadiranExcel', ['filter' => 'role:head']);
 $routes->get('/cari-data-ketidakhadiran', 'Ketidakhadiran::pencarianDataKetidakhadiran', ['filter' => 'role:head']);
 
 // ============================================================================
-// HARI LIBUR
+// HARI LIBUR (hanya ADMIN dan HEAD)
 // ============================================================================
 $routes->get('/hari-libur', 'HariLibur::index', ['filter' => 'role:admin,head']);
 $routes->get('/hari-libur/tambah', 'HariLibur::tambah', ['filter' => 'role:admin,head']);
 $routes->get('/hari-libur/sync-api', 'HariLibur::syncFromAPI', ['filter' => 'role:admin,head']);
 $routes->post('/hari-libur/simpan', 'HariLibur::simpan', ['filter' => 'role:admin,head']);
-$routes->post('/hari-libur/approve/(:num)', 'HariLibur::approve/$1', ['filter' => 'role:admin,head']);
-$routes->post('/hari-libur/approve-all', 'HariLibur::approveAll', ['filter' => 'role:admin,head']);
-$routes->post('/hari-libur/reject-all', 'HariLibur::rejectAll', ['filter' => 'role:admin,head']);
-$routes->delete('/hari-libur/hapus/(:num)', 'HariLibur::hapus/$1', ['filter' => 'role:admin,head']);
+$routes->post('/hari-libur/approve/(:num)', 'HariLibur::approve/$1', ['filter' => 'role:head']);
+$routes->post('/hari-libur/approve-all', 'HariLibur::approveAll', ['filter' => 'role:head']);
+$routes->post('/hari-libur/reject-all', 'HariLibur::rejectAll', ['filter' => 'role:head']);
+$routes->delete('/hari-libur/hapus/(:num)', 'HariLibur::hapus/$1', ['filter' => 'role:head']);
 
 // ============================================================================
 // USER PROFILE & ACCOUNT
@@ -128,16 +128,16 @@ $routes->get('/activate-account', 'Activation::activateAccount');
 $routes->post('/activate-account', 'Activation::attemptActivate');
 
 // ============================================================================
-// FILE MANAGER
+// FILE MANAGER (hanya ADMIN dan HEAD)
 // ============================================================================
 $routes->get('/file-manager', 'FileManager::index', ['filter' => 'role:admin,head']);
 $routes->get('/file-manager/browse', 'FileManager::browse', ['filter' => 'role:admin,head']);
 $routes->get('/file-manager/download', 'FileManager::download', ['filter' => 'role:admin,head']);
 $routes->get('/file-manager/preview', 'FileManager::preview', ['filter' => 'role:admin,head']);
-$routes->get('/file-manager/run-cleanup', 'FileManager::runCleanup', ['filter' => 'role:admin,head']);
+$routes->get('/file-manager/run-cleanup', 'FileManager::runCleanup', ['filter' => 'role:head']);
 $routes->post('/file-manager/download-bulk', 'FileManager::downloadBulk', ['filter' => 'role:admin,head']);
-$routes->post('/file-manager/delete-bulk', 'FileManager::deleteBulk', ['filter' => 'role:admin,head']);
-$routes->post('/file-manager/update-settings', 'FileManager::updateSettings', ['filter' => 'role:admin,head']);
+$routes->post('/file-manager/delete-bulk', 'FileManager::deleteBulk', ['filter' => 'role:head']);
+$routes->post('/file-manager/update-settings', 'FileManager::updateSettings', ['filter' => 'role:head']);
 $routes->post('/file-manager/upload-logo', 'FileManager::uploadLogo', ['filter' => 'role:admin,head']);
 
 // ============================================================================

@@ -13,15 +13,7 @@
             <h3 class="m-0 mb-1"><?= $user_profile->nama ?></h3>
             <div class="text-muted"><?= $user_profile->jabatan ?></div>
             <div class="mt-3">
-              <span class="badge <?php
-                                                if ($user_profile->role === 'admin') {
-                                                    echo 'bg-green-lt';
-                                                } else if ($user_profile->role === 'head') {
-                                                    echo 'bg-purple-lt';
-                                                } else {
-                                                    echo 'bg-blue-lt';
-                                                } ?>">
-                <?= $user_profile->role; ?></span>
+              <?= role_badge_html($user_profile->role ?? 'user') ?>
             </div>
           </div>
           <div class="d-flex">

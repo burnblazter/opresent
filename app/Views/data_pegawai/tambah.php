@@ -162,17 +162,24 @@
                   <option value="">---Pilih Role---</option>
                   <?php if (!empty($role)) : ?>
                   <?php foreach ($role as $role_option) : ?>
-                  <option value="<?= $role_option['id'] ?>" <?= old('role') === $role_option['id'] ? 'selected' : '' ?>>
-                    <?= $role_option['name'] ?></option>
+                  <option value="<?= $role_option['id'] ?>"
+                    <?= (old('role') == $role_option['id'] || (!old('role') && $role_option['id'] == 3)) ? 'selected' : '' ?>>
+                    <?= $role_option['name'] ?>
+                  </option>
                   <?php endforeach; ?>
                   <?php else : ?>
                   <option value="">Tidak ada pilihan role</option>
                   <?php endif; ?>
                 </select>
+
                 <?php if (validation_show_error('role')) : ?>
                 <div class="invalid-feedback">
                   <?= validation_show_error('role') ?>
                 </div>
+                <?php else: ?>
+                <small class="form-hint text-danger">
+                  ⚠ Default diset Pegawai. Hati-hati mengubah ini karena akses sistem berbahaya.
+                </small>
                 <?php endif; ?>
               </div>
               <div class="mb-3 w-100">

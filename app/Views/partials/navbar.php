@@ -7,7 +7,6 @@
           <li class="nav-item <?= $title === 'Home' ? 'active' : '' ?>">
             <a class="nav-link <?= $title === 'Home' ? 'active' : '' ?>" href="<?= base_url() ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/home -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                   <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -22,13 +21,13 @@
             </a>
           </li>
           <?php endif; ?>
-          <?php if (in_groups('admin') || in_groups('head')) : ?>
+
+          <?php if (in_groups('admin') || in_groups('head') || in_groups('helper')) : ?>
           <li
             class="nav-item dropdown <?= ($title === 'Dashboard' || $title === 'Data Pengguna' || $title === 'Data Unit' || $title === 'Data Lokasi Presensi' || $title === 'Laporan Presensi Harian' || $title === 'Laporan Presensi Bulanan') ? 'active' : '' ?>">
             <a class="nav-link dropdown-toggle" href="<?= base_url('/admin') ?>" data-bs-toggle="dropdown"
               data-bs-auto-close="outside" role="button" aria-expanded="false">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/package -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-hexagon" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -50,8 +49,17 @@
                     href="<?= base_url('/admin') ?>">
                     Dashboard
                   </a>
+
+                  <?php if (in_groups('helper')) : ?>
+                  <!-- Menu khusus Helper: hanya Data Pengguna -->
+                  <a href="<?= base_url('/data-pegawai') ?>"
+                    class="dropdown-item <?= $title === 'Data Pengguna' ? 'active' : '' ?>">
+                    Data Pengguna
+                  </a>
+                  <?php else : ?>
+                  <!-- Menu untuk Admin dan Head: Full Master Data -->
                   <div class="dropend">
-                    <a class="dropdown-item dropdown-toggle <?= $title === 'Data Unit' || $title === 'Data Lokasi Presensi' || $title === 'Data pengguna' ? 'active' : '' ?>"
+                    <a class="dropdown-item dropdown-toggle <?= $title === 'Data Unit' || $title === 'Data Lokasi Presensi' || $title === 'Data pengguna' || $title === 'Data Hari Libur' ? 'active' : '' ?>"
                       href="<?= base_url('/data-pegawai') ?>" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                       role="button" aria-expanded="false">
                       Master Data
@@ -71,6 +79,7 @@
                       </a>
                     </div>
                   </div>
+
                   <div class="dropend">
                     <a class="dropdown-item dropdown-toggle <?= $title === 'Laporan Presensi Harian' || $title === 'Laporan Presensi Bulanan' ? 'active' : '' ?>"
                       href="<?= base_url('/laporan-presensi-harian') ?>" data-bs-toggle="dropdown"
@@ -86,15 +95,17 @@
                       </a>
                     </div>
                   </div>
+                  <?php endif; ?>
                 </div>
               </div>
+            </div>
           </li>
           <?php endif; ?>
-          <?php if (!in_groups('head')) : ?>
+
+          <?php if (!in_groups('head') && !in_groups('helper')) : ?>
           <li class="nav-item <?= $title === 'Rekap Presensi' ? 'active' : '' ?>">
             <a class="nav-link" href="<?= base_url('rekap-presensi') ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/home -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clipboard-list" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -113,11 +124,11 @@
             </a>
           </li>
           <?php endif; ?>
+
+          <?php if (!in_groups('head') && !in_groups('helper')) : ?>
           <li class="nav-item <?= $title === 'Ketidakhadiran' ? 'active' : '' ?>">
-            <?php if (!in_groups('head')) : ?>
             <a class="nav-link" href="<?= base_url('/ketidakhadiran') ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/checkbox -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-x" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -132,13 +143,13 @@
                 Ketidakhadiran
               </span>
             </a>
-            <?php endif; ?>
           </li>
+          <?php endif; ?>
+
+          <?php if (in_groups('head')) : ?>
           <li class="nav-item <?= $title === 'Kelola Ketidakhadiran' ? 'active' : '' ?>">
-            <?php if (in_groups('head')) : ?>
             <a class="nav-link" href="<?= base_url('/kelola-ketidakhadiran') ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/checkbox -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-x" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -153,12 +164,13 @@
                 Ketidakhadiran
               </span>
             </a>
-            <?php endif; ?>
-            <?php if (in_groups('admin') || in_groups('head')) : ?>
+          </li>
+          <?php endif; ?>
+
+          <?php if (in_groups('admin') || in_groups('head')) : ?>
           <li class="nav-item <?= $title === 'File Manager' ? 'active' : '' ?>">
             <a class="nav-link" href="<?= base_url('file-manager') ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- icon folder -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-folder" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -172,11 +184,10 @@
             </a>
           </li>
           <?php endif; ?>
-          </li>
+
           <li class="nav-item">
             <a class="nav-link" href="<?= base_url('logout') ?>" data-bs-toggle="modal" data-bs-target="#logout-modal">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
-                <!-- Download SVG icon from http://tabler-icons.io/i/checkbox -->
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-logout" width="24"
                   height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
                   stroke-linecap="round" stroke-linejoin="round">

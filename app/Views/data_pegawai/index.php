@@ -469,18 +469,7 @@
                   <span class="text-muted"><?= $pegawai->jabatan ?></span>
                 </td>
                 <td>
-                  <span class="badge badge-role 
-                    <?php
-                    if ($pegawai->role === 'admin') {
-                        echo 'bg-green-lt text-green';
-                    } else if ($pegawai->role === 'head') {
-                        echo 'bg-purple-lt text-purple';
-                    } else {
-                        echo 'bg-blue-lt text-blue';
-                    }
-                    ?>">
-                    <?= ucfirst($pegawai->role) ?>
-                  </span>
+                  <?= role_badge_html($pegawai->role ?? 'user') ?>
                 </td>
                 <td>
                   <?php if ($pegawai->active == 0) : ?>

@@ -470,3 +470,110 @@ html {
   margin: 0;
   padding: 0;
 }
+
+/* ============================================
+   14. ROLE BADGE
+   ============================================ */
+
+.badge {
+  padding: 0.5em 1em;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+/* Administrator - Red/Purple Gradient */
+.badge-gradient-danger {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(102, 126, 234, 0.4);
+}
+
+.badge-gradient-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(102, 126, 234, 0.5);
+}
+
+/* Kepala Divisi - Pink/Red Gradient */
+.badge-gradient-purple {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(240, 147, 251, 0.4);
+}
+
+.badge-gradient-purple:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(240, 147, 251, 0.5);
+}
+
+/* Presensi/Pegawai - Blue Gradient */
+.badge-gradient-primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(79, 172, 254, 0.4);
+}
+
+.badge-gradient-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(79, 172, 254, 0.5);
+}
+
+/* User - Green/Cyan Gradient */
+.badge-gradient-info {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(67, 233, 123, 0.4);
+}
+
+.badge-gradient-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(67, 233, 123, 0.5);
+}
+
+/* Manager - Orange/Yellow Gradient */
+.badge-gradient-warning {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: white;
+  box-shadow: 0 4px 10px rgba(250, 112, 154, 0.4);
+}
+
+.badge-gradient-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(250, 112, 154, 0.5);
+}
+
+/* Guest - Soft Pastel */
+.badge-gradient-secondary {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #333;
+  box-shadow: 0 4px 10px rgba(168, 237, 234, 0.3);
+}
+
+.badge-gradient-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(168, 237, 234, 0.4);
+}
+
+/* Icon di dalam badge */
+.badge i {
+  font-size: 1em;
+}
+
+/* Animasi pulse untuk active badge */
+@keyframes badge-pulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 10px rgba(79, 172, 254, 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 20px rgba(79, 172, 254, 0.6);
+  }
+}
+
+.badge-gradient-primary.active {
+  animation: badge-pulse 2s infinite;
+}

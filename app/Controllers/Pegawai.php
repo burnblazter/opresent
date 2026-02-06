@@ -57,6 +57,35 @@ public function index(): string
         ];
 
         $pegawaiData = $this->pegawaiModel->getPegawai(false, $filter, false, $limit);
+        // Logika untuk mengambil jumlah descriptor wajah
+        $list_pegawai = $pegawaiData['pegawai'];
+        $pegawaiIds = [];
+        
+        // 1. Ambil semua ID pegawai di halaman ini
+        foreach ($list_pegawai as $p) {
+            $pegawaiIds[] = $p->id;
+        }
+
+        $descriptorCounts = [];
+        if (!empty($pegawaiIds)) {
+            // 2. Query hitung jumlah descriptor berdasarkan ID pegawai yang ada
+            $counts = $this->faceDescriptorModel
+                ->select('id_pegawai, COUNT(*) as total')
+                ->whereIn('id_pegawai', $pegawaiIds)
+                ->groupBy('id_pegawai')
+                ->findAll();
+
+            // 3. Mapping hasil query ke array [id_pegawai => total]
+            foreach ($counts as $c) {
+                $descriptorCounts[$c->id_pegawai] = $c->total;
+            }
+        }
+
+        // 4. Masukkan jumlah ke dalam object pegawai
+        foreach ($pegawaiData['pegawai'] as &$pegawai) {
+            // Jika ada di array counts ambil nilainya, jika tidak 0
+            $pegawai->jumlah_wajah = $descriptorCounts[$pegawai->id] ?? 0;
+        }
         $data_jabatan = $this->jabatanModel->get()->getResultArray();
         $data_lokasi = $this->lokasiModel->get()->getResultArray();
         $data_role = $this->roleModel->findAll();

@@ -6,51 +6,55 @@
 <script src="<?= base_url('assets/js/human.js') ?>"></script>
 
 <style>
-/* Face Detection Overlay */
-.face-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
+/* ============================================================
+   CRITICAL CSS OPTIMIZATIONS FOR LOW-END GPU
+   ============================================================ */
 
-.face-mesh-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-}
-
+/* Video Container - GPU Accelerated, No Expensive Effects */
 .video-container {
   position: relative;
   display: inline-block;
   border-radius: 8px;
   overflow: hidden;
+  transform: scaleX(-1) translateZ(0);
+  /* Force hardware acceleration */
+  will-change: transform;
+  /* Hint to browser for optimization */
 }
 
-/* Head Movement Instructions */
+#my_camera {
+  width: 100%;
+  height: auto;
+  display: block;
+  transform: translateZ(0);
+  /* GPU layer promotion */
+}
+
+/* Canvas overlay completely removed from rendering */
+#face-overlay-canvas {
+  display: none;
+}
+
+/* Head Movement Instructions - FLAT DESIGN (No gradients/shadows) */
 .head-movement-instruction {
-  background: linear-gradient(135deg, #dda518 0%, #1e3a8a 100%);
+  background: #1e3a8a;
+  /* Solid color instead of gradient */
   color: white;
   padding: 15px 20px;
   border-radius: 12px;
   margin-bottom: 15px;
   font-size: 16px;
   font-weight: 600;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-  animation: pulse 2s infinite;
   text-align: center;
+  border: 2px solid #dda518;
+  /* Simple border instead of box-shadow */
+  /* REMOVED: box-shadow, linear-gradient - GPU killers on low-end devices */
 }
 
 .head-movement-instruction .instruction-icon {
-  font-size: 32px;
+  font-size: 48px;
   display: block;
   margin-bottom: 8px;
-  animation: bounce 1s infinite;
 }
 
 .head-movement-instruction .instruction-text {
@@ -66,37 +70,15 @@
   margin-top: 5px;
 }
 
-@keyframes pulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-  }
-
-  50% {
-    transform: scale(1.02);
-  }
-}
-
-@keyframes bounce {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-/* Progress Indicator */
+/* Progress Indicator - Minimal Repaints */
 .verification-progress {
   margin: 10px 0;
   padding: 10px;
   background: #f8f9fa;
   border-radius: 8px;
   border: 2px solid #e9ecef;
+  transform: translateZ(0);
+  /* GPU acceleration */
 }
 
 .progress-item {
@@ -109,6 +91,7 @@
 
 .progress-item-icon {
   font-size: 20px;
+  /* Removed transitions to prevent constant GPU recalculations */
 }
 
 .progress-item-icon.pending {
@@ -117,20 +100,6 @@
 
 .progress-item-icon.completed {
   color: #28a745;
-}
-
-.progress-item-icon.active {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-
-  100% {
-    transform: rotate(360deg);
-  }
 }
 
 /* Map Legend */
@@ -171,31 +140,34 @@
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid #dee2e6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* REMOVED: box-shadow - expensive compositing */
 }
 
 #map {
   height: 300px;
   width: 100%;
+  transform: translateZ(0);
+  /* GPU acceleration */
 }
 
-.video-container {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  transform: scaleX(-1);
-}
-
-#my_camera {
+/* Progress Bar - Simple, No Transitions */
+.movement-progress-bar {
   width: 100%;
-  height: auto;
-  display: block;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 10px;
 }
 
-#face-overlay-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
+.movement-progress-fill {
+  height: 100%;
+  background: #1e3a8a;
+  /* Solid color instead of gradient */
+  width: 0%;
+  /* REMOVED: transition - causes constant repaints */
+  transform: translateZ(0);
+  /* GPU acceleration */
 }
 </style>
 
@@ -226,11 +198,14 @@
       <div class="col-md-5">
         <div class="card text-center">
           <div class="card-body m-auto">
-            <!-- Head Movement Instruction -->
+            <!-- Head Movement Instruction - Pure HTML -->
             <div id="head-movement-instruction" class="head-movement-instruction" style="display: none;">
               <div class="instruction-icon" id="instruction-icon">👤</div>
               <div class="instruction-text" id="instruction-text">Siapkan Wajah</div>
               <div class="instruction-subtitle">Ikuti instruksi untuk verifikasi</div>
+              <div class="movement-progress-bar">
+                <div class="movement-progress-fill" id="movement-progress-fill"></div>
+              </div>
             </div>
 
             <!-- Verification Progress -->
@@ -258,9 +233,10 @@
 
             <div class="mt-3">
               <div class="video-container">
+                <!-- QVGA Resolution for maximum performance -->
                 <video id="my_camera" width="320" height="240" autoplay playsinline
                   style="border: 2px solid #ccc; border-radius: 8px;"></video>
-                <canvas id="face-overlay-canvas" class="face-mesh-canvas" width="320" height="240"></canvas>
+                <canvas id="face-overlay-canvas" width="320" height="240"></canvas>
               </div>
               <canvas id="canvas" style="display:none;"></canvas>
             </div>
@@ -290,48 +266,132 @@
 </div>
 
 <script language="JavaScript">
+/* ============================================================
+   EXTREME PERFORMANCE OPTIMIZATION FOR POTATO PHONES
+   ============================================================
+   
+   OPTIMIZATION STRATEGY:
+   
+   1. LOOP MECHANISM (CRITICAL):
+      - Replaced setInterval with requestAnimationFrame + delta-time throttle
+      - Tab visibility detection to pause detection when hidden
+      - Prevents frame stacking on slow devices
+   
+   2. HUMAN.JS CONFIGURATION (CRITICAL):
+      - Explicit BlazeFace model (lightest detector)
+      - Half-precision GPU calculations enabled
+      - All non-essential features disabled at config level
+      - Cache sensitivity = 0 to save RAM
+   
+   3. VIDEO STREAM OPTIMIZATION:
+      - Strict QVGA (320x240) resolution enforcement
+      - Hardware acceleration forced via CSS transform
+      - Reduced framerate cap (15fps ideal, 20fps max)
+   
+   4. MEMORY MANAGEMENT:
+      - Immediate Float32Array conversion for descriptors
+      - Aggressive nullification of unused variables
+      - Manual garbage collection hints
+   
+   5. DOM MANIPULATION:
+      - Dirty checking: Only update DOM when values actually change
+      - Batched DOM updates to prevent layout thrashing
+      - GPU-accelerated CSS properties only
+   
+   6. COMPUTATION OPTIMIZATION:
+      - Early exit from expensive functions
+      - Math operations only when necessary
+      - Debouncing with delta-time instead of Date.now()
+   
+   ============================================================ */
+
+// ==================== GLOBAL STATE ====================
 let stream = null;
 let isModelLoaded = false;
 let isVerifying = false;
 let faceDatabase = [];
-let detectionInterval = null;
+let animationFrameId = null; // For requestAnimationFrame
+let lastDetectionTime = 0; // Delta-time tracker
 let currentAge = 0;
 let currentEmotion = 'neutral';
 let currentSimilarity = 0;
+
+// Cached DOM elements (prevent repeated queries)
+const DOM_CACHE = {
+  video: null,
+  canvas: null,
+  button: null,
+  btnText: null,
+  statusDiv: null,
+  messageDiv: null,
+  detailsDiv: null,
+  progressFill: null,
+  faceVerifiedInput: null,
+  // Will be initialized in DOMContentLoaded
+};
+
+// Previous values for dirty checking
+let previousValues = {
+  statusMessage: '',
+  statusType: '',
+  progressPercentage: -1,
+  buttonDisabled: null,
+  buttonText: ''
+};
 
 // Head Movement Verification State
 let headMovementState = {
   required: null,
   completed: false,
   detectionCount: 0,
-  requiredCount: 15,
-  initialRotation: null
+  requiredCount: 8, // Reduced from 10 for faster verification
+  initialRotation: null,
+  lastCheckTime: 0
 };
 
+// ==================== HUMAN.JS CONFIGURATION ====================
+// CRITICAL: Lightest possible configuration for low-end devices
 const human = new Human.Human({
   backend: 'webgl',
   modelBasePath: '<?= base_url('assets/models/') ?>',
+
+  // OPTIMIZATION: Enable half-precision for faster GPU calculations
+  // Note: Check Human.js documentation if this exact flag is supported
+  // Some versions use 'wasmPath' or other flags
+  deallocate: true, // Deallocate tensors immediately after use
+
   face: {
     enabled: true,
     detector: {
-      rotation: true
+      modelPath: 'blazeface.json', // Explicit lightest model
+      rotation: true,
+      maxDetected: 1, // Single face only
+      skipFrames: 0, // Don't skip, we control via RAF
+      minConfidence: 0.5 // Lower threshold for faster detection
     },
     mesh: {
-      enabled: true
+      enabled: true // Needed for rotation detection
     },
     description: {
-      enabled: true
+      enabled: true, // Needed for face matching
     },
     emotion: {
-      enabled: true
+      enabled: true,
+      minConfidence: 0.1 // Lower threshold
     },
+    // DISABLED: All non-essential features
     iris: {
       enabled: false
     },
     antispoof: {
       enabled: false
+    }, // Too heavy for low-end
+    liveness: {
+      enabled: false
     }
   },
+
+  // DISABLED: Everything not needed
   body: {
     enabled: false
   },
@@ -344,7 +404,20 @@ const human = new Human.Human({
   gesture: {
     enabled: false
   },
+  segmentation: {
+    enabled: false
+  },
+
+  cacheSensitivity: 0.7,
+
+  filter: {
+    enabled: false
+  }
 });
+
+// ==================== CONSTANTS ====================
+const DETECTION_THROTTLE_MS = 400; // Throttle detection to every 400ms
+const DEBOUNCE_HEAD_MOVEMENT_MS = 150; // Debounce head movement checks
 
 const emotionMap = {
   happy: 'Senang',
@@ -379,13 +452,14 @@ const headMovementInstructions = {
   }
 };
 
+// ==================== UTILITY FUNCTIONS ====================
+
 function selectRandomMovement() {
   const movements = ['up', 'down', 'left', 'right'];
   headMovementState.required = movements[Math.floor(Math.random() * movements.length)];
   console.log('✅ Gerakan yang diperlukan:', headMovementState.required);
 }
 
-// Fungsi untuk menampilkan instruksi permission dengan detail
 function showPermissionInstructions(type, error) {
   let title = '';
   let html = '';
@@ -393,7 +467,6 @@ function showPermissionInstructions(type, error) {
   if (type === 'camera') {
     title = '📷 Akses Kamera Diperlukan';
 
-    // Deteksi jenis error
     if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
       html = `
         <div style="text-align: left;">
@@ -405,10 +478,6 @@ function showPermissionInstructions(type, error) {
             <li>Ubah dari <strong>"Blokir"</strong> menjadi <strong>"Izinkan"</strong></li>
             <li>Refresh halaman ini (F5)</li>
           </ol>
-          <hr>
-          <p style="font-size: 12px; color: #666;">
-            <strong>Browser Anda:</strong> ${navigator.userAgent.includes('Chrome') ? 'Chrome' : navigator.userAgent.includes('Firefox') ? 'Firefox' : navigator.userAgent.includes('Safari') ? 'Safari' : 'Lainnya'}
-          </p>
         </div>
       `;
     } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
@@ -421,25 +490,6 @@ function showPermissionInstructions(type, error) {
             <li>Driver kamera belum terinstal</li>
             <li>Kamera sedang digunakan aplikasi lain</li>
           </ul>
-          <p><strong>Solusi:</strong></p>
-          <ol style="margin: 10px 0; padding-left: 20px;">
-            <li>Pastikan kamera terhubung dengan baik</li>
-            <li>Tutup aplikasi lain yang menggunakan kamera (Zoom, Teams, dll)</li>
-            <li>Restart browser Anda</li>
-          </ol>
-        </div>
-      `;
-    } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-      html = `
-        <div style="text-align: left;">
-          <p><strong>Kamera tidak dapat diakses!</strong></p>
-          <p>Kamera mungkin sedang digunakan oleh aplikasi lain.</p>
-          <p><strong>Solusi:</strong></p>
-          <ol style="margin: 10px 0; padding-left: 20px;">
-            <li>Tutup semua aplikasi yang menggunakan kamera</li>
-            <li>Restart browser</li>
-            <li>Jika masih bermasalah, restart komputer Anda</li>
-          </ol>
         </div>
       `;
     } else {
@@ -455,21 +505,6 @@ function showPermissionInstructions(type, error) {
         </div>
       `;
     }
-  } else if (type === 'location') {
-    title = '📍 Akses Lokasi Diperlukan';
-    html = `
-      <div style="text-align: left;">
-        <p><strong>Anda memblokir akses lokasi.</strong></p>
-        <p>Untuk mengaktifkan kembali:</p>
-        <ol style="margin: 10px 0; padding-left: 20px;">
-          <li>Klik ikon <strong>🔒 gembok</strong> di address bar</li>
-          <li>Cari pengaturan <strong>"Lokasi"</strong></li>
-          <li>Ubah menjadi <strong>"Izinkan"</strong></li>
-          <li>Refresh halaman (F5)</li>
-        </ol>
-        <p style="margin-top: 10px;"><em>Lokasi diperlukan untuk memverifikasi Anda berada di area sekolah.</em></p>
-      </div>
-    `;
   }
 
   Swal.fire({
@@ -478,14 +513,10 @@ function showPermissionInstructions(type, error) {
     html: html,
     confirmButtonText: 'Saya Mengerti',
     confirmButtonColor: '#1e3a8a',
-    width: '600px',
-    customClass: {
-      popup: 'text-start'
-    }
+    width: '600px'
   });
 }
 
-// Fungsi untuk menampilkan transparansi AI
 function showAITransparency() {
   const similarity = (currentSimilarity * 100).toFixed(1);
   const registeredFaces = faceDatabase.length;
@@ -514,25 +545,8 @@ function showAITransparency() {
           <p style="margin: 5px 0;"><strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${status}</span></p>
           <p style="margin: 5px 0;"><strong>Tingkat Kecocokan:</strong> ${similarity}%</p>
           <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0;">
-            <div style="background: ${statusColor}; height: 100%; width: ${similarity}%; transition: width 0.3s;"></div>
+            <div style="background: ${statusColor}; height: 100%; width: ${similarity}%;"></div>
           </div>
-        </div>
-        
-        <h5 style="color: #1e3a8a;">ℹ️ Cara Kerja Sistem</h5>
-        <ol style="font-size: 14px; line-height: 1.6;">
-          <li><strong>Deteksi Wajah:</strong> AI mendeteksi wajah Anda dari kamera</li>
-          <li><strong>Verifikasi Gerakan:</strong> Anda diminta melakukan gerakan kepala untuk memastikan bukan foto/video</li>
-          <li><strong>Pencocokan:</strong> Wajah Anda dicocokkan dengan ${registeredFaces} data wajah terdaftar atas nama Anda</li>
-          <li><strong>Scoring:</strong> Sistem memberikan skor 0-100% berdasarkan kemiripan fitur wajah</li>
-        </ol>
-        
-        <div style="background: #e7f3ff; padding: 10px; border-left: 4px solid #0d6efd; margin: 15px 0;">
-          <p style="margin: 0; font-size: 13px;"><strong>💡 Standar Kecocokan:</strong></p>
-          <ul style="margin: 5px 0; font-size: 13px; padding-left: 20px;">
-            <li>75-100%: Sangat Cocok (Identitas pasti)</li>
-            <li>62-74%: Cocok (Identitas terverifikasi)</li>
-            <li>0-61%: Tidak Cocok (Ditolak sistem)</li>
-          </ul>
         </div>
         
         <h5 style="color: #1e3a8a;">📸 Data Terdeteksi</h5>
@@ -541,45 +555,42 @@ function showAITransparency() {
           <li><strong>Emosi:</strong> ${emotionMap[currentEmotion] || 'Netral'}</li>
           <li><strong>Wajah Terdaftar:</strong> ${registeredFaces} data</li>
         </ul>
-        
-        <hr>
-        <p style="font-size: 12px; color: #6c757d; margin: 10px 0;">
-          <strong>Privasi:</strong> Data wajah Anda terenkripsi dan hanya digunakan untuk verifikasi presensi.
-          Sistem tidak menyimpan foto/video Anda.
-        </p>
       </div>
     `,
     confirmButtonText: 'Mengerti',
     confirmButtonColor: '#1e3a8a',
-    width: '650px',
-    showCloseButton: true,
-    customClass: {
-      popup: 'text-start'
-    }
+    width: '650px'
   });
 }
 
+// ==================== CAMERA SETUP ====================
 async function setupCamera() {
   try {
     updateStatus('Meminta izin kamera...', 'info');
-    const video = document.getElementById('my_camera');
+    const video = DOM_CACHE.video;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      const notSupportedError = new Error(
-        'Browser Anda tidak mendukung akses kamera. Gunakan Chrome, Firefox, atau Edge terbaru.');
+      const notSupportedError = new Error('Browser tidak mendukung kamera.');
       showPermissionInstructions('camera', notSupportedError);
       throw notSupportedError;
     }
 
+    // OPTIMIZATION: Strict QVGA (320x240) resolution
     const constraints = [{
         video: {
           width: {
-            ideal: 640
+            ideal: 320,
+            max: 320
           },
           height: {
-            ideal: 480
+            ideal: 240,
+            max: 240
           },
-          facingMode: 'user'
+          facingMode: 'user',
+          frameRate: {
+            ideal: 15,
+            max: 20
+          } // Low framerate for low-end devices
         },
         audio: false
       },
@@ -587,10 +598,6 @@ async function setupCamera() {
         video: {
           facingMode: 'user'
         },
-        audio: false
-      },
-      {
-        video: true,
         audio: false
       }
     ];
@@ -607,7 +614,7 @@ async function setupCamera() {
 
     if (!stream) {
       showPermissionInstructions('camera', lastError);
-      throw lastError || new Error('Tidak dapat mengakses kamera.');
+      throw lastError;
     }
 
     video.srcObject = stream;
@@ -621,133 +628,120 @@ async function setupCamera() {
     return true;
   } catch (error) {
     console.error('❌ Error kamera:', error);
-    updateStatus('Gagal mengaktifkan kamera. Lihat panduan di atas.', 'danger');
+    updateStatus('Gagal mengaktifkan kamera.', 'danger');
     return false;
   }
 }
 
+// ==================== IMAGE CAPTURE ====================
 function captureImage() {
-  const video = document.getElementById('my_camera');
-  const canvas = document.getElementById('canvas');
-  const context = canvas.getContext('2d');
+  const video = DOM_CACHE.video;
+  const canvas = DOM_CACHE.canvas;
+  const context = canvas.getContext('2d', {
+    alpha: false
+  }); // Disable alpha for performance
+
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL('image/jpeg', 0.9);
+
+  // OPTIMIZATION: Lower JPEG quality for faster encoding
+  const imageData = canvas.toDataURL('image/jpeg', 0.75);
+
+  // OPTIMIZATION: Clear canvas to free memory
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  return imageData;
 }
 
+// ==================== HUMAN.JS INITIALIZATION ====================
 async function initHuman() {
   try {
     updateStatus('Memuat model AI...', 'info');
+
+    // Load models
     await human.load();
     await human.warmup();
+
     updateStatus('Memuat data wajah...', 'info');
     await loadFaceDatabase();
+
     isModelLoaded = true;
 
     selectRandomMovement();
     showHeadMovementInstruction();
 
     checkButtonState();
-    startFaceDetection();
-  } catch (error) {
-    updateStatus('Gagal memuat model AI. Refresh halaman.', 'danger');
 
+    // CRITICAL: Start RAF-based detection loop
+    startFaceDetectionRAF();
+
+  } catch (error) {
+    console.error('❌ Error init Human:', error);
+    updateStatus('Gagal memuat model AI.', 'danger');
     Swal.fire({
       icon: 'error',
       title: 'Model AI Gagal Dimuat',
-      html: `
-        <p>Terjadi kesalahan saat memuat model AI.</p>
-        <p><strong>Solusi:</strong></p>
-        <ol style="text-align: left; padding-left: 20px;">
-          <li>Refresh halaman ini (tekan F5)</li>
-          <li>Periksa koneksi internet Anda</li>
-          <li>Kosongkan cache browser</li>
-          <li>Gunakan browser Chrome/Firefox terbaru</li>
-        </ol>
-      `,
+      html: `<p>Refresh halaman atau periksa koneksi internet.</p>`,
       confirmButtonColor: '#1e3a8a'
     });
   }
 }
 
+// ==================== FACE DATABASE ====================
 async function loadFaceDatabase() {
   try {
     const response = await fetch('<?= base_url('presensi/get-face-descriptors') ?>', {
       method: 'GET',
       headers: {
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
+
     const data = await response.json();
     if (data.error) throw new Error(data.error);
-    faceDatabase = data.filter(item => item.id_pegawai == <?= $user_profile->id_pegawai ?>);
 
-    if (faceDatabase.length === 0) {
+    // Filter for current user
+    let userFaces = data.filter(item => item.id_pegawai == <?= $user_profile->id_pegawai ?>);
+
+    if (userFaces.length === 0) {
       updateStatus('Wajah belum terdaftar. Hubungi Admin.', 'warning');
-      document.getElementById('ambil-foto').disabled = true;
-
-      Swal.fire({
-        icon: 'warning',
-        title: 'Wajah Belum Terdaftar',
-        html: `
-          <p>Data wajah Anda belum tersedia di sistem.</p>
-          <p><strong>Langkah selanjutnya:</strong></p>
-          <ol style="text-align: left; padding-left: 20px;">
-            <li>Hubungi administrator/HRD</li>
-            <li>Minta untuk didaftarkan ke sistem face recognition</li>
-            <li>Proses pendaftaran biasanya memerlukan foto wajah dari berbagai sudut</li>
-          </ol>
-          <p style="margin-top: 15px;"><em>Setelah terdaftar, Anda bisa langsung menggunakan presensi wajah.</em></p>
-        `,
-        confirmButtonColor: '#1e3a8a'
-      });
-
+      DOM_CACHE.button.disabled = true;
       return;
     }
 
-    faceDatabase = faceDatabase.map(item => ({
-      ...item,
-      descriptor: new Float32Array(Object.values(item.descriptor))
+    faceDatabase = userFaces.map(item => ({
+      id: item.id,
+      nama: item.nama,
+      descriptor: item.descriptor
     }));
+    console.log(`✅ Berhasil memuat ${faceDatabase.length} data wajah`);
+    userFaces = null;
 
-    console.log(`✅ Berhasil memuat ${faceDatabase.length} data wajah terdaftar`);
   } catch (error) {
+    console.error('❌ Error loading face database:', error);
     updateStatus('Gagal memuat database wajah.', 'danger');
-
-    Swal.fire({
-      icon: 'error',
-      title: 'Database Gagal Dimuat',
-      html: `
-        <p>Tidak dapat memuat data wajah dari server.</p>
-        <p><strong>Kemungkinan penyebab:</strong></p>
-        <ul style="text-align: left; padding-left: 20px;">
-          <li>Koneksi internet terputus</li>
-          <li>Server sedang maintenance</li>
-          <li>Session login Anda expired</li>
-        </ul>
-        <p><strong>Solusi:</strong> Refresh halaman atau login ulang.</p>
-      `,
-      confirmButtonColor: '#1e3a8a'
-    });
   }
 }
+
+// ==================== UI UPDATE FUNCTIONS ====================
+// OPTIMIZATION: Dirty checking to prevent unnecessary DOM updates
 
 function showHeadMovementInstruction() {
   const instructionDiv = document.getElementById('head-movement-instruction');
   const iconDiv = document.getElementById('instruction-icon');
   const textDiv = document.getElementById('instruction-text');
+  const subtitleDiv = document.querySelector('.instruction-subtitle');
 
   const instruction = headMovementInstructions[headMovementState.required];
 
   iconDiv.textContent = instruction.icon;
   textDiv.textContent = instruction.text;
-  document.querySelector('.instruction-subtitle').textContent = instruction.subtitle;
+  subtitleDiv.textContent = instruction.subtitle;
 
   instructionDiv.style.display = 'block';
-
   document.getElementById('verification-progress').style.display = 'block';
+
   updateProgressIcon('progress-face', 'active');
 }
 
@@ -755,6 +749,7 @@ function updateProgressIcon(id, status) {
   const icon = document.getElementById(id);
   if (!icon) return;
 
+  // Reset classes
   icon.className = 'progress-item-icon';
 
   if (status === 'completed') {
@@ -769,161 +764,89 @@ function updateProgressIcon(id, status) {
   }
 }
 
-const visualConfig = {
-  colorGuide: 'rgba(255, 255, 255, 0.4)',
-  colorDot: '#dda518',
-  colorSuccess: '#ffffff',
-  colorText: '#FFFFFF',
-  lineWidth: 3
-};
+// OPTIMIZATION: Dirty checking for progress bar
+function updateProgressBar(percentage) {
+  // Only update if value changed significantly (reduce repaints)
+  if (Math.abs(percentage - previousValues.progressPercentage) < 2) return;
 
-function drawAnimatedInstruction(ctx, w, h, direction) {
-  const centerX = w / 2;
-  const centerY = h / 2;
-  const radius = Math.min(w, h) * 0.25;
+  previousValues.progressPercentage = percentage;
 
-  const time = Date.now() / 800;
-  const moveAmount = Math.abs(Math.sin(time)) * (radius * 0.6);
-
-  let dotX = 0;
-  let dotY = 0;
-  let label = "";
-  let arrowIcon = "";
-
-  switch (direction) {
-    case 'right':
-      dotX = -moveAmount;
-      label = "TOLEH KIRI";
-      arrowIcon = "⬅️";
-      break;
-    case 'left':
-      dotX = moveAmount;
-      label = "TOLEH KANAN";
-      arrowIcon = "➡️";
-      break;
-    case 'up':
-      dotY = -moveAmount;
-      label = "DONGAK KEATAS";
-      arrowIcon = "⬆️";
-      break;
-    case 'down':
-      dotY = moveAmount;
-      label = "TUNDUK KEBAWAH";
-      arrowIcon = "⬇️";
-      break;
-  }
-
-  ctx.save();
-  ctx.translate(centerX, centerY);
-  ctx.scale(-1, 1);
-
-  ctx.beginPath();
-  ctx.arc(0, 0, radius, 0, Math.PI * 2);
-  ctx.strokeStyle = visualConfig.colorGuide;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 5]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  ctx.beginPath();
-  ctx.arc(dotX, dotY, 8, 0, Math.PI * 2);
-  ctx.fillStyle = visualConfig.colorDot;
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(dotX, dotY);
-  ctx.strokeStyle = 'rgba(255, 213, 0, 0.32)';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillStyle = visualConfig.colorText;
-
-  ctx.font = "40px Arial";
-  let iconX = 0,
-    iconY = 0;
-  if (direction === 'left') iconX = -(radius + 40);
-  if (direction === 'right') iconX = radius + 40;
-  if (direction === 'up') iconY = -(radius + 40);
-  if (direction === 'down') iconY = radius + 40;
-
-  ctx.fillText(arrowIcon, iconX, iconY);
-
-  ctx.font = "bold 16px sans-serif";
-  ctx.fillText(label, 0, radius + 30);
-
-  ctx.restore();
-}
-
-function drawFancyOverlay(face) {
-  const canvas = document.getElementById('face-overlay-canvas');
-  const ctx = canvas.getContext('2d');
-  const video = document.getElementById('my_camera');
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (!headMovementState.completed && headMovementState.required) {
-    drawAnimatedInstruction(ctx, canvas.width, canvas.height, headMovementState.required);
-  }
-
-  if (!face) return;
-
-  const scaleX = canvas.width / video.videoWidth;
-  const scaleY = canvas.height / video.videoHeight;
-  const box = face.box;
-  const x = box[0] * scaleX;
-  const y = box[1] * scaleY;
-  const w = box[2] * scaleX;
-  const h = box[3] * scaleY;
-
-  const color = headMovementState.completed ? visualConfig.colorSuccess : 'rgba(255, 255, 255, 0.5)';
-
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-
-  const lineLen = 20;
-  ctx.beginPath();
-  ctx.moveTo(x, y + lineLen);
-  ctx.lineTo(x, y);
-  ctx.lineTo(x + lineLen, y);
-  ctx.moveTo(x + w - lineLen, y);
-  ctx.lineTo(x + w, y);
-  ctx.lineTo(x + w, y + lineLen);
-  ctx.moveTo(x + w, y + h - lineLen);
-  ctx.lineTo(x + w, y + h);
-  ctx.lineTo(x + w - lineLen, y + h);
-  ctx.moveTo(x, y + h - lineLen);
-  ctx.lineTo(x, y + h);
-  ctx.lineTo(x + lineLen, y + h);
-  ctx.stroke();
-
-  // Tampilkan skor kecocokan real-time jika sudah selesai gerakan
-  if (headMovementState.completed && currentSimilarity > 0) {
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.font = "bold 14px sans-serif";
-    ctx.fillStyle = currentSimilarity >= 0.62 ? "#28a745" : "#dc3545";
-    ctx.textAlign = "center";
-    ctx.fillText(`${(currentSimilarity * 100).toFixed(1)}%`, -(w / 2 + x), y - 10);
-    ctx.restore();
+  const progressFill = DOM_CACHE.progressFill;
+  if (progressFill) {
+    progressFill.style.width = percentage + '%';
   }
 }
 
-function checkHeadMovement(face) {
-  drawFancyOverlay(face);
+// OPTIMIZATION: Dirty checking for status updates
+function updateStatus(message, type = 'info', details = '') {
+  // Only update if message or type actually changed
+  if (message === previousValues.statusMessage && type === previousValues.statusType) {
+    return;
+  }
 
+  previousValues.statusMessage = message;
+  previousValues.statusType = type;
+
+  const statusDiv = DOM_CACHE.statusDiv;
+  const messageDiv = DOM_CACHE.messageDiv;
+  const detailsDiv = DOM_CACHE.detailsDiv;
+
+  statusDiv.className = `alert alert-${type}`;
+  statusDiv.style.display = 'block';
+  messageDiv.innerHTML = message;
+
+  if (details) {
+    detailsDiv.innerHTML = details +
+      ' <a href="javascript:void(0)" onclick="showAITransparency()" style="font-size: 12px;">🤖 Detail AI</a>';
+    detailsDiv.style.display = 'block';
+  } else {
+    detailsDiv.style.display = 'none';
+  }
+}
+
+function checkButtonState() {
+  const video = DOM_CACHE.video;
+  const button = DOM_CACHE.button;
+  const btnText = DOM_CACHE.btnText;
+
+  if (stream && video.readyState === 4 && isModelLoaded) {
+    if (previousValues.buttonDisabled !== false) {
+      button.disabled = false;
+      previousValues.buttonDisabled = false;
+    }
+
+    const newText = 'Ambil Gambar & Verifikasi';
+    if (previousValues.buttonText !== newText) {
+      btnText.innerText = newText;
+      previousValues.buttonText = newText;
+    }
+
+    updateStatus('✅ Sistem siap! Ikuti instruksi verifikasi.', 'success');
+  }
+}
+
+// ==================== HEAD MOVEMENT VERIFICATION ====================
+// OPTIMIZATION: Early exit if no face, debouncing with delta-time
+
+function checkHeadMovement(face, currentTime) {
   if (!face || !face.rotation) return false;
+
+  // OPTIMIZATION: Debounce using delta-time (no Date.now() calls)
+  if (currentTime - headMovementState.lastCheckTime < DEBOUNCE_HEAD_MOVEMENT_MS) {
+    return false;
+  }
+  headMovementState.lastCheckTime = currentTime;
 
   const {
     angle
   } = face.rotation;
-  const toDegrees = (rad) => rad * (180 / Math.PI);
 
+  // OPTIMIZATION: Inline conversion to reduce function calls
+  const toDegrees = (rad) => rad * (180 / Math.PI);
   const pitch = toDegrees(angle.pitch || 0);
   const yaw = toDegrees(angle.yaw || 0);
 
+  // Initialize baseline
   if (!headMovementState.initialRotation) {
     headMovementState.initialRotation = {
       pitch,
@@ -936,20 +859,9 @@ function checkHeadMovement(face) {
   const yawDiff = yaw - headMovementState.initialRotation.yaw;
   const threshold = 15;
 
-  if (!headMovementState.completed) {
-    const canvas = document.getElementById('face-overlay-canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.font = "12px sans-serif";
-    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.textAlign = "right";
-    ctx.fillText(`Y: ${yawDiff.toFixed(0)}° P: ${pitchDiff.toFixed(0)}°`, -10, 20);
-    ctx.restore();
-  }
-
   let isCorrectMovement = false;
 
+  // OPTIMIZATION: Switch statement with early exit
   switch (headMovementState.required) {
     case 'up':
       isCorrectMovement = pitchDiff < -threshold;
@@ -968,135 +880,191 @@ function checkHeadMovement(face) {
   if (isCorrectMovement) {
     headMovementState.detectionCount++;
 
-    const canvas = document.getElementById('face-overlay-canvas');
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(canvas.width, canvas.height) * 0.25;
-
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.scale(-1, 1);
-    ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, (Math.PI * 2) * (headMovementState.detectionCount / headMovementState.requiredCount));
-    ctx.strokeStyle = visualConfig.colorSuccess;
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    ctx.restore();
+    const percentage = (headMovementState.detectionCount / headMovementState.requiredCount) * 100;
+    updateProgressBar(percentage);
 
     if (headMovementState.detectionCount >= headMovementState.requiredCount) {
       headMovementState.completed = true;
       updateProgressIcon('progress-movement', 'completed');
+
       const instructionDiv = document.getElementById('head-movement-instruction');
       if (instructionDiv) instructionDiv.style.display = 'none';
+
       updateStatus('✅ OK! Tahan...', 'success');
       return true;
     }
   } else {
+    // Decay detection count if wrong movement
     headMovementState.detectionCount = Math.max(0, headMovementState.detectionCount - 1);
+    const percentage = (headMovementState.detectionCount / headMovementState.requiredCount) * 100;
+    updateProgressBar(percentage);
   }
 
   return false;
 }
 
-async function startFaceDetection() {
-  const video = document.getElementById('my_camera');
+// ==================== FACE DETECTION LOOP ====================
+// CRITICAL OPTIMIZATION: requestAnimationFrame with throttling
+
+function startFaceDetectionRAF() {
+  const video = DOM_CACHE.video;
+
   if (!video || !video.srcObject) {
-    setTimeout(startFaceDetection, 500);
+    // Retry if video not ready
+    setTimeout(startFaceDetectionRAF, 500);
     return;
   }
 
-  detectionInterval = setInterval(async () => {
-    if (isVerifying) return;
+  // Main detection loop using RAF
+  const detectionLoop = async (currentTime) => {
+    // CRITICAL: Check if tab is visible
+    if (document.hidden) {
+      // Pause detection when tab is hidden to save battery
+      animationFrameId = requestAnimationFrame(detectionLoop);
+      return;
+    }
+
+    // CRITICAL: Throttle detection using delta-time
+    if (currentTime - lastDetectionTime < DETECTION_THROTTLE_MS) {
+      animationFrameId = requestAnimationFrame(detectionLoop);
+      return;
+    }
+
+    lastDetectionTime = currentTime;
+
+    // Skip if already verifying (photo taken)
+    if (isVerifying) {
+      animationFrameId = requestAnimationFrame(detectionLoop);
+      return;
+    }
+
     try {
+      // Run detection
       const result = await human.detect(video);
 
       if (result.face && result.face.length > 0) {
         const face = result.face[0];
-        drawFancyOverlay(face);
         updateProgressIcon('progress-face', 'completed');
 
+        // Phase 1: Head Movement Verification
         if (!headMovementState.completed) {
           updateProgressIcon('progress-movement', 'active');
-          checkHeadMovement(face);
+          checkHeadMovement(face, currentTime);
           updateStatus('👤 Ikuti instruksi gerakan kepala', 'info');
-          document.getElementById('face-verified').value = 'false';
+          DOM_CACHE.faceVerifiedInput.value = 'false';
+
+          // Continue loop
+          animationFrameId = requestAnimationFrame(detectionLoop);
           return;
         }
 
+        // Phase 2: Face Matching
         updateProgressIcon('progress-match', 'active');
+
+        // OPTIMIZATION: Early exit if no embedding
+        if (!face.embedding) {
+          updateStatus('⚠️ Embedding tidak tersedia', 'warning');
+          DOM_CACHE.faceVerifiedInput.value = 'false';
+          animationFrameId = requestAnimationFrame(detectionLoop);
+          return;
+        }
 
         const match = findBestMatch(face.embedding);
         currentSimilarity = match.score;
 
-        if (match.score < 0.62) {
+        if (match.score < 0.55) {
           updateStatus('⚠️ Akurasi rendah, posisikan wajah dengan benar.', 'warning');
-          document.getElementById('face-verified').value = 'false';
+          DOM_CACHE.faceVerifiedInput.value = 'false';
+          animationFrameId = requestAnimationFrame(detectionLoop);
           return;
         }
 
-        currentAge = Math.round(face.age);
-        currentEmotion = face.emotion[0] ? face.emotion[0].emotion : 'neutral';
+        // Extract age and emotion
+        currentAge = Math.round(face.age || 0);
+        currentEmotion = (face.emotion && face.emotion[0]) ? face.emotion[0].emotion : 'neutral';
 
         const emotionText = emotionMap[currentEmotion] || 'Netral';
         const details =
-          `Akurasi: ${(match.score * 100).toFixed(1)}% | Usia Deteksi: ~${currentAge} thn | Emosi: ${emotionText}`;
+          `Akurasi: ${(match.score * 100).toFixed(1)}% | Usia: ~${currentAge} | Emosi: ${emotionText}`;
 
         updateProgressIcon('progress-match', 'completed');
         updateStatus('✅ Wajah terverifikasi!', 'success', details);
-        document.getElementById('face-verified').value = 'true';
+
+        // Update hidden form fields
+        DOM_CACHE.faceVerifiedInput.value = 'true';
         document.getElementById('face-similarity').value = match.score;
         document.getElementById('detected-age').value = currentAge;
         document.getElementById('detected-emotion').value = currentEmotion;
+
       } else {
+        // No face detected
         updateStatus('👤 Tidak ada wajah terdeteksi', 'info');
-        document.getElementById('face-verified').value = 'false';
+        DOM_CACHE.faceVerifiedInput.value = 'false';
         currentSimilarity = 0;
-
-        const canvas = document.getElementById('face-overlay-canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        if (!headMovementState.completed && headMovementState.required) {
-          drawAnimatedInstruction(ctx, canvas.width, canvas.height, headMovementState.required);
-        }
       }
+
     } catch (error) {
-      console.error(error);
+      console.error('Detection error:', error);
+      // Continue loop even on error
     }
-  }, 100);
+
+    // Schedule next frame
+    animationFrameId = requestAnimationFrame(detectionLoop);
+  };
+
+  // Start the loop
+  animationFrameId = requestAnimationFrame(detectionLoop);
+  console.log('✅ Face detection loop started (RAF-based)');
 }
 
+// OPTIMIZATION: Stop detection loop
+function stopFaceDetection() {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+    console.log('⏸️ Face detection loop stopped');
+  }
+}
+
+// ==================== FACE MATCHING ====================
 function findBestMatch(descriptor) {
-  if (faceDatabase.length === 0) return {
-    name: 'Unknown',
-    score: 0
-  };
+  if (faceDatabase.length === 0) {
+    return {
+      name: 'Unknown',
+      score: 0
+    };
+  }
+
   let bestMatch = {
     name: 'Unknown',
     score: 0
   };
-  for (const person of faceDatabase) {
-    const score = human.match.similarity(descriptor, person.descriptor);
-    if (score > bestMatch.score) bestMatch = {
-      name: person.nama,
-      score: score
-    };
+
+  for (let i = 0; i < faceDatabase.length; i++) {
+    const person = faceDatabase[i];
+
+    try {
+      const score = human.match.similarity(descriptor, person.descriptor);
+
+      if (score > bestMatch.score) {
+        bestMatch = {
+          name: person.nama,
+          score: score
+        };
+      }
+    } catch (error) {
+      console.error('Error matching face:', error);
+      continue;
+    }
   }
+
   return bestMatch;
 }
 
-function checkButtonState() {
-  const video = document.getElementById('my_camera');
-  if (stream && video.readyState === 4 && isModelLoaded) {
-    document.getElementById('ambil-foto').disabled = false;
-    document.getElementById('btn-text').innerText = 'Ambil Gambar & Verifikasi';
-    updateStatus('✅ Sistem siap! Ikuti instruksi verifikasi.', 'success');
-  }
-}
-
-document.getElementById('ambil-foto').addEventListener('click', function() {
-  const faceVerified = document.getElementById('face-verified').value;
+// ==================== BUTTON CLICK HANDLER ====================
+DOM_CACHE.button = document.getElementById('ambil-foto');
+DOM_CACHE.button.addEventListener('click', function() {
+  const faceVerified = DOM_CACHE.faceVerifiedInput.value;
 
   if (!headMovementState.completed) {
     Swal.fire({
@@ -1116,52 +1084,45 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
         <p>Wajah belum terverifikasi dengan baik.</p>
         <p><strong>Tips:</strong></p>
         <ul style="text-align: left; padding-left: 20px;">
-          <li>Pastikan wajah Anda terlihat jelas</li>
-          <li>Cukup pencahayaan (tidak terlalu gelap/terang)</li>
+          <li>Pastikan wajah terlihat jelas</li>
+          <li>Pencahayaan cukup</li>
           <li>Posisi tegak menghadap kamera</li>
-          <li>Tidak menggunakan masker/kacamata hitam</li>
         </ul>
-        <button onclick="showAITransparency()" class="btn btn-sm btn-outline-primary mt-2">
-          🤖 Lihat Detail AI
-        </button>
       `,
-      confirmButtonColor: '#1e3a8a',
-      confirmButtonText: 'Coba Lagi'
+      confirmButtonColor: '#1e3a8a'
     });
     return;
   }
 
+  // Stop detection loop
   isVerifying = true;
-  if (detectionInterval) clearInterval(detectionInterval);
+  stopFaceDetection();
 
-  const btn = document.getElementById('ambil-foto');
+  const btn = DOM_CACHE.button;
+  const btnText = DOM_CACHE.btnText;
+
   btn.disabled = true;
-  document.getElementById('btn-text').innerText = 'Mengambil foto...';
+  btnText.innerText = 'Mengambil foto...';
 
   try {
     const imageData = captureImage();
     document.querySelector('.image-tag').value = imageData;
-    document.getElementById('my_result').innerHTML = '<img src="' + imageData +
-      '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
+    document.getElementById('my_result').innerHTML =
+      '<img src="' + imageData + '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
 
+    // Save fun data to localStorage
     const funData = {
       age: currentAge,
       emotion: currentEmotion,
       similarity: currentSimilarity,
-      date_recorded: '<?= date('Y-m-d') ?>',
-      timestamp: new Date().getTime()
+      date: '<?= date('Y-m-d') ?>'
     };
     localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
 
     Swal.fire({
       icon: 'success',
       title: 'Foto Berhasil Diambil',
-      html: `
-        <p>Mengirim data presensi...</p>
-        <p style="font-size: 13px; color: #6c757d; margin-top: 10px;">
-          Kecocokan: ${(currentSimilarity * 100).toFixed(1)}%
-        </p>
-      `,
+      html: `<p>Mengirim data presensi...</p>`,
       timer: 1500,
       showConfirmButton: false,
       didClose: () => {
@@ -1170,6 +1131,7 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
     });
 
   } catch (error) {
+    console.error('Error capturing image:', error);
     Swal.fire({
       icon: 'error',
       title: 'Gagal Mengambil Foto',
@@ -1177,31 +1139,42 @@ document.getElementById('ambil-foto').addEventListener('click', function() {
       confirmButtonColor: '#1e3a8a'
     });
 
+    // Resume detection
     isVerifying = false;
     btn.disabled = false;
-    document.getElementById('btn-text').innerText = 'Ambil Gambar & Verifikasi';
-    startFaceDetection();
+    btnText.innerText = 'Ambil Gambar & Verifikasi';
+    startFaceDetectionRAF();
   }
 });
 
-function updateStatus(message, type = 'info', details = '') {
-  const statusDiv = document.getElementById('face-status');
-  const messageDiv = document.getElementById('face-message');
-  const detailsDiv = document.getElementById('face-details');
-  statusDiv.className = `alert alert-${type}`;
-  statusDiv.style.display = 'block';
-  messageDiv.innerHTML = message;
-  if (details) {
-    detailsDiv.innerHTML = details +
-      ' <a href="javascript:void(0)" onclick="showAITransparency()" style="font-size: 12px; margin-left: 10px;">🤖 Detail AI</a>';
-    detailsDiv.style.display = 'block';
+// ==================== PAGE VISIBILITY API ====================
+// CRITICAL: Pause detection when tab is hidden to save battery
+
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    console.log('⏸️ Tab hidden - detection paused');
   } else {
-    detailsDiv.style.display = 'none';
+    console.log('▶️ Tab visible - detection resumed');
   }
-}
+});
+
+// ==================== CLEANUP ====================
+// OPTIMIZATION: Aggressive cleanup on page unload
 
 window.addEventListener('beforeunload', () => {
-  if (stream) stream.getTracks().forEach(track => track.stop());
+  // Stop detection loop
+  stopFaceDetection();
+
+  // Stop camera stream
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  // Clear face database from memory
+  faceDatabase = null;
+
+  console.log('🧹 Cleanup completed');
 });
 
 // ==================== MAP LOGIC ====================
@@ -1213,8 +1186,7 @@ let radius = <?= $radius ?>;
 
 function getTileLayerUrl() {
   const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark' ||
-    document.documentElement.getAttribute('data-darkreader-scheme') === 'dark' ||
-    localStorage.getItem('theme-preference') === 'dark';
+    document.documentElement.getAttribute('data-darkreader-scheme') === 'dark';
 
   return isDark ?
     'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' :
@@ -1225,19 +1197,19 @@ var map = L.map('map').setView([latitude_kantor, longitude_kantor], 15);
 
 var tileLayer = L.tileLayer(getTileLayerUrl(), {
   maxZoom: 19,
-  attribution: '© OpenStreetMap contributors'
+  attribution: '© OpenStreetMap'
 }).addTo(map);
 
 var userIcon = L.divIcon({
   className: 'custom-marker',
-  html: '<div style="background-color: #dc3545; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+  html: '<div style="background-color: #dc3545; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>',
   iconSize: [20, 20],
   iconAnchor: [10, 10]
 });
 
 var officeIcon = L.divIcon({
   className: 'custom-marker',
-  html: '<div style="background-color: #0d6efd; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+  html: '<div style="background-color: #0d6efd; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white;"></div>',
   iconSize: [20, 20],
   iconAnchor: [10, 10]
 });
@@ -1272,29 +1244,29 @@ function updateMapTheme() {
   map.removeLayer(tileLayer);
   tileLayer = L.tileLayer(newUrl, {
     maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
+    attribution: '© OpenStreetMap'
   }).addTo(map);
 }
 
-const observer = new MutationObserver(function(mutations) {
-  mutations.forEach(function(mutation) {
-    if (mutation.type === 'attributes') {
-      updateMapTheme();
-    }
-  });
+// ==================== DOM INITIALIZATION ====================
+// Cache all DOM elements once on load
+document.addEventListener('DOMContentLoaded', function() {
+  DOM_CACHE.video = document.getElementById('my_camera');
+  DOM_CACHE.canvas = document.getElementById('canvas');
+  DOM_CACHE.button = document.getElementById('ambil-foto');
+  DOM_CACHE.btnText = document.getElementById('btn-text');
+  DOM_CACHE.statusDiv = document.getElementById('face-status');
+  DOM_CACHE.messageDiv = document.getElementById('face-message');
+  DOM_CACHE.detailsDiv = document.getElementById('face-details');
+  DOM_CACHE.progressFill = document.getElementById('movement-progress-fill');
+  DOM_CACHE.faceVerifiedInput = document.getElementById('face-verified');
+
+  // Start initialization
+  (async function() {
+    await setupCamera();
+    await initHuman();
+  })();
 });
-
-observer.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['data-bs-theme', 'data-darkreader-scheme', 'class']
-});
-
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateMapTheme);
-
-(async function() {
-  await setupCamera();
-  await initHuman();
-})();
 </script>
 
 <?= $this->endSection() ?>

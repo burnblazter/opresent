@@ -42,7 +42,7 @@
         <?= csrf_field() ?>
         <div class="card-body">
 
-          <?= view('Myth\Auth\Views\_message_block') ?>
+          <?= view('App\ThirdParty\MythAuth\Views\_message_block') ?>
 
           <h2 class="card-title text-center mb-4"><?= lang('Auth.forgotPassword') ?></h2>
           <p class="text-muted mb-4"><?= lang('Auth.enterEmailForInstructions') ?></p>

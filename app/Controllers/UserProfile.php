@@ -5,7 +5,7 @@ namespace App\Controllers;
 use App\Models\UsersModel;
 use App\Models\PegawaiModel;
 use App\Models\EmailTokenModel;
-use Myth\Auth\Controllers\AuthController;
+use App\ThirdParty\MythAuth\Controllers\AuthController;
 use Config\Email;
 
 class UserProfile extends BaseController

@@ -45,7 +45,7 @@
         <div class="card-body">
           <h2 class="h2 text-center mb-4"><?= lang('Auth.resetYourPassword') ?></h2>
 
-          <?= view('Myth\Auth\Views\_message_block') ?>
+          <?= view('App\ThirdParty\MythAuth\Views\_message_block') ?>
 
           <form action="<?= url_to('reset-password') ?>" method="post" autocomplete="off" novalidate>
             <?= csrf_field() ?>

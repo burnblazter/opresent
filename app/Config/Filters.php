@@ -24,9 +24,9 @@ class Filters extends BaseConfig
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'login'      => \Myth\Auth\Filters\LoginFilter::class,
-        'role'       => \Myth\Auth\Filters\RoleFilter::class,
-        'permission' => \Myth\Auth\Filters\PermissionFilter::class,
+        'login'      => \App\ThirdParty\MythAuth\Filters\LoginFilter::class,
+        'role'       => \App\ThirdParty\MythAuth\Filters\RoleFilter::class,
+        'permission' => \App\ThirdParty\MythAuth\Filters\PermissionFilter::class,
     ];
 
     /**

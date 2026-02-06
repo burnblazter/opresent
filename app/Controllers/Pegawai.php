@@ -9,8 +9,8 @@ use App\Models\JabatanModel;
 use App\Models\PegawaiModel;
 use App\Models\UsersRoleModel;
 use App\Models\LokasiPresensiModel;
-use Myth\Auth\Models\PermissionModel;
-use Myth\Auth\Controllers\AuthController;
+use App\ThirdParty\MythAuth\Models\PermissionModel;
+use App\ThirdParty\MythAuth\Controllers\AuthController;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -616,7 +616,7 @@ public function update()
         $role_db = $this->request->getVar('role_db');
 
         if ($role !== $role_db) {
-            $groupModel = new \Myth\Auth\Models\GroupModel();
+            $groupModel = new \App\ThirdParty\MythAuth\Models\GroupModel();
             $groupModel->addUserToGroup($id_user, (int)$role);
             $groupModel->removeUserFromGroup($id_user, (int)$role_db);
         }

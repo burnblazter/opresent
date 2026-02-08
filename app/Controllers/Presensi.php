@@ -25,7 +25,7 @@ class Presensi extends BaseController
 
     // PERBAIKAN: Konstanta untuk validasi
     private const MAX_DISTANCE_METERS = 10000; // Maksimal 10km untuk mencegah abuse
-    private const MIN_FACE_SIMILARITY = 0.6; // Threshold minimum untuk face recognition
+    private const MIN_FACE_SIMILARITY = 0.62; // Threshold minimum untuk face recognition
     private const MAX_IMAGE_SIZE = 5242880; // 5MB dalam bytes
     private const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png'];
     

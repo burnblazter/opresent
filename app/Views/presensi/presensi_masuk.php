@@ -154,7 +154,7 @@
 .movement-progress-bar {
   width: 100%;
   height: 8px;
-  background: #e9ecef;
+  background: #ffffff;
   border-radius: 4px;
   overflow: hidden;
   margin-top: 10px;
@@ -162,7 +162,7 @@
 
 .movement-progress-fill {
   height: 100%;
-  background: #1e3a8a;
+  background: #dda518;
   /* Solid color instead of gradient */
   width: 0%;
   /* REMOVED: transition - causes constant repaints */
@@ -233,10 +233,8 @@
 
             <div class="mt-3">
               <div class="video-container">
-                <!-- QVGA Resolution for maximum performance -->
-                <video id="my_camera" width="320" height="240" autoplay playsinline
-                  style="border: 2px solid #ccc; border-radius: 8px;"></video>
-                <canvas id="face-overlay-canvas" width="320" height="240"></canvas>
+                <video id="my_camera" autoplay playsinline style="width: 100%; max-width: 640px;"></video>
+                <canvas id="face-overlay-canvas"></canvas>
               </div>
               <canvas id="canvas" style="display:none;"></canvas>
             </div>
@@ -266,45 +264,6 @@
 </div>
 
 <script language="JavaScript">
-/* ============================================================
-   EXTREME PERFORMANCE OPTIMIZATION FOR POTATO PHONES
-   ============================================================
-   
-   OPTIMIZATION STRATEGY:
-   
-   1. LOOP MECHANISM (CRITICAL):
-      - Replaced setInterval with requestAnimationFrame + delta-time throttle
-      - Tab visibility detection to pause detection when hidden
-      - Prevents frame stacking on slow devices
-   
-   2. HUMAN.JS CONFIGURATION (CRITICAL):
-      - Explicit BlazeFace model (lightest detector)
-      - Half-precision GPU calculations enabled
-      - All non-essential features disabled at config level
-      - Cache sensitivity = 0 to save RAM
-   
-   3. VIDEO STREAM OPTIMIZATION:
-      - Strict QVGA (320x240) resolution enforcement
-      - Hardware acceleration forced via CSS transform
-      - Reduced framerate cap (15fps ideal, 20fps max)
-   
-   4. MEMORY MANAGEMENT:
-      - Immediate Float32Array conversion for descriptors
-      - Aggressive nullification of unused variables
-      - Manual garbage collection hints
-   
-   5. DOM MANIPULATION:
-      - Dirty checking: Only update DOM when values actually change
-      - Batched DOM updates to prevent layout thrashing
-      - GPU-accelerated CSS properties only
-   
-   6. COMPUTATION OPTIMIZATION:
-      - Early exit from expensive functions
-      - Math operations only when necessary
-      - Debouncing with delta-time instead of Date.now()
-   
-   ============================================================ */
-
 // ==================== GLOBAL STATE ====================
 let stream = null;
 let isModelLoaded = false;
@@ -335,6 +294,7 @@ let previousValues = {
   statusMessage: '',
   statusType: '',
   progressPercentage: -1,
+  statusDetails: '',
   buttonDisabled: null,
   buttonText: ''
 };
@@ -349,11 +309,15 @@ let headMovementState = {
   lastCheckTime: 0
 };
 
-// ==================== HUMAN.JS CONFIGURATION ====================
-// CRITICAL: Lightest possible configuration for low-end devices
 const human = new Human.Human({
-  backend: 'webgl',
   modelBasePath: '<?= base_url('assets/models/') ?>',
+
+  wasm: {
+    enabled: true,
+    simd: true
+  },
+
+  backend: 'wasm',
 
   // OPTIMIZATION: Enable half-precision for faster GPU calculations
   // Note: Check Human.js documentation if this exact flag is supported
@@ -363,11 +327,11 @@ const human = new Human.Human({
   face: {
     enabled: true,
     detector: {
-      modelPath: 'blazeface.json', // Explicit lightest model
+      modelPath: 'blazeface.json',
       rotation: true,
       maxDetected: 1, // Single face only
-      skipFrames: 0, // Don't skip, we control via RAF
-      minConfidence: 0.5 // Lower threshold for faster detection
+      skipFrames: 1,
+      minConfidence: 0.62 // Lower threshold for faster detection
     },
     mesh: {
       enabled: true // Needed for rotation detection
@@ -377,7 +341,7 @@ const human = new Human.Human({
     },
     emotion: {
       enabled: true,
-      minConfidence: 0.1 // Lower threshold
+      minConfidence: 0.1, // Lower threshold
     },
     // DISABLED: All non-essential features
     iris: {
@@ -388,10 +352,10 @@ const human = new Human.Human({
     }, // Too heavy for low-end
     liveness: {
       enabled: false
-    }
+    },
+
   },
 
-  // DISABLED: Everything not needed
   body: {
     enabled: false
   },
@@ -411,12 +375,13 @@ const human = new Human.Human({
   cacheSensitivity: 0.7,
 
   filter: {
-    enabled: false
+    enabled: true,
+    equalization: false,
   }
 });
 
 // ==================== CONSTANTS ====================
-const DETECTION_THROTTLE_MS = 400; // Throttle detection to every 400ms
+const DETECTION_THROTTLE_MS = 200;
 const DEBOUNCE_HEAD_MOVEMENT_MS = 150; // Debounce head movement checks
 
 const emotionMap = {
@@ -579,18 +544,18 @@ async function setupCamera() {
     const constraints = [{
         video: {
           width: {
-            ideal: 320,
-            max: 320
+            ideal: 640,
+            max: 640
           },
           height: {
-            ideal: 240,
-            max: 240
+            ideal: 480,
+            max: 480
           },
           facingMode: 'user',
           frameRate: {
-            ideal: 15,
-            max: 20
-          } // Low framerate for low-end devices
+            ideal: 24,
+            max: 30
+          }
         },
         audio: false
       },
@@ -659,9 +624,28 @@ async function initHuman() {
   try {
     updateStatus('Memuat model AI...', 'info');
 
-    // Load models
-    await human.load();
-    await human.warmup();
+    try {
+      const support = human.env;
+
+      if (!support.wasm) {
+        throw new Error("Browser tidak support WASM");
+      }
+
+      await human.load();
+      await human.warmup();
+      console.log('Backend:', human.tf.getBackend());
+
+
+    } catch (wasmError) {
+      console.warn('⚠️ Gagal memuat WASM, mencoba fallback ke WebGL...', wasmError);
+
+      human.config.backend = 'webgl';
+      await human.load();
+      await human.warmup();
+
+      console.log('✅ Berhasil recover menggunakan WebGL');
+      updateStatus('Mode Kompatibilitas (WebGL) Aktif', 'warning');
+    }
 
     updateStatus('Memuat data wajah...', 'info');
     await loadFaceDatabase();
@@ -779,13 +763,16 @@ function updateProgressBar(percentage) {
 
 // OPTIMIZATION: Dirty checking for status updates
 function updateStatus(message, type = 'info', details = '') {
-  // Only update if message or type actually changed
-  if (message === previousValues.statusMessage && type === previousValues.statusType) {
+  // Perbaiki logika ini: Cek juga apakah 'details' berubah
+  if (message === previousValues.statusMessage &&
+    type === previousValues.statusType &&
+    details === previousValues.statusDetails) { // <--- Tambahkan ini
     return;
   }
 
   previousValues.statusMessage = message;
   previousValues.statusType = type;
+  previousValues.statusDetails = details; // <--- Simpan nilai details terakhir
 
   const statusDiv = DOM_CACHE.statusDiv;
   const messageDiv = DOM_CACHE.messageDiv;
@@ -857,7 +844,7 @@ function checkHeadMovement(face, currentTime) {
 
   const pitchDiff = pitch - headMovementState.initialRotation.pitch;
   const yawDiff = yaw - headMovementState.initialRotation.yaw;
-  const threshold = 15;
+  const threshold = 12;
 
   let isCorrectMovement = false;
 
@@ -1014,7 +1001,7 @@ function startFaceDetectionRAF() {
 
   // Start the loop
   animationFrameId = requestAnimationFrame(detectionLoop);
-  console.log('✅ Face detection loop started (RAF-based)');
+  console.log('✅ Face detection loop started');
 }
 
 // OPTIMIZATION: Stop detection loop
@@ -1115,7 +1102,7 @@ DOM_CACHE.button.addEventListener('click', function() {
       age: currentAge,
       emotion: currentEmotion,
       similarity: currentSimilarity,
-      date: '<?= date('Y-m-d') ?>'
+      date_recorded: '<?= date('Y-m-d') ?>'
     };
     localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
 

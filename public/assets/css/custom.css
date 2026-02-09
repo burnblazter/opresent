@@ -79,6 +79,21 @@
     60px 60px !important;
 }
 
+html[data-darkreader-scheme="dark"] .btn-secondary,
+html[data-darkreader-scheme="dark"] .btn-warning {
+  color: transparent !important;
+  text-shadow: 0 0 0 #1e3a8a !important;
+  border-color: transparent !important;
+}
+
+html[data-darkreader-scheme="dark"] .btn-secondary svg,
+html[data-darkreader-scheme="dark"] .btn-warning svg,
+html[data-darkreader-scheme="dark"] .btn-secondary i,
+html[data-darkreader-scheme="dark"] .btn-warning i {
+  color: #1e3a8a !important;
+  text-shadow: none !important;
+}
+
 /* ============================================
    4. GLOBAL BACKGROUND & TYPOGRAPHY
    ============================================ */

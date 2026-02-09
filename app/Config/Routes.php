@@ -47,6 +47,7 @@ $routes->post('/data-pegawai/store', 'Pegawai::store', ['filter' => 'role:admin,
 $routes->post('/data-pegawai/update', 'Pegawai::update', ['filter' => 'role:admin,head,helper']);
 $routes->delete('/data-pegawai/(:num)', 'Pegawai::delete', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/bulk-delete', 'Pegawai::bulkDelete', ['filter' => 'role:admin,head,helper']);
+$routes->post('data-pegawai/bulk-update-unit', 'Pegawai::bulkUpdateUnit', ['filter' => 'role:admin,head,helper']);
 $routes->get('/data-pegawai/edit/(:segment)', 'Pegawai::edit/$1', ['filter' => 'role:admin,head,helper']);
 $routes->get('/data-pegawai/download-template', 'Pegawai::downloadTemplate', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/import-excel', 'Pegawai::importExcel', ['filter' => 'role:admin,head,helper']);
@@ -64,11 +65,10 @@ $routes->post('/hapus-foto/(:segment)', 'Pegawai::hapusFoto/$1', ['filter' => 'r
 // ============================================================================
 // PRESENSI
 // ============================================================================
-$routes->post('/presensi-masuk', 'Presensi::presensiMasuk');
-$routes->post('/presensi-masuk/simpan', 'Presensi::simpanPresensiMasuk');
-
-$routes->post('/presensi-keluar', 'Presensi::presensiKeluar');
-$routes->post('/presensi-keluar/simpan', 'Presensi::simpanPresensiKeluar');
+$routes->post('/presensi-masuk', 'Presensi::presensiMasuk', ['filter' => 'role:pegawai,helper']);
+$routes->post('/presensi-masuk/simpan', 'Presensi::simpanPresensiMasuk', ['filter' => 'role:pegawai,helper']);
+$routes->post('/presensi-keluar', 'Presensi::presensiKeluar', ['filter' => 'role:pegawai,helper']);
+$routes->post('/presensi-keluar/simpan', 'Presensi::simpanPresensiKeluar', ['filter' => 'role:pegawai,helper']);
 
 $routes->get('/rekap-presensi', 'Presensi::rekapPresensiPegawai', ['filter' => 'role:admin,pegawai,helper']);
 $routes->post('/rekap-presensi/excel', 'Presensi::rekapPresensiPegawaiExcel', ['filter' => 'role:admin,pegawai,helper']);
@@ -148,5 +148,21 @@ $routes->cli('cron/auto-cleanup', 'Cron::autoCleanup');
 // ============================================================================
 // PRESENSI PEGAWAI
 // ============================================================================
-$routes->get('presensi/get-face-descriptors', 'Presensi::getFaceDescriptors', ['filter' => 'role:pegawai']);
-$routes->post('presensi/verify-face', 'Presensi::verifyFace', ['filter' => 'role:pegawai']);
+$routes->get('presensi/get-face-descriptors', 'Presensi::getFaceDescriptors', ['filter' => 'role:pegawai,helper']);
+$routes->post('presensi/verify-face', 'Presensi::verifyFace', ['filter' => 'role:pegawai,helper']);
+
+// ============================================================================
+// FACE ENROLLMENT REQUEST (USER)
+// ============================================================================
+$routes->get('/face-enrollment', 'FaceEnrollmentRequest::index', ['filter' => 'role:pegawai']);
+$routes->post('/face-enrollment/submit', 'FaceEnrollmentRequest::submitRequest', ['filter' => 'role:pegawai']);
+$routes->get('/face-enrollment/cancel/(:num)', 'FaceEnrollmentRequest::cancelRequest/$1', ['filter' => 'role:pegawai']);
+
+// ============================================================================
+// FACE ENROLLMENT ADMIN (ADMIN/HEAD)
+// ============================================================================
+$routes->get('/kelola-face-enrollment', 'FaceEnrollmentAdmin::index', ['filter' => 'role:admin,head']);
+$routes->get('/kelola-face-enrollment/detail/(:num)', 'FaceEnrollmentAdmin::detail/$1', ['filter' => 'role:admin,head']);
+$routes->post('/kelola-face-enrollment/approve/(:num)', 'FaceEnrollmentAdmin::approve/$1', ['filter' => 'role:admin,head']);
+$routes->post('/kelola-face-enrollment/reject/(:num)', 'FaceEnrollmentAdmin::reject/$1', ['filter' => 'role:admin,head']);
+$routes->get('/kelola-face-enrollment/image/(:num)', 'FaceEnrollmentAdmin::viewImage/$1', ['filter' => 'role:admin,head']);

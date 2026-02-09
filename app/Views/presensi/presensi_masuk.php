@@ -1,3 +1,5 @@
+<!-- presensi_masuk -->
+
 <?= $this->extend('templates/index') ?>
 
 <?= $this->section('pageBody') ?>
@@ -6,11 +8,6 @@
 <script src="<?= base_url('assets/js/human.js') ?>"></script>
 
 <style>
-/* ============================================================
-   CRITICAL CSS OPTIMIZATIONS FOR LOW-END GPU
-   ============================================================ */
-
-/* Video Container - GPU Accelerated, No Expensive Effects */
 .video-container {
   position: relative;
   display: inline-block;
@@ -256,6 +253,11 @@
                 <span id="btn-text">Memuat Kamera...</span>
               </button>
             </form>
+            <div class="text-center mt-3">
+              <a href="<?= base_url('face-enrollment') ?>" class="text-muted small text-decoration-none">
+                <span class="me-1">⚠️</span>Kendala verifikasi? Request Pendaftaran Wajah
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -274,6 +276,8 @@ let lastDetectionTime = 0; // Delta-time tracker
 let currentAge = 0;
 let currentEmotion = 'neutral';
 let currentSimilarity = 0;
+let isFaceRegistered = false;
+const FACE_ENROLLMENT_URL = '<?= base_url('face-enrollment') ?>';
 
 // Cached DOM elements (prevent repeated queries)
 const DOM_CACHE = {
@@ -318,11 +322,7 @@ const human = new Human.Human({
   },
 
   backend: 'wasm',
-
-  // OPTIMIZATION: Enable half-precision for faster GPU calculations
-  // Note: Check Human.js documentation if this exact flag is supported
-  // Some versions use 'wasmPath' or other flags
-  deallocate: true, // Deallocate tensors immediately after use
+  deallocate: true,
 
   face: {
     enabled: true,
@@ -377,6 +377,7 @@ const human = new Human.Human({
   filter: {
     enabled: true,
     equalization: false,
+
   }
 });
 
@@ -501,7 +502,7 @@ function showAITransparency() {
   }
 
   Swal.fire({
-    title: '🤖 Transparansi AI',
+    title: '🤖 Detail AI',
     html: `
       <div style="text-align: left;">
         <h5 style="margin-top: 0; color: #1e3a8a;">📊 Hasil Verifikasi Wajah</h5>
@@ -540,7 +541,6 @@ async function setupCamera() {
       throw notSupportedError;
     }
 
-    // OPTIMIZATION: Strict QVGA (320x240) resolution
     const constraints = [{
         video: {
           width: {
@@ -622,27 +622,34 @@ function captureImage() {
 // ==================== HUMAN.JS INITIALIZATION ====================
 async function initHuman() {
   try {
-    updateStatus('Memuat model AI...', 'info');
+    const preloadTime = localStorage.getItem('humanjs_preloaded');
+    const isCached = preloadTime && (Date.now() - parseInt(preloadTime) < 1800000);
+
+    if (isCached) {
+      updateStatus('⚡ Menggunakan model dari cache...', 'info');
+      console.log('⚡ Using cached Human.js models (pre-loaded from dashboard)');
+    } else {
+      updateStatus('Memuat model AI...', 'info');
+      console.log('📥 Loading Human.js models (not cached)');
+    }
 
     try {
-      const support = human.env;
+      await human.load();
 
-      if (!support.wasm) {
-        throw new Error("Browser tidak support WASM");
+      if (!isCached) {
+        console.log('🔥 First-time load, performing warmup...');
+        await human.warmup();
+      } else {
+        console.log('⚡ Skipping warmup (already cached)');
       }
 
-      await human.load();
-      await human.warmup();
       console.log('Backend:', human.tf.getBackend());
-
 
     } catch (wasmError) {
       console.warn('⚠️ Gagal memuat WASM, mencoba fallback ke WebGL...', wasmError);
-
       human.config.backend = 'webgl';
       await human.load();
       await human.warmup();
-
       console.log('✅ Berhasil recover menggunakan WebGL');
       updateStatus('Mode Kompatibilitas (WebGL) Aktif', 'warning');
     }
@@ -651,13 +658,9 @@ async function initHuman() {
     await loadFaceDatabase();
 
     isModelLoaded = true;
-
     selectRandomMovement();
     showHeadMovementInstruction();
-
     checkButtonState();
-
-    // CRITICAL: Start RAF-based detection loop
     startFaceDetectionRAF();
 
   } catch (error) {
@@ -685,13 +688,33 @@ async function loadFaceDatabase() {
     const data = await response.json();
     if (data.error) throw new Error(data.error);
 
-    // Filter for current user
     let userFaces = data.filter(item => item.id_pegawai == <?= $user_profile->id_pegawai ?>);
 
     if (userFaces.length === 0) {
-      updateStatus('Wajah belum terdaftar. Hubungi Admin.', 'warning');
-      DOM_CACHE.button.disabled = true;
-      return;
+      updateStatus('Wajah tidak ditemukan di database.', 'danger');
+
+      document.querySelector('.video-container').style.display = 'none';
+      document.getElementById('verification-progress').style.display = 'none';
+      document.getElementById('head-movement-instruction').style.display = 'none';
+
+      Swal.fire({
+        icon: 'error',
+        title: 'Wajah Belum Terdaftar',
+        text: 'Sistem tidak menemukan data wajah Anda untuk verifikasi.',
+        showCancelButton: true,
+        confirmButtonText: 'Request Pendaftaran Wajah',
+        confirmButtonColor: '#1e3a8a', // Warna biru utama
+        cancelButtonText: 'Tutup',
+        cancelButtonColor: '#6c757d',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = FACE_ENROLLMENT_URL;
+        }
+      });
+
+      return false;
     }
 
     faceDatabase = userFaces.map(item => ({
@@ -699,17 +722,25 @@ async function loadFaceDatabase() {
       nama: item.nama,
       descriptor: item.descriptor
     }));
+
+    isFaceRegistered = true;
     console.log(`✅ Berhasil memuat ${faceDatabase.length} data wajah`);
     userFaces = null;
+    return true; // Return true jika berhasil
 
   } catch (error) {
     console.error('❌ Error loading face database:', error);
     updateStatus('Gagal memuat database wajah.', 'danger');
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Gagal Memuat Data',
+      text: 'Terjadi kesalahan saat mengambil data wajah. Silahkan refresh halaman.',
+      confirmButtonColor: '#1e3a8a'
+    });
+    return false;
   }
 }
-
-// ==================== UI UPDATE FUNCTIONS ====================
-// OPTIMIZATION: Dirty checking to prevent unnecessary DOM updates
 
 function showHeadMovementInstruction() {
   const instructionDiv = document.getElementById('head-movement-instruction');
@@ -796,7 +827,7 @@ function checkButtonState() {
   const button = DOM_CACHE.button;
   const btnText = DOM_CACHE.btnText;
 
-  if (stream && video.readyState === 4 && isModelLoaded) {
+  if (stream && video.readyState === 4 && isModelLoaded && isFaceRegistered) {
     if (previousValues.buttonDisabled !== false) {
       button.disabled = false;
       previousValues.buttonDisabled = false;
@@ -809,6 +840,9 @@ function checkButtonState() {
     }
 
     updateStatus('✅ Sistem siap! Ikuti instruksi verifikasi.', 'success');
+  } else if (!isFaceRegistered && isModelLoaded) {
+    button.disabled = true;
+    btnText.innerText = "Wajah Tidak Terdaftar";
   }
 }
 
@@ -919,6 +953,10 @@ function startFaceDetectionRAF() {
 
     lastDetectionTime = currentTime;
 
+    if (DOM_CACHE.button && DOM_CACHE.button.disabled) {
+      checkButtonState();
+    }
+
     // Skip if already verifying (photo taken)
     if (isVerifying) {
       animationFrameId = requestAnimationFrame(detectionLoop);
@@ -959,8 +997,15 @@ function startFaceDetectionRAF() {
         const match = findBestMatch(face.embedding);
         currentSimilarity = match.score;
 
-        if (match.score < 0.55) {
-          updateStatus('⚠️ Akurasi rendah, posisikan wajah dengan benar.', 'warning');
+        if (match.score < 0.62) {
+          const helpLink =
+            `<div class="mt-2">Susah terdeteksi? <a href="${FACE_ENROLLMENT_URL}" class="fw-bold text-decoration-none">Request Pendaftaran Wajah</a></div>`;
+
+          updateStatus(
+            '⚠️ Akurasi rendah, posisikan wajah dengan benar.',
+            'warning',
+            helpLink
+          );
           DOM_CACHE.faceVerifiedInput.value = 'false';
           animationFrameId = requestAnimationFrame(detectionLoop);
           return;
@@ -992,7 +1037,6 @@ function startFaceDetectionRAF() {
 
     } catch (error) {
       console.error('Detection error:', error);
-      // Continue loop even on error
     }
 
     // Schedule next frame
@@ -1048,91 +1092,7 @@ function findBestMatch(descriptor) {
   return bestMatch;
 }
 
-// ==================== BUTTON CLICK HANDLER ====================
 DOM_CACHE.button = document.getElementById('ambil-foto');
-DOM_CACHE.button.addEventListener('click', function() {
-  const faceVerified = DOM_CACHE.faceVerifiedInput.value;
-
-  if (!headMovementState.completed) {
-    Swal.fire({
-      icon: 'warning',
-      title: 'Verifikasi Belum Selesai',
-      text: 'Selesaikan verifikasi gerakan kepala terlebih dahulu!',
-      confirmButtonColor: '#1e3a8a'
-    });
-    return;
-  }
-
-  if (faceVerified !== 'true') {
-    Swal.fire({
-      icon: 'error',
-      title: 'Wajah Belum Terverifikasi',
-      html: `
-        <p>Wajah belum terverifikasi dengan baik.</p>
-        <p><strong>Tips:</strong></p>
-        <ul style="text-align: left; padding-left: 20px;">
-          <li>Pastikan wajah terlihat jelas</li>
-          <li>Pencahayaan cukup</li>
-          <li>Posisi tegak menghadap kamera</li>
-        </ul>
-      `,
-      confirmButtonColor: '#1e3a8a'
-    });
-    return;
-  }
-
-  // Stop detection loop
-  isVerifying = true;
-  stopFaceDetection();
-
-  const btn = DOM_CACHE.button;
-  const btnText = DOM_CACHE.btnText;
-
-  btn.disabled = true;
-  btnText.innerText = 'Mengambil foto...';
-
-  try {
-    const imageData = captureImage();
-    document.querySelector('.image-tag').value = imageData;
-    document.getElementById('my_result').innerHTML =
-      '<img src="' + imageData + '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
-
-    // Save fun data to localStorage
-    const funData = {
-      age: currentAge,
-      emotion: currentEmotion,
-      similarity: currentSimilarity,
-      date_recorded: '<?= date('Y-m-d') ?>'
-    };
-    localStorage.setItem('daily_ai_mood', JSON.stringify(funData));
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Foto Berhasil Diambil',
-      html: `<p>Mengirim data presensi...</p>`,
-      timer: 1500,
-      showConfirmButton: false,
-      didClose: () => {
-        document.getElementById('presensi-form').submit();
-      }
-    });
-
-  } catch (error) {
-    console.error('Error capturing image:', error);
-    Swal.fire({
-      icon: 'error',
-      title: 'Gagal Mengambil Foto',
-      text: error.message,
-      confirmButtonColor: '#1e3a8a'
-    });
-
-    // Resume detection
-    isVerifying = false;
-    btn.disabled = false;
-    btnText.innerText = 'Ambil Gambar & Verifikasi';
-    startFaceDetectionRAF();
-  }
-});
 
 // ==================== PAGE VISIBILITY API ====================
 // CRITICAL: Pause detection when tab is hidden to save battery
@@ -1226,18 +1186,46 @@ var group = new L.featureGroup([
 ]);
 map.fitBounds(group.getBounds().pad(0.1));
 
+const themeObserver = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    if (mutation.type === 'attributes') {
+      if (['data-bs-theme', 'data-darkreader-scheme', 'class'].includes(mutation.attributeName)) {
+        updateMapTheme();
+      }
+    }
+  });
+});
+
+themeObserver.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ['data-bs-theme', 'data-darkreader-scheme', 'class']
+});
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+  if (!document.documentElement.getAttribute('data-bs-theme')) {
+    updateMapTheme();
+  }
+});
+
+
 function updateMapTheme() {
+  // Hapus layer lama
+  if (tileLayer) {
+    map.removeLayer(tileLayer);
+  }
+
   const newUrl = getTileLayerUrl();
-  map.removeLayer(tileLayer);
+
   tileLayer = L.tileLayer(newUrl, {
     maxZoom: 19,
     attribution: '© OpenStreetMap'
   }).addTo(map);
 }
 
-// ==================== DOM INITIALIZATION ====================
-// Cache all DOM elements once on load
+// --- BAGIAN INI MENGGANTIKAN BAGIAN PALING BAWAH SCRIPT ANDA ---
+
 document.addEventListener('DOMContentLoaded', function() {
+  // 1. Inisialisasi Cache Element
   DOM_CACHE.video = document.getElementById('my_camera');
   DOM_CACHE.canvas = document.getElementById('canvas');
   DOM_CACHE.button = document.getElementById('ambil-foto');
@@ -1248,12 +1236,117 @@ document.addEventListener('DOMContentLoaded', function() {
   DOM_CACHE.progressFill = document.getElementById('movement-progress-fill');
   DOM_CACHE.faceVerifiedInput = document.getElementById('face-verified');
 
-  // Start initialization
+  // 2. Setup Event Listener Tombol (DIPINDAHKAN KE SINI)
+  setupButtonListener();
+
+  // 3. Jalankan Kamera & AI
   (async function() {
     await setupCamera();
     await initHuman();
   })();
 });
+
+// Fungsi baru untuk menangani klik tombol (Pemisahan logika agar rapi)
+function setupButtonListener() {
+  DOM_CACHE.button.addEventListener('click', function() {
+    if (!isFaceRegistered) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Akses Ditolak',
+        text: 'Wajah Anda belum terdaftar di sistem.',
+        showCancelButton: true,
+        confirmButtonText: 'Request Pendaftaran Wajah',
+        confirmButtonColor: '#1e3a8a',
+        cancelButtonText: 'Batal'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = FACE_ENROLLMENT_URL;
+        }
+      });
+      return;
+    }
+
+    const faceVerified = DOM_CACHE.faceVerifiedInput.value;
+
+    if (!headMovementState.completed) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Verifikasi Belum Selesai',
+        text: 'Selesaikan verifikasi gerakan kepala terlebih dahulu!',
+        confirmButtonColor: '#1e3a8a'
+      });
+      return;
+    }
+
+    if (faceVerified !== 'true') {
+      Swal.fire({
+        icon: 'error',
+        title: 'Wajah Belum Terverifikasi',
+        html: `
+            <p>Wajah belum terverifikasi dengan baik.</p>
+            <p><strong>Tips:</strong></p>
+            <ul style="text-align: left; padding-left: 20px;">
+              <li>Pastikan wajah terlihat jelas</li>
+              <li>Pencahayaan cukup</li>
+              <li>Posisi tegak menghadap kamera</li>
+            </ul>
+          `,
+        confirmButtonColor: '#1e3a8a'
+      });
+      return;
+    }
+
+    isVerifying = true;
+    stopFaceDetection();
+
+    const btn = DOM_CACHE.button;
+    const btnText = DOM_CACHE.btnText;
+
+    btn.disabled = true;
+    btnText.innerText = 'Mengambil foto...';
+
+    try {
+      const imageData = captureImage();
+      document.querySelector('.image-tag').value = imageData;
+      document.getElementById('my_result').innerHTML =
+        '<img src="' + imageData + '" style="max-width: 100%; border-radius: 8px; border: 2px solid #28a745;"/>';
+
+      const funData = {
+        age: currentAge,
+        emotion: currentEmotion,
+        similarity: currentSimilarity,
+        date_recorded: '<?= date('Y-m-d') ?>',
+        type: 'in'
+      };
+      localStorage.setItem('daily_ai_mood_in', JSON.stringify(funData));
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Foto Berhasil Diambil',
+        html: `<p>Mengirim data presensi masuk...</p>`,
+        timer: 1500,
+        showConfirmButton: false,
+        didClose: () => {
+          document.getElementById('presensi-form').submit();
+        }
+      });
+
+    } catch (error) {
+      console.error('Error capturing image:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Gagal Mengambil Foto',
+        text: error.message,
+        confirmButtonColor: '#1e3a8a'
+      });
+
+      isVerifying = false;
+      btn.disabled = false;
+      btnText.innerText = 'Ambil Gambar & Verifikasi';
+      startFaceDetectionRAF();
+    }
+  });
+}
 </script>
 
 <?= $this->endSection() ?>

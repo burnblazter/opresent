@@ -31,6 +31,7 @@ class PegawaiModel extends Model
         $offset = ($page - 1) * $perPage;
 
         $this->builder->select('pegawai.*, users.id as id_user, users.id_pegawai, users.username, users.active, users.email, auth_groups.name as role, auth_groups.id as role_id, jabatan.jabatan, lokasi_presensi.nama_lokasi as lokasi_presensi');
+    $this->builder->select('(SELECT COUNT(face_descriptors.id) FROM face_descriptors WHERE face_descriptors.id_pegawai = pegawai.id) as jumlah_wajah');
         $this->builder->join('users', 'users.id_pegawai = pegawai.id');
         $this->builder->join('auth_groups_users', 'auth_groups_users.user_id = users.id');
         $this->builder->join('auth_groups', 'auth_groups.id = auth_groups_users.group_id');

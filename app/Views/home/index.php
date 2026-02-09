@@ -787,7 +787,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const boxIn = document.getElementById('ai-joke-container-in');
   if (boxIn && typeof checkAiData === 'function') {
-    checkAiData('daily_ai_mood', 'in', boxIn, currentDate);
+    checkAiData('daily_ai_mood_in', 'in', boxIn, currentDate);
   }
 
   const boxOut = document.getElementById('ai-joke-container-out');
@@ -1142,5 +1142,112 @@ function updateClock() {
 </script>
 
 <script src="<?= base_url('assets/js/ai-jokes.js') ?>"></script>
+
+<!-- Pre-load Human.js Script -->
+<script>
+(async function preloadHumanJS() {
+  const isLoggedIn = <?= json_encode(logged_in()) ?>;
+  if (!isLoggedIn) return;
+
+  try {
+    console.log('🔥 [Dashboard] Pre-loading Human.js models...');
+
+    const preloadTime = localStorage.getItem('humanjs_preloaded');
+    const now = Date.now();
+    const thirtyMinutes = 30 * 60 * 1000;
+
+    if (preloadTime && (now - parseInt(preloadTime)) < thirtyMinutes) {
+      console.log('⚡ [Dashboard] Human.js already cached, skipping...');
+      return;
+    }
+
+    if (!window.Human) {
+      const script = document.createElement('script');
+      script.src = '<?= base_url('assets/js/human.js') ?>';
+      script.async = true;
+
+      await new Promise((resolve, reject) => {
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+
+      console.log('✅ [Dashboard] Human.js library loaded');
+    }
+
+    const human = new Human.Human({
+      modelBasePath: '<?= base_url('assets/models/') ?>',
+
+      wasm: {
+        enabled: true,
+        simd: true
+      },
+
+      backend: 'wasm',
+      deallocate: true,
+
+      face: {
+        enabled: true,
+        detector: {
+          modelPath: 'blazeface.json',
+          maxDetected: 1,
+          skipFrames: 1,
+          minConfidence: 0.62
+        },
+        mesh: {
+          enabled: true
+        },
+        description: {
+          enabled: true
+        },
+        emotion: {
+          enabled: true,
+          minConfidence: 0.1
+        },
+
+        iris: {
+          enabled: false
+        },
+        antispoof: {
+          enabled: false
+        },
+        liveness: {
+          enabled: false
+        }
+      },
+
+      body: {
+        enabled: false
+      },
+      hand: {
+        enabled: false
+      },
+      object: {
+        enabled: false
+      },
+      gesture: {
+        enabled: false
+      },
+      segmentation: {
+        enabled: false
+      }
+    });
+
+    console.log('⏳ [Dashboard] Loading AI models...');
+    await human.load();
+
+    console.log('⏳ [Dashboard] Warming up models...');
+    await human.warmup();
+
+    console.log('✅ [Dashboard] Human.js models cached successfully!');
+    console.log('📊 Backend:', human.tf.getBackend());
+
+    localStorage.setItem('humanjs_preloaded', now.toString());
+
+  } catch (error) {
+    console.warn('⚠️ [Dashboard] Pre-load Human.js failed:', error.message);
+  }
+})();
+</script>
 
 <?= $this->endSection() ?>

@@ -3,9 +3,10 @@
     <div class="navbar">
       <div class="container-xl">
         <ul class="navbar-nav">
+
           <?php if (!in_groups('head')) : ?>
           <li class="nav-item <?= $title === 'Home' ? 'active' : '' ?>">
-            <a class="nav-link <?= $title === 'Home' ? 'active' : '' ?>" href="<?= base_url() ?>">
+            <a class="nav-link" href="<?= base_url() ?>">
               <span class="nav-link-icon d-md-none d-lg-inline-block">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
                   stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -17,6 +18,28 @@
               </span>
               <span class="nav-link-title">
                 Home
+              </span>
+            </a>
+          </li>
+
+          <li class="nav-item <?= $title === 'Request Pendaftaran Wajah' ? 'active' : '' ?>">
+            <a class="nav-link" href="<?= base_url('face-enrollment') ?>">
+              <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-face-id" width="24"
+                  height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path>
+                  <path d="M4 16v2a2 2 0 0 0 2 2h2"></path>
+                  <path d="M16 4h2a2 2 0 0 1 2 2v2"></path>
+                  <path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path>
+                  <path d="M9 10l.01 0"></path>
+                  <path d="M15 10l.01 0"></path>
+                  <path d="M9.5 15a3.5 3.5 0 0 0 5 0"></path>
+                </svg>
+              </span>
+              <span class="nav-link-title">
+                Request Pendaftaran Wajah
               </span>
             </a>
           </li>
@@ -51,15 +74,13 @@
                   </a>
 
                   <?php if (in_groups('helper')) : ?>
-                  <!-- Menu khusus Helper: hanya Data Pengguna -->
                   <a href="<?= base_url('/data-pegawai') ?>"
                     class="dropdown-item <?= $title === 'Data Pengguna' ? 'active' : '' ?>">
                     Data Pengguna
                   </a>
                   <?php else : ?>
-                  <!-- Menu untuk Admin dan Head: Full Master Data -->
                   <div class="dropend">
-                    <a class="dropdown-item dropdown-toggle <?= $title === 'Data Unit' || $title === 'Data Lokasi Presensi' || $title === 'Data pengguna' || $title === 'Data Hari Libur' ? 'active' : '' ?>"
+                    <a class="dropdown-item dropdown-toggle <?= $title === 'Data Hari Libur' || $title === 'Data Unit' || $title === 'Data Lokasi Presensi' || $title === 'Data pengguna' ? 'active' : '' ?>"
                       href="<?= base_url('/data-pegawai') ?>" data-bs-toggle="dropdown" data-bs-auto-close="outside"
                       role="button" aria-expanded="false">
                       Master Data
@@ -183,6 +204,47 @@
               </span>
             </a>
           </li>
+
+          <li class="nav-item <?= $title === 'Request Pendaftaran Wajah' ? 'active' : '' ?>">
+            <a class="nav-link" href="<?= base_url('kelola-face-enrollment') ?>">
+              <span class="nav-link-icon d-md-none d-lg-inline-block">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-scan" width="24"
+                  height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M10 9a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"></path>
+                  <path d="M4 8v-2a2 2 0 0 1 2 -2h2"></path>
+                  <path d="M4 16v2a2 2 0 0 0 2 2h2"></path>
+                  <path d="M16 4h2a2 2 0 0 1 2 2v2"></path>
+                  <path d="M16 20h2a2 2 0 0 0 2 -2v-2"></path>
+                  <path d="M8 16a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2"></path>
+                </svg>
+              </span>
+
+              <span class="nav-link-title" style="display: flex; align-items: center;">
+                Request Pendaftaran Wajah
+
+                <?php if (isset($totalPendingFaces) && $totalPendingFaces > 0) : ?>
+                <span style="
+          background-color: #dda518 !important;
+          color: #ffffff !important;
+          font-size: 10px !important;
+          font-weight: bold !important;
+          padding: 2px 6px !important;
+          border-radius: 50px !important;
+          margin-left: 8px !important;
+          transform: none !important;
+          box-shadow: none !important;
+          border: none !important;
+          line-height: 1.2 !important;
+          display: inline-block !important;
+      ">
+                  <?= $totalPendingFaces ?>
+                </span>
+                <?php endif; ?>
+              </span>
+            </a>
+          </li>
           <?php endif; ?>
 
           <li class="nav-item">
@@ -202,6 +264,7 @@
               </span>
             </a>
           </li>
+
         </ul>
       </div>
     </div>

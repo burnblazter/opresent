@@ -98,9 +98,9 @@
             <div class="card-body">
               <div class="mb-3">
                 <label class="form-label">Radius (meter)</label>
-                <input name="radius" type="number"
+                <input id="radius" name="radius" type="number"
                   class="form-control <?= validation_show_error('radius') ? 'is-invalid' : '' ?>" placeholder="e.g. 100"
-                  value="<?= old('radius') ?>">
+                  value="<?= old('radius', '100') ?>">
                 <?php if (validation_show_error('radius')) : ?>
                 <div class="invalid-feedback">
                   <?= validation_show_error('radius') ?>
@@ -180,9 +180,10 @@ $(document).ready(function() {
     width: '100%',
   });
 
-  // 2. Data Lokasi Awal
-  var defaultLat = <?= old('latitude', $lokasi['latitude']) ?>;
-  var defaultLng = <?= old('longitude', $lokasi['longitude']) ?>;
+  // 2. Data Lokasi Awal (nilai default untuk halaman tambah)
+  var defaultLat = <?= old('latitude', '-1.2379') ?>;
+  var defaultLng = <?= old('longitude', '116.8289') ?>;
+  var defaultRadius = <?= old('radius', '100') ?>;
 
   // 3. Init Map Container
   var map = L.map('map').setView([defaultLat, defaultLng], 15);
@@ -200,7 +201,6 @@ $(document).ready(function() {
       map.removeLayer(currentTileLayer);
     }
 
-    // Pasang layer baru
     currentTileLayer = L.tileLayer(tileUrl, {
       attribution: '&copy; OpenStreetMap &copy; CARTO',
       maxZoom: 19
@@ -230,33 +230,39 @@ $(document).ready(function() {
     shadowUrl: '<?= base_url('assets/img/leaflet/marker-shadow.png') ?>',
   });
 
+  // 4. Buat marker dan circle
   var marker = L.marker([defaultLat, defaultLng], {
     draggable: true
   }).addTo(map);
+
   var circle = L.circle([defaultLat, defaultLng], {
     color: '#206bc4',
     fillColor: '#206bc4',
     fillOpacity: 0.2,
-    radius: <?= $lokasi['radius'] ?>
+    radius: defaultRadius
   }).addTo(map);
 
+  // 5. Event saat marker di-drag
   marker.on('dragend', function(e) {
     var pos = marker.getLatLng();
     circle.setLatLng(pos);
     updateCoordinates(pos.lat, pos.lng);
   });
 
+  // 6. Event saat klik peta
   map.on('click', function(e) {
     marker.setLatLng(e.latlng);
     circle.setLatLng(e.latlng);
     updateCoordinates(e.latlng.lat, e.latlng.lng);
   });
 
+  // 7. Update input koordinat
   function updateCoordinates(lat, lng) {
     $('#latitude').val(lat.toFixed(7));
     $('#longitude').val(lng.toFixed(7));
   }
 
+  // 8. Update peta saat input koordinat diubah manual
   $('#latitude, #longitude').on('change', function() {
     var lat = parseFloat($('#latitude').val());
     var lng = parseFloat($('#longitude').val());
@@ -267,9 +273,12 @@ $(document).ready(function() {
     }
   });
 
-  $('input[name="radius"]').on('input', function() {
+  // 9. Update radius circle saat input radius diubah
+  $('#radius').on('input', function() {
     var r = parseFloat($(this).val());
-    if (!isNaN(r)) circle.setRadius(r);
+    if (!isNaN(r) && r > 0) {
+      circle.setRadius(r);
+    }
   });
 });
 </script>

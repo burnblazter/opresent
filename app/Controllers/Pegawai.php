@@ -1075,4 +1075,38 @@ public function update()
 
         return $this->response->setJSON(['success' => false, 'message' => 'Invalid Request']);
     }
+
+    public function bulkUpdateUnit()
+    {
+        if (!$this->request->isAJAX()) {
+            return $this->response->setStatusCode(404);
+        }
+
+        $ids = $this->request->getPost('ids');
+        $newJabatanId = $this->request->getPost('jabatan');
+
+        if (empty($ids) || empty($newJabatanId)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Data tidak lengkap.'
+            ]);
+        }
+
+        $pegawaiModel = new \App\Models\PegawaiModel(); 
+
+        try {
+            $pegawaiModel->update($ids, ['id_jabatan' => $newJabatanId]);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => count($ids) . ' pegawai berhasil dipindahkan unitnya.'
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Database error: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

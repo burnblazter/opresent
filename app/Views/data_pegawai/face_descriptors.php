@@ -71,14 +71,14 @@
   background: white;
 }
 
-/* --- INSTRUCTION BOX --- */
+/* --- INSTRUCTION BOX --- Simplified (no gradients) */
 .instruction-box {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 50%, #dda518 100%);
+  background: #1e3a8a;
   color: white;
   padding: 24px;
   border-radius: 12px;
   margin-bottom: 24px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border: 2px solid #dda518;
 }
 
 .instruction-box h4 {
@@ -98,7 +98,6 @@
   padding: 12px 16px;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  backdrop-filter: blur(10px);
 }
 
 .instruction-step:last-child {
@@ -118,7 +117,6 @@
   font-size: 0.95rem;
   margin-right: 14px;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .instruction-step .step-text {
@@ -190,13 +188,13 @@
 /* --- IMAGE EDITOR --- */
 .img-container {
   max-height: 560px;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: #1e293b;
   overflow: hidden;
   border-radius: 12px;
   border: 2px solid #334155;
   margin-bottom: 24px;
   position: relative;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: translateZ(0);
 }
 
 .img-container img {
@@ -204,24 +202,25 @@
   display: block;
 }
 
+
 #upload-detection-canvas {
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 10;
+  z-index: 999;
 }
 
 /* --- ROTATION CONTROL --- */
 .rotation-wrapper {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8fafc;
   padding: 20px 24px;
   border-radius: 12px;
   border: 2px solid #e2e8f0;
   margin-bottom: 24px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .rotation-label {
@@ -272,7 +271,6 @@
   background: #dda518;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all 0.2s;
 }
 
@@ -288,7 +286,6 @@
   border-radius: 50%;
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   transition: all 0.2s;
 }
 
@@ -306,47 +303,50 @@
 }
 
 /* --- WEBCAM SECTION --- */
-#camera-container {
+.video-container {
   position: relative;
-  width: 100%;
-  max-width: 720px;
-  margin: 0 auto;
-  border-radius: 12px;
+  display: inline-block;
+  border-radius: 8px;
   overflow: hidden;
-  background: #000;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: scaleX(-1) translateZ(0);
+  will-change: transform;
+  border: 2px solid #dee2e6 !important;
+  box-shadow: none !important;
 }
 
 #webcam-video {
   width: 100%;
   height: auto;
   display: block;
-  transform: scaleX(-1);
+  transform: translateZ(0);
 }
 
+/* Canvas overlay removed - performance optimization */
+/* --- Ganti bagian ini di CSS --- */
+
 #webcam-canvas {
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  transform: scaleX(-1);
   pointer-events: none;
 }
 
-/* --- TECH STATS --- */
+/* --- TECH STATS --- Simplified */
 .tech-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 16px;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: #1e293b;
   color: #00d2ff;
   padding: 16px;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
   border-radius: 0 0 12px 12px;
   margin-top: -4px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateZ(0);
 }
 
 .tech-stat-item {
@@ -373,7 +373,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .status-alert.alert-info {
@@ -437,14 +436,12 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e3a8a 100%);
+  background: #1e3a8a;
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-  box-shadow: 0 6px 8px -1px rgba(30, 58, 138, 0.4);
+  background: #1e40af;
   transform: translateY(-2px);
 }
 
@@ -513,13 +510,11 @@
   border-radius: 12px;
   background: white;
   transition: all 0.3s;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .face-card:hover {
   background: #f9fafb;
   transform: translateY(-4px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   border-color: #1e3a8a;
 }
 
@@ -603,7 +598,7 @@
   gap: 8px;
 }
 
-/* --- ANIMATIONS --- */
+/* --- ANIMATIONS --- Minimal */
 @keyframes pulse {
 
   0%,
@@ -700,7 +695,7 @@
             </ul>
 
             <div class="tab-content">
-              <!-- TAB UPLOAD (PRIORITAS PERTAMA) -->
+              <!-- TAB UPLOAD -->
               <div id="upload-tab" class="tab-pane fade show active">
                 <div class="instruction-box fade-in">
                   <h4>
@@ -719,7 +714,8 @@
                   </div>
                   <div class="instruction-step">
                     <div class="step-number">2</div>
-                    <div class="step-text">Sesuaikan <strong>posisi crop & rotasi</strong>.</div>
+                    <div class="step-text">Sesuaikan <strong>posisi crop & rotasi</strong> agar wajah terlihat jelas.
+                    </div>
                   </div>
                   <div class="instruction-step">
                     <div class="step-number">3</div>
@@ -843,8 +839,7 @@
                   </h4>
                   <div class="instruction-step">
                     <div class="step-number">1</div>
-                    <div class="step-text">Posisikan <strong>satu wajah</strong> dengan jelas di tengah kamera hingga
-                      muncul <strong>kotak hijau</strong>.</div>
+                    <div class="step-text">Posisikan <strong>satu wajah</strong> dengan jelas di tengah kamera.</div>
                   </div>
                   <div class="instruction-step">
                     <div class="step-number">2</div>
@@ -857,13 +852,15 @@
                   </div>
                 </div>
 
-                <div id="face-status" class="status-alert alert-info text-center">
-                  <div id="face-message">Memuat model AI...</div>
+                <div id="face-status" class="alert alert-info" style="display: none;">
+                  <div id="face-message">Memuat kamera...</div>
                 </div>
 
                 <div class="text-center mb-3">
-                  <div id="camera-container">
-                    <video id="webcam-video" autoplay playsinline muted></video>
+                  <div class="video-container"
+                    style="max-width: 640px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 2px solid #dee2e6;">
+                    <video id="webcam-video" autoplay playsinline muted
+                      style="width: 100%; height: auto; display: block;"></video>
                     <canvas id="webcam-canvas"></canvas>
                   </div>
                   <div class="tech-stats" id="tech-stats">
@@ -923,8 +920,7 @@
     <div class="row">
       <div class="col-12">
         <div class="card">
-          <div class="card-header"
-            style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-bottom: 2px solid #e5e7eb;">
+          <div class="card-header" style="background: #f8fafc; border-bottom: 2px solid #e5e7eb;">
             <h3 class="card-title" style="color: #1e3a8a; font-weight: 600;">
               <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -1004,18 +1000,56 @@
 </div>
 
 <script>
-// --- KONFIGURASI HUMAN.JS ---
-const config = {
-  backend: 'webgl',
+// ==================== GLOBAL STATE ====================
+let isModelLoaded = false;
+let webcamStream = null;
+let webcamAnimationFrame = null;
+let uploadDetectionTimeout = null;
+let cropper = null;
+let lastWebcamDetection = 0;
+let uploadDetectionInterval = null;
+
+// OPTIMIZATION: DOM Cache
+const DOM_CACHE = {
+  video: null,
+  btnWebcam: null,
+  statusDiv: null,
+  messageDiv: null,
+  // Will be initialized in DOMContentLoaded
+};
+
+// Previous values for dirty checking
+let previousValues = {
+  statusMessage: '',
+  statusType: '',
+  webcamFaces: -1,
+  webcamAge: '',
+  webcamGender: '',
+  webcamEmotion: ''
+};
+
+const idPegawai = <?= $pegawai->id ?>;
+
+// ==================== HUMAN.JS CONFIG ====================
+const human = new Human.Human({
   modelBasePath: '<?= base_url('assets/models/') ?>',
-  filter: {
+
+  wasm: {
     enabled: true,
-    equalization: false
+    simd: true
   },
+
+  backend: 'wasm',
+  deallocate: true,
+
   face: {
     enabled: true,
     detector: {
-      rotation: true
+      modelPath: 'blazeface.json',
+      rotation: true,
+      maxDetected: 1,
+      skipFrames: 1,
+      minConfidence: 0.62
     },
     mesh: {
       enabled: true
@@ -1024,12 +1058,20 @@ const config = {
       enabled: true
     },
     emotion: {
-      enabled: true
+      enabled: true,
+      minConfidence: 0.1
     },
     iris: {
       enabled: false
     },
+    antispoof: {
+      enabled: false
+    },
+    liveness: {
+      enabled: false
+    }
   },
+
   body: {
     enabled: false
   },
@@ -1042,35 +1084,69 @@ const config = {
   gesture: {
     enabled: false
   },
+  segmentation: {
+    enabled: false
+  },
+
+  cacheSensitivity: 0.7,
+
+  filter: {
+    enabled: true,
+    equalization: false
+  }
+});
+
+// ==================== CONSTANTS ====================
+const WEBCAM_DETECTION_INTERVAL = 200; // ms
+const UPLOAD_DETECTION_DEBOUNCE = 800; // ms
+
+const emotionMap = {
+  happy: 'Senang',
+  sad: 'Sedih',
+  neutral: 'Netral',
+  angry: 'Marah',
+  fearful: 'Takut',
+  surprised: 'Terkejut',
+  disgusted: 'Jijik'
 };
 
-const human = new Human.Human(config);
-
-let isModelLoaded = false;
-let webcamStream = null;
-let webcamAnimationFrame = null;
-let webcamLastDetection = 0;
-const WEBCAM_DETECTION_INTERVAL = 100; // ms antara detection
-
-const idPegawai = <?= $pegawai->id ?>;
-const video = document.getElementById('webcam-video');
-const canvas = document.getElementById('webcam-canvas');
-
-// --- INIT ---
+// ==================== INIT HUMAN ====================
 async function initHuman() {
   try {
     updateStatus('Memuat model AI...', 'info');
-    await human.load();
-    await human.warmup();
+
+    try {
+      const support = human.env;
+
+      if (!support.wasm) {
+        throw new Error("Browser tidak support WASM");
+      }
+
+      await human.load();
+      await human.warmup();
+      console.log('✅ Backend:', human.tf.getBackend());
+
+    } catch (wasmError) {
+      console.warn('⚠️ Fallback ke WebGL...', wasmError);
+
+      human.config.backend = 'webgl';
+      await human.load();
+      await human.warmup();
+
+      console.log('✅ Berhasil recover menggunakan WebGL');
+      updateStatus('Mode Kompatibilitas (WebGL) Aktif', 'warning');
+    }
+
     isModelLoaded = true;
     updateStatus('✅ Sistem AI Siap', 'success');
+
   } catch (error) {
-    console.error('Error init Human:', error);
+    console.error('❌ Error init Human:', error);
     updateStatus('❌ Gagal memuat model AI. Silakan refresh halaman.', 'danger');
   }
 }
 
-// ========== WEBCAM SECTION ==========
+// ==================== WEBCAM SECTION ====================
 
 async function startWebcam() {
   if (!isModelLoaded) {
@@ -1080,29 +1156,58 @@ async function startWebcam() {
   try {
     updateStatus('⏳ Mengakses kamera...', 'info');
 
-    webcamStream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: {
-          ideal: 1280
+    const constraints = [{
+        video: {
+          width: {
+            ideal: 640,
+            max: 640
+          },
+          height: {
+            ideal: 480,
+            max: 480
+          },
+          facingMode: 'user',
+          frameRate: {
+            ideal: 24,
+            max: 30
+          }
         },
-        height: {
-          ideal: 720
+        audio: false
+      },
+      {
+        video: {
+          facingMode: 'user'
         },
-        facingMode: 'user'
+        audio: false
       }
+    ];
+
+    let lastError = null;
+    for (const constraint of constraints) {
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia(constraint);
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    if (!webcamStream) {
+      throw lastError;
+    }
+
+    const video = DOM_CACHE.video;
+    video.srcObject = webcamStream;
+
+    await new Promise((resolve, reject) => {
+      video.onloadedmetadata = () => video.play().then(resolve).catch(reject);
+      setTimeout(() => reject(new Error('Timeout loading video')), 10000);
     });
 
-    video.srcObject = webcamStream;
-    await new Promise(resolve => video.onloadeddata = resolve);
-    video.play();
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    document.getElementById('btn-capture-webcam').disabled = false;
+    DOM_CACHE.btnWebcam.disabled = false;
     updateStatus('✅ Kamera Aktif. Posisikan wajah Anda...', 'success');
 
-    // Start optimized detection loop
+    // Start detection loop
     webcamDetectionLoop();
 
   } catch (error) {
@@ -1116,83 +1221,152 @@ function stopWebcam() {
     webcamStream.getTracks().forEach(track => track.stop());
     webcamStream = null;
   }
-  video.srcObject = null;
+
+  if (DOM_CACHE.video) {
+    DOM_CACHE.video.srcObject = null;
+  }
 
   if (webcamAnimationFrame) {
     cancelAnimationFrame(webcamAnimationFrame);
     webcamAnimationFrame = null;
   }
 
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  document.getElementById('btn-capture-webcam').disabled = true;
-  document.getElementById('stat-faces').innerText = '0';
-  document.getElementById('stat-age').innerText = '-';
-  document.getElementById('stat-gender').innerText = '-';
-  document.getElementById('stat-emotion').innerText = '-';
+  // Reset stats
+  updateWebcamStats(0, '-', '-', '-');
+  DOM_CACHE.btnWebcam.disabled = true;
 }
 
-// OPTIMIZED: Throttled detection loop untuk webcam
-async function webcamDetectionLoop() {
-  const now = Date.now();
 
-  // Throttle detection untuk mengurangi beban CPU
-  if (now - webcamLastDetection >= WEBCAM_DETECTION_INTERVAL) {
-    webcamLastDetection = now;
 
-    if (!video.paused && !video.ended && isModelLoaded) {
-      try {
-        const result = await human.detect(video);
-        drawWebcamResults(result);
-      } catch (error) {
-        console.error('Detection error:', error);
+function drawOverlay(result, video) {
+  const canvas = document.getElementById('webcam-canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (result.face && result.face.length > 0) {
+    const face = result.face[0];
+    const box = face.box; // [x, y, width, height]
+
+    // Config Style
+    const x = box[0];
+    const y = box[1];
+    const w = box[2];
+    const h = box[3];
+    const lineLen = 20;
+    const color = '#D1FAE5';
+
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = 'rgba(0, 210, 255, 0.1)';
+
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.moveTo(x, y + lineLen);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + lineLen, y);
+
+    ctx.moveTo(x + w - lineLen, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w, y + lineLen);
+
+    ctx.moveTo(x + w, y + h - lineLen);
+    ctx.lineTo(x + w, y + h);
+    ctx.lineTo(x + w - lineLen, y + h);
+
+    ctx.moveTo(x + lineLen, y + h);
+    ctx.lineTo(x, y + h);
+    ctx.lineTo(x, y + h - lineLen);
+
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x, y + (h / 2));
+    ctx.lineTo(x + w, y + (h / 2));
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#6EE7B7';
+    ctx.stroke();
+  }
+}
+
+// OPTIMIZATION: RAF-based detection loop with throttling
+async function webcamDetectionLoop(currentTime = 0) {
+  // Throttle detection
+  if (currentTime - lastWebcamDetection < WEBCAM_DETECTION_INTERVAL) {
+    webcamAnimationFrame = requestAnimationFrame(webcamDetectionLoop);
+    return;
+  }
+
+  lastWebcamDetection = currentTime;
+
+  const video = DOM_CACHE.video;
+
+  if (!video.paused && !video.ended && isModelLoaded && webcamStream) {
+    try {
+      const result = await human.detect(video);
+      drawOverlay(result, video);
+
+      const faceCount = result.face ? result.face.length : 0;
+
+      if (faceCount > 0) {
+        const face = result.face[0];
+        const confidence = Math.round(face.boxScore * 100);
+        const age = Math.round(face.age || 0);
+        const gender = face.gender || '-';
+        const emotion = (face.emotion && face.emotion[0]) ? face.emotion[0].emotion.toUpperCase() : '-';
+
+        updateWebcamStats(faceCount, age + ' Thn', gender, emotion);
+
+        if (faceCount === 1) {
+          updateStatus(`✅ Wajah Terdeteksi (${confidence}%)`, 'success');
+        } else {
+          updateStatus(`⚠️ Terdeteksi ${faceCount} wajah. Pastikan hanya 1 wajah!`, 'warning');
+        }
+      } else {
+        updateWebcamStats(0, '-', '-', '-');
+        updateStatus('⚠️ Mencari wajah...', 'warning');
       }
+
+    } catch (error) {
+      console.error('Detection error:', error);
     }
   }
 
-  // Continue loop hanya jika webcam masih aktif
+  // Continue loop
   if (webcamStream && video.srcObject) {
     webcamAnimationFrame = requestAnimationFrame(webcamDetectionLoop);
   }
 }
 
-function drawWebcamResults(result) {
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+// OPTIMIZATION: Dirty checking for webcam stats
+function updateWebcamStats(faces, age, gender, emotion) {
+  if (previousValues.webcamFaces !== faces) {
+    document.getElementById('stat-faces').innerText = faces;
+    previousValues.webcamFaces = faces;
+  }
 
-  const drawOptions = {
-    color: 'rgba(16, 185, 129, 0.6)',
-    lineWidth: 2,
-    drawLabels: false
-  };
+  if (previousValues.webcamAge !== age) {
+    document.getElementById('stat-age').innerText = age;
+    previousValues.webcamAge = age;
+  }
 
-  human.draw.face(canvas, result.face, drawOptions);
+  if (previousValues.webcamGender !== gender) {
+    document.getElementById('stat-gender').innerText = gender;
+    previousValues.webcamGender = gender;
+  }
 
-  document.getElementById('stat-faces').innerText = result.face ? result.face.length : 0;
-
-  if (result.face && result.face.length > 0) {
-    const face = result.face[0];
-    const confidence = Math.round(face.boxScore * 100);
-
-    document.getElementById('stat-age').innerText = Math.round(face.age) + " Thn";
-    document.getElementById('stat-gender').innerText = face.gender || '-';
-    document.getElementById('stat-emotion').innerText = face.emotion?. [0]?.emotion.toUpperCase() || '-';
-
-    if (result.face.length === 1) {
-      document.getElementById('face-message').innerHTML = `✅ Wajah Terdeteksi (${confidence}%)`;
-      document.getElementById('face-status').className = 'status-alert alert-success text-center';
-    } else {
-      document.getElementById('face-message').innerHTML =
-        `⚠️ Terdeteksi ${result.face.length} wajah. Pastikan hanya 1 wajah!`;
-      document.getElementById('face-status').className = 'status-alert alert-warning text-center';
-    }
-  } else {
-    document.getElementById('face-message').innerHTML = `⚠️ Mencari wajah...`;
-    document.getElementById('face-status').className = 'status-alert alert-warning text-center';
-    document.getElementById('stat-age').innerText = '-';
-    document.getElementById('stat-gender').innerText = '-';
-    document.getElementById('stat-emotion').innerText = '-';
+  if (previousValues.webcamEmotion !== emotion) {
+    document.getElementById('stat-emotion').innerText = emotion;
+    previousValues.webcamEmotion = emotion;
   }
 }
 
@@ -1213,7 +1387,7 @@ document.getElementById('btn-capture-webcam').addEventListener('click', async fu
   `;
 
   try {
-    const result = await human.detect(video);
+    const result = await human.detect(DOM_CACHE.video);
 
     if (!result.face || result.face.length === 0) {
       throw new Error('❌ Wajah tidak terdeteksi! Posisikan wajah dengan jelas.');
@@ -1238,11 +1412,8 @@ document.getElementById('btn-capture-webcam').addEventListener('click', async fu
   }
 });
 
-// ========== UPLOAD SECTION ==========
+// ==================== UPLOAD SECTION ====================
 
-let cropper = null;
-let cropperCanvas = null;
-let cropperDetectionInterval = null;
 const imageElement = document.getElementById('image-to-crop');
 const rotationSlider = document.getElementById('rotation-slider');
 const rotationDisplay = document.getElementById('rotation-val-display');
@@ -1293,7 +1464,7 @@ async function setupCropper(imgSrc) {
   }
 
   // Stop existing detection
-  stopCropperDetection();
+  stopUploadDetection();
 
   imageElement.src = imgSrc;
   document.getElementById('editor-area').style.display = 'block';
@@ -1305,78 +1476,97 @@ async function setupCropper(imgSrc) {
     autoCropArea: 0.8,
     responsive: true,
     ready: function() {
-      setupCropperOverlay();
-      startCropperDetection();
+      startUploadDetection();
     },
     crop: function() {
-      debouncedCropperDetection();
+      debouncedUploadDetection();
     }
   });
 
   document.getElementById('btn-upload-save').disabled = false;
 }
 
-// Setup overlay canvas
-function setupCropperOverlay() {
-  const container = document.querySelector('.img-container');
-
-  if (cropperCanvas) {
-    cropperCanvas.remove();
-  }
-
-  cropperCanvas = document.createElement('canvas');
-  cropperCanvas.style.position = 'absolute';
-  cropperCanvas.style.top = '0';
-  cropperCanvas.style.left = '0';
-  cropperCanvas.style.pointerEvents = 'none';
-  cropperCanvas.style.zIndex = '10';
-
-  const cropperContainer = document.querySelector('.cropper-container');
-  if (cropperContainer) {
-    const rect = cropperContainer.getBoundingClientRect();
-    cropperCanvas.width = rect.width;
-    cropperCanvas.height = rect.height;
-    cropperContainer.style.position = 'relative';
-    cropperContainer.appendChild(cropperCanvas);
-  }
-}
-
-// OPTIMIZED: Detection untuk cropper dengan interval, bukan loop terus-menerus
-let cropperDetectionTimeout = null;
-
-function startCropperDetection() {
-  if (!isModelLoaded) return;
+// OPTIMIZATION: Interval-based detection instead of continuous loop
+function startUploadDetection() {
+  if (!isModelLoaded || !cropper) return;
 
   // Initial detection
   detectFaceOnCropper();
 
-  // Set interval untuk periodic detection (lebih hemat resource)
-  cropperDetectionInterval = setInterval(() => {
+  // Periodic detection
+  uploadDetectionInterval = setInterval(() => {
     detectFaceOnCropper();
-  }, 800); // Update setiap 800ms
+  }, UPLOAD_DETECTION_DEBOUNCE);
 }
 
-function stopCropperDetection() {
-  if (cropperDetectionInterval) {
-    clearInterval(cropperDetectionInterval);
-    cropperDetectionInterval = null;
+function stopUploadDetection() {
+  if (uploadDetectionInterval) {
+    clearInterval(uploadDetectionInterval);
+    uploadDetectionInterval = null;
   }
 
-  if (cropperDetectionTimeout) {
-    clearTimeout(cropperDetectionTimeout);
-    cropperDetectionTimeout = null;
+  if (uploadDetectionTimeout) {
+    clearTimeout(uploadDetectionTimeout);
+    uploadDetectionTimeout = null;
   }
 }
 
-function debouncedCropperDetection() {
-  clearTimeout(cropperDetectionTimeout);
-  cropperDetectionTimeout = setTimeout(() => {
+function debouncedUploadDetection() {
+  clearTimeout(uploadDetectionTimeout);
+  uploadDetectionTimeout = setTimeout(() => {
     detectFaceOnCropper();
   }, 300);
 }
 
+// --- Fungsi Baru untuk Menggambar di Upload Area ---
+
+function drawUploadOverlay(result) {
+  const canvas = document.getElementById('upload-detection-canvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.querySelector('.img-container');
+
+  if (canvas.width !== container.offsetWidth || canvas.height !== container.offsetHeight) {
+    canvas.width = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (!cropper || !result.face || result.face.length === 0) return;
+  const face = result.face[0];
+  const cropBoxData = cropper.getCropBoxData();
+  const scaleX = cropBoxData.width / 512;
+  const scaleY = cropBoxData.height / 512;
+  const x = cropBoxData.left + (face.box[0] * scaleX);
+  const y = cropBoxData.top + (face.box[1] * scaleY);
+  const w = face.box[2] * scaleX;
+  const h = face.box[3] * scaleY;
+
+  const lineLen = 15;
+  const color = '#D1FAE5';
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = 'rgba(0, 210, 255, 0.15)'; //
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x, y + lineLen);
+  ctx.lineTo(x, y);
+  ctx.lineTo(x + lineLen, y);
+  ctx.moveTo(x + w - lineLen, y);
+  ctx.lineTo(x + w, y);
+  ctx.lineTo(x + w, y + lineLen);
+  ctx.moveTo(x + w, y + h - lineLen);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x + w - lineLen, y + h);
+  ctx.moveTo(x + lineLen, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y + h - lineLen);
+  ctx.stroke();
+}
+
 async function detectFaceOnCropper() {
-  if (!cropper || !cropperCanvas || !isModelLoaded) return;
+  if (!cropper || !isModelLoaded) return;
 
   try {
     const croppedCanvas = cropper.getCroppedCanvas({
@@ -1385,46 +1575,10 @@ async function detectFaceOnCropper() {
     });
 
     const result = await human.detect(croppedCanvas);
-
-    const ctx = cropperCanvas.getContext('2d');
-    ctx.clearRect(0, 0, cropperCanvas.width, cropperCanvas.height);
+    drawUploadOverlay(result);
 
     if (result.face && result.face.length > 0) {
       const face = result.face[0];
-      const cropBoxData = cropper.getCropBoxData();
-
-      // Draw detection box
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.8)';
-      ctx.lineWidth = 3;
-      ctx.fillStyle = 'rgba(16, 185, 129, 0.1)';
-
-      const scaleX = cropBoxData.width / 512;
-      const scaleY = cropBoxData.height / 512;
-
-      if (face.box) {
-        const box = {
-          x: cropBoxData.left + (face.box[0] * scaleX),
-          y: cropBoxData.top + (face.box[1] * scaleY),
-          width: face.box[2] * scaleX,
-          height: face.box[3] * scaleY
-        };
-
-        ctx.fillRect(box.x, box.y, box.width, box.height);
-        ctx.strokeRect(box.x, box.y, box.width, box.height);
-      }
-
-      // Draw landmarks
-      if (face.mesh && face.mesh.length > 0) {
-        ctx.fillStyle = 'rgba(16, 185, 129, 0.6)';
-        face.mesh.forEach(point => {
-          const x = cropBoxData.left + (point[0] * scaleX);
-          const y = cropBoxData.top + (point[1] * scaleY);
-          ctx.beginPath();
-          ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
-          ctx.fill();
-        });
-      }
-
       const confidence = Math.round(face.boxScore * 100);
       const age = Math.round(face.age);
       const gender = face.gender || '-';
@@ -1454,7 +1608,7 @@ rotationSlider.addEventListener('input', function() {
   rotationDisplay.innerText = degree + '°';
   if (cropper) {
     cropper.rotateTo(degree);
-    debouncedCropperDetection();
+    debouncedUploadDetection();
   }
 });
 
@@ -1462,7 +1616,7 @@ function resetRotation() {
   resetRotationUI();
   if (cropper) {
     cropper.reset();
-    debouncedCropperDetection();
+    debouncedUploadDetection();
   }
 }
 
@@ -1517,12 +1671,7 @@ document.getElementById('btn-upload-save').addEventListener('click', async funct
       cropper = null;
     }
 
-    if (cropperCanvas) {
-      cropperCanvas.remove();
-      cropperCanvas = null;
-    }
-
-    stopCropperDetection();
+    stopUploadDetection();
 
   } catch (e) {
     alert(e.message);
@@ -1539,7 +1688,7 @@ document.getElementById('btn-upload-save').addEventListener('click', async funct
   }
 });
 
-// ========== COMMON FUNCTIONS ==========
+// ==================== COMMON FUNCTIONS ====================
 
 async function saveFaceDescriptor(descriptor, label) {
   try {
@@ -1598,9 +1747,18 @@ async function editLabel(id, currentLabel) {
   }
 }
 
+// OPTIMIZATION: Dirty checking for status updates
 function updateStatus(msg, type) {
-  document.getElementById('face-status').className = `status-alert alert-${type} text-center`;
-  document.getElementById('face-message').innerHTML = msg;
+  if (msg === previousValues.statusMessage && type === previousValues.statusType) {
+    return;
+  }
+
+  previousValues.statusMessage = msg;
+  previousValues.statusType = type;
+
+  DOM_CACHE.statusDiv.className = `status-alert alert-${type} text-center`;
+  DOM_CACHE.statusDiv.style.display = 'block';
+  DOM_CACHE.messageDiv.innerHTML = msg;
 }
 
 function updateUploadStatus(msg, type) {
@@ -1610,31 +1768,55 @@ function updateUploadStatus(msg, type) {
   document.getElementById('upload-message').innerHTML = msg;
 }
 
-// ========== TAB HANDLERS ==========
+// ==================== TAB HANDLERS ====================
 
 document.getElementById('tab-webcam-link').addEventListener('shown.bs.tab', () => {
-  stopCropperDetection();
+  stopUploadDetection();
   startWebcam();
 });
 
 document.getElementById('tab-upload-link').addEventListener('shown.bs.tab', () => {
   stopWebcam();
 
-  // Resume cropper detection jika cropper aktif
-  if (cropper && !cropperDetectionInterval) {
-    startCropperDetection();
+  // Resume upload detection if cropper active
+  if (cropper && !uploadDetectionInterval) {
+    startUploadDetection();
   }
 });
 
-// ========== CLEANUP ==========
+// ==================== CLEANUP ====================
 
 window.addEventListener('beforeunload', () => {
   stopWebcam();
-  stopCropperDetection();
+  stopUploadDetection();
+
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
 });
 
-// ========== INIT ==========
-initHuman();
+// ==================== PAGE VISIBILITY API ====================
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden) {
+    console.log('⏸️ Tab hidden - detection paused');
+  } else {
+    console.log('▶️ Tab visible - detection resumed');
+  }
+});
+
+
+// ==================== DOM INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache DOM elements
+  DOM_CACHE.video = document.getElementById('webcam-video');
+  DOM_CACHE.btnWebcam = document.getElementById('btn-capture-webcam');
+  DOM_CACHE.statusDiv = document.getElementById('face-status');
+  DOM_CACHE.messageDiv = document.getElementById('face-message');
+
+  // Initialize Human.js
+  initHuman();
+});
 </script>
 
 <?= $this->endSection() ?>

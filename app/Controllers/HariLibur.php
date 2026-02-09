@@ -21,7 +21,7 @@ class HariLibur extends BaseController
         $user_profile = $this->usersModel->getUserInfo(user_id());
 
         $data = [
-            'title' => 'Daftar Hari Libur',
+            'title' => 'Data Hari Libur',
             'user_profile' => $user_profile,
             'data_libur' => $this->hariLiburModel->getApproved(),
             'pending_libur' => $this->hariLiburModel->getPendingApproval()

@@ -43,14 +43,13 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #206bc4;
+  background: #1e3a8a;
   color: white;
   padding: 1rem 1.5rem;
   border-radius: 50px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   display: none;
   z-index: 1000;
-  animation: slideUp 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -662,7 +661,17 @@
 <div class="bulk-action-bar" id="bulkActionBar">
   <div class="d-flex align-items-center gap-3">
     <span id="selectedCount">0</span> data terpilih
-    <button class="btn btn-sm btn-white" onclick="bulkDelete()">
+
+    <button class="btn btn-sm btn-secondary" onclick="openBulkEditModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2"
+        stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M9 11l-4 4l4 4m-4 -4h11a4 4 0 0 0 0 -8h-1" />
+      </svg>
+      Pindah Unit
+    </button>
+
+    <button class="btn btn-sm btn-danger" onclick="bulkDelete()">
       <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2"
         stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
@@ -675,6 +684,36 @@
       Hapus Terpilih
     </button>
     <button class="btn btn-sm btn-ghost-light" onclick="deselectAll()">Batal</button>
+  </div>
+</div>
+
+<!-- Pindah Unit Modal -->
+<div class="modal modal-blur fade" id="modal-bulk-edit" tabindex="-1" role="dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pindah Unit Massal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Pilih Unit Baru</label>
+          <select id="bulk_new_jabatan" class="form-select">
+            <option value="">-- Pilih Unit Tujuan --</option>
+            <?php foreach ($data_jabatan as $opsi) : ?>
+            <option value="<?= $opsi['id'] ?>"><?= $opsi['jabatan'] ?></option>
+            <?php endforeach; ?>
+          </select>
+          <div class="text-muted small mt-2">
+            Aksi ini akan memindahkan <strong id="count-display">0</strong> pegawai yang dipilih ke unit baru.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn me-auto" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" onclick="submitBulkEdit()">Simpan Perubahan</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -993,6 +1032,62 @@ function bulkDelete() {
       }
     });
   }
+}
+
+// Fungsi untuk membuka modal edit
+function openBulkEditModal() {
+  if (selectedIds.length === 0) return;
+
+  // Update text jumlah di modal
+  $('#count-display').text(selectedIds.length);
+  // Reset pilihan select
+  $('#bulk_new_jabatan').val('');
+  // Tampilkan modal
+  $('#modal-bulk-edit').modal('show');
+}
+
+// Fungsi eksekusi simpan perubahan
+function submitBulkEdit() {
+  var newJabatan = $('#bulk_new_jabatan').val();
+
+  if (!newJabatan) {
+    alert('Harap pilih unit tujuan!');
+    return;
+  }
+
+  // Animasi loading pada tombol (opsional)
+  var btn = event.target;
+  var originalText = btn.innerHTML;
+  btn.innerHTML = 'Menyimpan...';
+  btn.disabled = true;
+
+  $.ajax({
+    url: '/data-pegawai/bulk-update-unit', // Route baru yang akan kita buat
+    type: 'POST',
+    data: {
+      ids: selectedIds,
+      jabatan: newJabatan,
+      <?= csrf_token() ?>: '<?= csrf_hash() ?>' // Sertakan CSRF token jika perlu
+    },
+    success: function(response) {
+      if (response.success) {
+        // Tutup modal
+        $('#modal-bulk-edit').modal('hide');
+        alert(response.message);
+        location.reload(); // Refresh halaman
+      } else {
+        alert('Gagal: ' + response.message);
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    },
+    error: function(xhr, status, error) {
+      console.error(xhr.responseText);
+      alert('Terjadi kesalahan server.');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  });
 }
 
 function deselectAll() {

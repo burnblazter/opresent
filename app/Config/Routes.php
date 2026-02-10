@@ -166,3 +166,11 @@ $routes->get('/kelola-face-enrollment/detail/(:num)', 'FaceEnrollmentAdmin::deta
 $routes->post('/kelola-face-enrollment/approve/(:num)', 'FaceEnrollmentAdmin::approve/$1', ['filter' => 'role:admin,head']);
 $routes->post('/kelola-face-enrollment/reject/(:num)', 'FaceEnrollmentAdmin::reject/$1', ['filter' => 'role:admin,head']);
 $routes->get('/kelola-face-enrollment/image/(:num)', 'FaceEnrollmentAdmin::viewImage/$1', ['filter' => 'role:admin,head']);
+
+// ============================================================================
+// PUBLIC PLAYGROUND
+// ============================================================================
+$routes->get('playground',                'PlaygroundController::index');
+$routes->post('playground/register-face', 'PlaygroundController::registerFace');
+$routes->post('playground/clear',         'PlaygroundController::clearSession');
+$routes->post('playground/submit',        'PlaygroundController::submitPresensi');

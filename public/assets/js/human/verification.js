@@ -1,3 +1,4 @@
+// human/verification.js
 // ==================== FACE VERIFICATION MODULE ====================
 const FaceVerification = (function () {
   "use strict"

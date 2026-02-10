@@ -25,7 +25,6 @@
               satu.<br>
               <strong>• Proses Massal:</strong> Centang beberapa pengajuan, pilih aksi (Approve/Reject), lalu klik
               "Proses Pengajuan Terpilih".<br>
-              <strong>• Catatan:</strong> Hanya pengajuan dengan tanggal yang sudah tiba yang dapat diproses.<br>
               <strong>• File:</strong> Anda dapat mengganti file surat keterangan di halaman detail pengajuan.
             </p>
           </div>

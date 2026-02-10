@@ -43,39 +43,6 @@
     scroll-behavior: smooth
   }
 
-  @font-face {
-    font-family: "Plus Jakarta Sans";
-    src: url("../fonts/plus-jakarta-sans/PlusJakartaSans-Regular.woff2") format("woff2");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Plus Jakarta Sans";
-    src: url("../fonts/plus-jakarta-sans/PlusJakartaSans-Medium.woff2") format("woff2");
-    font-weight: 500;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Plus Jakarta Sans";
-    src: url("../fonts/plus-jakarta-sans/PlusJakartaSans-SemiBold.woff2") format("woff2");
-    font-weight: 600;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Plus Jakarta Sans";
-    src: url("../fonts/plus-jakarta-sans/PlusJakartaSans-Bold.woff2") format("woff2");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
-
-
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     background: var(--bg);
@@ -1446,9 +1413,35 @@
     border-radius: 3px
   }
   </style>
+  <script src="<?= base_url('assets/js/darkreader.min.js') ?>"></script>
+  <script>
+  const savedTheme = localStorage.getItem('theme-preference');
+  if (savedTheme === 'dark') DarkReader.enable({
+    brightness: 100,
+    contrast: 100,
+    sepia: 5
+  });
+  </script>
 </head>
 
 <body>
+  <div class="theme-switcher d-flex gap-1" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <a href="#" class="nav-link px-2" id="enable-dark-mode"
+      style="background: rgba(255,255,255,0.9); border-radius: 50%; padding: 0.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"><svg
+        xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2"
+        stroke="currentColor" fill="none">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+      </svg></a>
+    <a href="#" class="nav-link px-2 d-none" id="enable-light-mode"
+      style="background: rgba(255,255,255,0.9); border-radius: 50%; padding: 0.6rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"><svg
+        xmlns="http://www.w3.org/2000/svg" class="icon" width="20" height="20" viewBox="0 0 24 24" stroke-width="2"
+        stroke="currentColor" fill="none">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+        <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+        <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
+      </svg></a>
+  </div>
 
   <!-- ==================== NAV ==================== -->
   <nav class="pg-nav">
@@ -1820,6 +1813,34 @@
   </script>
   <script src="<?= base_url('assets/js/human.js') ?>"></script>
   <script src="<?= base_url('assets/js/human/playground.js') ?>"></script>
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const btnDark = document.getElementById('enable-dark-mode');
+    const btnLight = document.getElementById('enable-light-mode');
+
+    function updateUI(isDark) {
+      isDark ? (btnDark?.classList.add('d-none'), btnLight?.classList.remove('d-none')) : (btnLight?.classList.add(
+        'd-none'), btnDark?.classList.remove('d-none'));
+    }
+    updateUI(DarkReader.isEnabled());
+    btnDark?.addEventListener('click', (e) => {
+      e.preventDefault();
+      DarkReader.enable({
+        brightness: 100,
+        contrast: 100,
+        sepia: 5
+      });
+      localStorage.setItem('theme-preference', 'dark');
+      updateUI(true);
+    });
+    btnLight?.addEventListener('click', (e) => {
+      e.preventDefault();
+      DarkReader.disable();
+      localStorage.setItem('theme-preference', 'light');
+      updateUI(false);
+    });
+  });
+  </script>
 </body>
 
 </html>

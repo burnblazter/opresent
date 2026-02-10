@@ -118,7 +118,6 @@
     rTime: $("r-time"),
     rStatus: $("r-status"),
     rCoords: $("r-coords"),
-    receiptId: $("receipt-id"),
     btnRcClose: $("btn-receipt-close"),
 
     navClock: $("nav-clock"),
@@ -660,7 +659,6 @@
   // RECEIPT
   // ─────────────────────────────────────────────
   function showReceipt(data, timeStatus) {
-    D.receiptId.textContent = "RECEIPT: " + data.receipt_id
     D.rName.textContent = data.name
     D.rScore.textContent = data.score + "% Cocok"
     D.rTime.textContent = data.time

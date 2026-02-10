@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\UsersModel;
+use App\ThirdParty\MythAuth\Password;
 
 class Activation extends BaseController
 {
@@ -18,29 +19,27 @@ class Activation extends BaseController
         $token = $this->request->getGet('token');
 
         if (empty($token)) {
-            session()->setFlashdata('gagal', 'Token aktivasi tidak valid');
+            session()->setFlashdata('error', 'Token aktivasi tidak ditemukan.');
             return redirect()->to('/login');
         }
 
-        // Cek token di database - gunakan asArray() untuk konsistensi
-        $user = $this->usersModel->asArray()->where('activate_hash', $token)->first();
+        $user = $this->usersModel->where('activate_hash', $token)->first();
 
         if (!$user) {
-            session()->setFlashdata('gagal', 'Token aktivasi tidak valid atau sudah digunakan');
+            session()->setFlashdata('error', 'Token aktivasi tidak valid atau sudah kadaluarsa.');
             return redirect()->to('/login');
         }
 
-        // Cek apakah sudah punya password (sudah pernah aktivasi)
-        if ($user['password_hash'] !== null) {
-            session()->setFlashdata('info', 'Akun sudah aktif, silakan login');
+        if (!empty($user->password_hash)) {
+            session()->setFlashdata('message', 'Akun ini sudah aktif. Silakan login.');
             return redirect()->to('/login');
         }
 
         $data = [
-            'title' => 'Aktivasi Akun',
-            'token' => $token,
-            'email' => $user['email'],
-            'username' => $user['username'],
+            'title'    => 'Aktivasi Akun',
+            'token'    => $token,
+            'email'    => $user->email,
+            'username' => $user->username,
         ];
 
         return view('auth/activate', $data);
@@ -49,20 +48,21 @@ class Activation extends BaseController
     public function attemptActivate()
     {
         $rules = [
-            'token' => 'required',
+            'token'    => 'required',
             'password' => [
-                'rules' => 'required|min_length[8]|max_length[255]',
+                'label'  => 'Password',
+                'rules'  => 'required|min_length[8]',
                 'errors' => [
-                    'required' => 'Password wajib diisi',
-                    'min_length' => 'Password minimal 8 karakter',
-                    'max_length' => 'Password maksimal 255 karakter',
+                    'required'   => '{field} wajib diisi',
+                    'min_length' => '{field} minimal 8 karakter',
                 ]
             ],
             'pass_confirm' => [
-                'rules' => 'required|matches[password]',
+                'label'  => 'Konfirmasi Password',
+                'rules'  => 'required|matches[password]',
                 'errors' => [
-                    'required' => 'Konfirmasi password wajib diisi',
-                    'matches' => 'Konfirmasi password tidak sama',
+                    'required' => '{field} wajib diisi',
+                    'matches'  => '{field} tidak sama dengan password',
                 ]
             ],
         ];
@@ -71,31 +71,31 @@ class Activation extends BaseController
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
-        $token = $this->request->getPost('token');
+        $token    = $this->request->getPost('token');
         $password = $this->request->getPost('password');
 
-        // Cek token - gunakan asArray()
-        $user = $this->usersModel->asArray()->where('activate_hash', $token)->first();
+        $user = $this->usersModel->where('activate_hash', $token)->first();
 
         if (!$user) {
-            session()->setFlashdata('gagal', 'Token aktivasi tidak valid');
+            session()->setFlashdata('error', 'Token aktivasi tidak valid.');
             return redirect()->to('/login');
         }
 
-        // PENTING: Gunakan method hashPassword dari UsersModel!
-        $password_hash = $this->usersModel->hashPassword($password);
-        
-        // Update user: set password, aktifkan akun, hapus token
-        // Gunakan Query Builder langsung untuk bypass callbacks
-        $this->usersModel->db->table('users')
-            ->where('id', $user['id'])
-            ->update([
-                'password_hash' => $password_hash,
-                'active' => 1,
-                'activate_hash' => null,
-            ]);
+        $hashPassword = Password::hash($password);
 
-        session()->setFlashdata('berhasil', 'Akun berhasil diaktifkan! Silakan login dengan password yang Anda buat');
-        return redirect()->to('/login');
+        $user->password_hash = $hashPassword;
+        $user->activate_hash = null;
+        $user->active        = 1;
+
+        try {
+            if ($this->usersModel->save($user)) {
+                session()->setFlashdata('message', 'Sukses! Akun aktif. Silakan login.');
+                return redirect()->to('/login');
+            } else {
+                return redirect()->back()->withInput()->with('errors', $this->usersModel->errors());
+            }
+        } catch (\Exception $e) {
+            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 }

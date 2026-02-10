@@ -45,7 +45,7 @@ $routes->get('/data-pegawai', 'Pegawai::index', ['filter' => 'role:admin,head,he
 $routes->get('/tambah-data-pegawai', 'Pegawai::add', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/store', 'Pegawai::store', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/update', 'Pegawai::update', ['filter' => 'role:admin,head,helper']);
-$routes->delete('/data-pegawai/(:num)', 'Pegawai::delete', ['filter' => 'role:admin,head,helper']);
+$routes->delete('/data-pegawai/(:num)', 'Pegawai::delete/$1', ['filter' => 'role:admin,head,helper']);
 $routes->post('/data-pegawai/bulk-delete', 'Pegawai::bulkDelete', ['filter' => 'role:admin,head,helper']);
 $routes->post('data-pegawai/bulk-update-unit', 'Pegawai::bulkUpdateUnit', ['filter' => 'role:admin,head,helper']);
 $routes->get('/data-pegawai/edit/(:segment)', 'Pegawai::edit/$1', ['filter' => 'role:admin,head,helper']);
@@ -94,6 +94,7 @@ $routes->get('/cari-ketidakhadiran', 'Ketidakhadiran::pencarianKetidakhadiranPeg
 $routes->get('/kelola-ketidakhadiran', 'Ketidakhadiran::kelolaKetidakhadiran', ['filter' => 'role:head']);
 $routes->get('/kelola-ketidakhadiran/(:num)', 'Ketidakhadiran::kelolaKetidakhadiranAksi/$1', ['filter' => 'role:head']);
 $routes->post('/kelola-ketidakhadiran/store', 'Ketidakhadiran::updateStatusKetidakhadiran', ['filter' => 'role:head']);
+$routes->post('/kelola-ketidakhadiran/mass-approval', 'Ketidakhadiran::massApproval', ['filter' => 'role:head']);
 $routes->post('/kelola-ketidakhadiran/update-file', 'Ketidakhadiran::updateFileKetidakhadiran', ['filter' => 'role:head']);
 $routes->post('/kelola-ketidakhadiran/excel', 'Ketidakhadiran::kelolaKetidakhadiranExcel', ['filter' => 'role:head']);
 $routes->get('/cari-data-ketidakhadiran', 'Ketidakhadiran::pencarianDataKetidakhadiran', ['filter' => 'role:head']);
@@ -124,7 +125,7 @@ $routes->post('/send-email-token', 'UserProfile::emailToken');
 $routes->get('/change-email', 'UserProfile::changeEmail');
 $routes->post('/update-email', 'UserProfile::attemptChangeEmail');
 
-$routes->get('/activate-account', 'Activation::activateAccount');
+$routes->get('/activate-account', 'Activation::activateAccount', ['as' => 'activate-account']);
 $routes->post('/activate-account', 'Activation::attemptActivate');
 
 // ============================================================================
@@ -174,3 +175,16 @@ $routes->get('playground',                'PlaygroundController::index');
 $routes->post('playground/register-face', 'PlaygroundController::registerFace');
 $routes->post('playground/clear',         'PlaygroundController::clearSession');
 $routes->post('playground/submit',        'PlaygroundController::submitPresensi');
+
+// ============================================================================
+// QUOTE
+// ============================================================================
+$routes->get('quote/random', 'Quote::random');
+
+// ============================================================================
+// LAB
+// ============================================================================\
+$routes->get('lab', 'Lab::index', ['filter' => 'role:admin,head,helper']);
+$routes->get('lab/load-descriptor/(:num)', 'Lab::loadDescriptorByPegawai/$1', ['filter' => 'role:admin,head,helper']);
+$routes->post('lab/save-session-descriptor', 'Lab::saveSessionDescriptor', ['filter' => 'role:admin,head,helper']);
+$routes->delete('lab/clear-session', 'Lab::clearSessionDescriptors', ['filter' => 'role:admin,head,helper']);

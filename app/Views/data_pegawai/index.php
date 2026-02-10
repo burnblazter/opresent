@@ -978,7 +978,7 @@ $(document).ready(function() {
     var id = $(this).data('id');
     $('#modal-name').html(nama);
     $('#modal-danger').modal('show');
-    $('#form-hapus').attr('action', '/data-pegawai/' + id);
+    $('#form-hapus').attr('action', '<?= base_url('data-pegawai') ?>/' + id);
   });
 
   // Checkbox selection

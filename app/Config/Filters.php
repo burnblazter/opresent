@@ -37,6 +37,7 @@ class Filters extends BaseConfig
                     'activate-account/*',
                     'playground',
                     'playground/*',
+                    'quote/random',
                 ]
             ],
         ],

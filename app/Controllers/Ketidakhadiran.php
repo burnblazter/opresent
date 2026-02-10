@@ -776,11 +776,6 @@ class Ketidakhadiran extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Data Pengajuan Tidak Ditemukan');
         }
 
-        if ($data_ketidakhadiran->tanggal_mulai > date('Y-m-d')) {
-            session()->setFlashdata('info', 'Tanggal ketidakhadiran belum tiba. Tidak dapat merubah status pengajuan untuk tanggal di masa depan.');
-            return redirect()->to(base_url('/kelola-ketidakhadiran'));
-        }
-
         $data = [
             'title' => 'Detail Ketidakhadiran',
             'user_profile' => $user_profile,
@@ -876,8 +871,7 @@ class Ketidakhadiran extends BaseController
         foreach ($selectedIds as $id) {
             $data_ketidakhadiran = $this->ketidakhadiranModel->findDataKetidakhadiran($id);
             
-            // Validasi tanggal sudah tiba
-            if ($data_ketidakhadiran && $data_ketidakhadiran->tanggal_mulai <= date('Y-m-d')) {
+            if ($data_ketidakhadiran) { 
                 $this->ketidakhadiranModel->save([
                     'id' => $id,
                     'status_pengajuan' => $action,

@@ -30,7 +30,7 @@ public function index()
         }
 
         $data = [
-            'title' => '',
+            'title' => 'Lab Face',
             'user_profile' => $this->usersModel->getUserInfo(user_id()), 
             'pegawai_list' => $this->pegawaiModel->asObject()->findAll(),
         ];

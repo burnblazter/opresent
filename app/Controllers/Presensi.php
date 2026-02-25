@@ -374,26 +374,56 @@ class Presensi extends BaseController
 
         // PERBAIKAN: Telegram notifikasi dengan sanitasi data
         try {
+            // 1. Ambil Data Pegawai (Untuk Nama & NIP)
             $detail_pegawai = $this->pegawaiModel->getPegawaiById($id_pegawai);
             
-            if ($detail_pegawai) {
-                $jam_jadwal = $detail_pegawai->jam_masuk;
+            // 2. Ambil Data User & Lokasi (Untuk Jam Jadwal)
+            $user_info = $this->usersModel->getUserInfo(user_id());
+            $lokasi_presensi = $this->lokasiModel->where('nama_lokasi', $user_info->lokasi_presensi)->first();
+            
+            if ($detail_pegawai && $lokasi_presensi) {
+                // Ambil jam masuk dari tabel LOKASI
+                $jam_jadwal = $lokasi_presensi->jam_masuk; 
                 
-                if (strtotime($jam_masuk) > strtotime($jam_jadwal)) {
+                $timestamp_masuk = strtotime($jam_masuk); // Waktu scan (aktual)
+                $timestamp_jadwal = strtotime($jam_jadwal); // Waktu jadwal (target)
+                
+                $keterangan_waktu = "";
+                $status_text = "";
+                
+                // Hitung Selisih
+                if ($timestamp_masuk > $timestamp_jadwal) {
                     $status_text = 'TERLAMBAT ⚠️';
+                    
+                    // Hitung keterlambatan
+                    $selisih = $timestamp_masuk - $timestamp_jadwal;
+                    $jam_lat = floor($selisih / 3600);
+                    $menit_lat = floor(($selisih % 3600) / 60);
+                    
+                    $keterangan_waktu = "⏳ <b>Terlambat:</b> {$jam_lat} Jam {$menit_lat} Menit";
                 } else {
                     $status_text = 'TEPAT WAKTU ✅';
+                    
+                    // (Opsional) Hitung datang lebih awal berapa menit
+                    $selisih = $timestamp_jadwal - $timestamp_masuk;
+                    $menit_awal = floor(($selisih % 3600) / 60);
+                    
+                    $keterangan_waktu = "✨ <b>Info:</b> Datang {$menit_awal} menit lebih awal";
                 }
                 
                 $tanggal_indo = format_tanggal_indo($tanggal_masuk);
                 
-                // PERBAIKAN: Escape HTML untuk Telegram
-                $pesan  = "<b>🟢 PRESENSI MASUK</b>\n\n";
+                // Format Pesan Telegram
+                $pesan  = "<b>🟢 LAPORAN KEDATANGAN SISWA</b>\n";
+                $pesan .= "-----------------------------------\n";
                 $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($detail_pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
-                $pesan .= "🆔 <b>Nomor induk:</b> " . htmlspecialchars($detail_pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
-                $pesan .= "💼 <b>Unit:</b> " . htmlspecialchars($detail_pegawai->jabatan, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "🆔 <b>Nomor Induk:</b> " . htmlspecialchars($detail_pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "📅 <b>Tanggal:</b> " . htmlspecialchars($tanggal_indo, ENT_QUOTES, 'UTF-8') . "\n";
-                $pesan .= "🕐 <b>Jam Masuk:</b> " . htmlspecialchars($jam_masuk, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "-----------------------------------\n";
+                $pesan .= "⏰ <b>Jadwal Masuk:</b> " . $jam_jadwal . "\n";
+                $pesan .= "🕐 <b>Waktu Scan:</b> " . htmlspecialchars($jam_masuk, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "-----------------------------------\n";
+                $pesan .= $keterangan_waktu . "\n";
                 $pesan .= "<b>Status:</b> " . $status_text;
                 
                 $result = send_telegram_notification($pesan);
@@ -404,7 +434,6 @@ class Presensi extends BaseController
             }
         } catch (\Exception $e) {
             log_message('error', 'Error notifikasi Telegram: ' . $e->getMessage());
-            // Jangan gagalkan proses jika notifikasi gagal
         }
 
         session()->setFlashdata('berhasil', 'Presensi masuk berhasil disimpan dengan verifikasi wajah');

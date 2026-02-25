@@ -188,93 +188,120 @@
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">Aksi Massal</h5>
+        <h5 class="modal-title">Aksi Massal File</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <ul class="nav nav-tabs mb-3" role="tablist">
           <li class="nav-item" role="presentation">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-download" type="button"
-              role="tab">Download</button>
+              role="tab">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                <polyline points="7 11 12 16 17 11" />
+                <line x1="12" y1="4" x2="12" y2="16" />
+              </svg>
+              Download
+            </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-delete" type="button"
-              role="tab">Hapus</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-delete" type="button" role="tab">
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon me-2" width="24" height="24" viewBox="0 0 24 24"
+                stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+                <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+              </svg>
+              Hapus
+            </button>
           </li>
         </ul>
 
         <div class="tab-content">
-          <!-- Download Tab -->
           <div class="tab-pane fade show active" id="tab-download" role="tabpanel">
             <form action="<?= base_url('file-manager/download-bulk') ?>" method="post">
               <?= csrf_field() ?>
               <input type="hidden" name="type" value="<?= $type ?>">
 
               <div class="mb-3">
-                <label class="form-label">Download file dari</label>
-                <select class="form-select" name="days">
-                  <option value="0">Semua file</option>
-                  <option value="7">7 hari terakhir</option>
-                  <option value="30">30 hari terakhir</option>
-                  <option value="60">60 hari terakhir</option>
-                  <option value="90">90 hari terakhir</option>
+                <label class="form-label">Pilih Rentang Waktu</label>
+                <select class="form-select" id="download_select" name="days" onchange="toggleCustom('download')">
+                  <option value="0">Semua File (Tanpa Batas)</option>
+                  <option disabled>--- Mingguan ---</option>
+                  <option value="3">3 Hari Terakhir</option>
+                  <option value="7">1 Minggu Terakhir</option>
+                  <option value="14">2 Minggu Terakhir</option>
+                  <option disabled>--- Bulanan ---</option>
+                  <option value="30">1 Bulan Terakhir</option>
+                  <option value="60">2 Bulan Terakhir</option>
+                  <option value="90">3 Bulan Terakhir</option>
+                  <option disabled>--- Manual ---</option>
+                  <option value="custom">Input Manual (Custom)</option>
                 </select>
+
+                <div class="mt-2 d-none" id="download_custom_div">
+                  <label class="form-label text-muted small">Masukkan jumlah hari:</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="download_custom_input" placeholder="Contoh: 45"
+                      min="1">
+                    <span class="input-group-text">hari terakhir</span>
+                  </div>
+                </div>
               </div>
 
-              <div class="alert alert-info">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24"
-                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <circle cx="12" cy="12" r="9" />
-                  <line x1="12" y1="8" x2="12.01" y2="8" />
-                  <polyline points="11 12 12 12 12 16 13 16" />
-                </svg>
+              <div class="alert alert-info bg-blue-lt">
                 File akan didownload dalam format ZIP.
               </div>
 
-              <button type="submit" class="btn btn-primary w-100">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-                  stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
-                  <polyline points="7 11 12 16 17 11" />
-                  <line x1="12" y1="4" x2="12" y2="16" />
-                </svg>
-                Download ZIP
-              </button>
+              <button type="submit" class="btn btn-primary w-100">Download ZIP</button>
             </form>
           </div>
 
-          <!-- Delete Tab -->
           <div class="tab-pane fade" id="tab-delete" role="tabpanel">
             <form action="<?= base_url('file-manager/delete-bulk') ?>" method="post"
-              onsubmit="return confirm('PERHATIAN: File yang dihapus tidak dapat dikembalikan. Lanjutkan?')">
+              onsubmit="return confirm('Yakin ingin menghapus permanen? Aksi ini tidak bisa dibatalkan.')">
               <?= csrf_field() ?>
               <input type="hidden" name="type" value="<?= $type ?>">
 
               <div class="mb-3">
-                <label class="form-label">Hapus file lebih dari</label>
-                <select class="form-select" name="days" required>
+                <label class="form-label">Hapus file yang <strong>LEBIH TUA</strong> dari:</label>
+
+                <select class="form-select" id="delete_select" name="days" required onchange="toggleCustom('delete')">
                   <option value="">-- Pilih Periode --</option>
-                  <option value="30">30 hari</option>
-                  <option value="60">60 hari</option>
-                  <option value="90">90 hari</option>
-                  <option value="180">180 hari</option>
-                  <option value="365">1 tahun</option>
+                  <option disabled>--- Mingguan ---</option>
+                  <option value="3">3 Hari (Hapus file lama)</option>
+                  <option value="7">1 Minggu</option>
+                  <option value="14">2 Minggu</option>
+                  <option disabled>--- Bulanan ---</option>
+                  <option value="30">1 Bulan (30 Hari)</option>
+                  <option value="60">2 Bulan</option>
+                  <option value="90">3 Bulan</option>
+                  <option value="180">6 Bulan</option>
+                  <option value="365">1 Tahun</option>
+                  <option disabled>--- Manual ---</option>
+                  <option value="custom">Input Manual (Custom)</option>
                 </select>
+
+                <div class="mt-2 d-none" id="delete_custom_div">
+                  <label class="form-label text-muted small">Hapus file yang umurnya lebih dari:</label>
+                  <div class="input-group">
+                    <input type="number" class="form-control" id="delete_custom_input" placeholder="Contoh: 100"
+                      min="1">
+                    <span class="input-group-text">hari</span>
+                  </div>
+                  <small class="form-hint text-danger">Contoh: Jika diisi 5, maka file yang dibuat 6 hari lalu (atau
+                    lebih) akan dihapus.</small>
+                </div>
               </div>
 
-              <div class="alert alert-danger">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon alert-icon" width="24" height="24"
-                  viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
-                  stroke-linejoin="round">
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <circle cx="12" cy="12" r="9" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-                <strong>PERINGATAN:</strong> File yang dihapus tidak dapat dikembalikan!
+              <div class="alert alert-danger bg-red-lt">
+                <strong>PERINGATAN:</strong> File yang dihapus tidak dapat dikembalikan! Pastikan sudah
+                didownload/backup terlebih dahulu.
               </div>
 
               <button type="submit" class="btn btn-danger w-100">
@@ -287,7 +314,7 @@
                   <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
                   <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
                 </svg>
-                Hapus File
+                Hapus Permanen
               </button>
             </form>
           </div>
@@ -340,6 +367,37 @@ var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
 var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
 })
+
+// Fungsi untuk mengatur Input Custom
+function toggleCustom(mode) {
+  // Mode bisa 'download' atau 'delete'
+  const selectBox = document.getElementById(mode + '_select');
+  const customDiv = document.getElementById(mode + '_custom_div');
+  const customInput = document.getElementById(mode + '_custom_input');
+
+  if (selectBox.value === 'custom') {
+    // Tampilkan input manual
+    customDiv.classList.remove('d-none');
+
+    // Atur input manual agar dikirim sebagai 'days'
+    customInput.setAttribute('name', 'days');
+    customInput.setAttribute('required', 'required');
+
+    // Hapus nama dari select box agar tidak bentrok
+    selectBox.removeAttribute('name');
+  } else {
+    // Sembunyikan input manual
+    customDiv.classList.add('d-none');
+
+    // Kembalikan nama 'days' ke select box
+    selectBox.setAttribute('name', 'days');
+
+    // Matikan input manual
+    customInput.removeAttribute('name');
+    customInput.removeAttribute('required');
+    customInput.value = ''; // Reset nilai
+  }
+}
 </script>
 
 <?= $this->endSection() ?>

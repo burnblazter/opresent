@@ -1698,11 +1698,6 @@ class Presensi extends BaseController
      */
     public function getFaceDescriptors()
     {
-        // Hanya user dengan group 3 (pegawai) yang bisa akses
-        // if (!in_groups(3)) {
-        //     return $this->response->setJSON(['error' => 'Unauthorized'])->setStatusCode(403);
-        // }
-
         $descriptors = $this->faceDescriptorModel->getAllActiveDescriptors();
         
         $result = [];

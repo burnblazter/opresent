@@ -19,6 +19,7 @@
   justify-content: center;
 }
 </style>
+
 <!-- Page body -->
 <div class="page-body">
   <div class="container-xl">
@@ -50,8 +51,10 @@
     <div class="row row-deck row-cards">
       <div class="col-12">
         <div class="row row-cards">
+          <!-- Pengguna Aktif -->
           <div class="col-sm-6 col-lg-3">
-            <div class="card card-sm">
+            <a href="<?= base_url('/data-pegawai') ?>" class="card card-sm card-link"
+              style="text-decoration: none; color: inherit;">
               <div class="card-body">
                 <div class="row align-items-center">
                   <div class="col-auto">
@@ -77,10 +80,13 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
+
+          <!-- Pengguna Masuk -->
           <div class="col-sm-6 col-lg-3">
-            <div class="card card-sm">
+            <a href="<?= base_url('/laporan-presensi-harian') ?>" class="card card-sm card-link"
+              style="text-decoration: none; color: inherit;">
               <div class="card-body">
                 <div class="row align-items-center">
                   <div class="col-auto">
@@ -105,10 +111,13 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
+
+          <!-- Pengguna Izin/Sakit -->
           <div class="col-sm-6 col-lg-3">
-            <div class="card card-sm">
+            <a href="<?= base_url('/kelola-ketidakhadiran') ?>" class="card card-sm card-link"
+              style="text-decoration: none; color: inherit;">
               <div class="card-body">
                 <div class="row align-items-center">
                   <div class="col-auto">
@@ -133,10 +142,13 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
+
+          <!-- Pengguna Alpha -->
           <div class="col-sm-6 col-lg-3">
-            <div class="card card-sm">
+            <a href="<?= base_url('/laporan-presensi-harian') ?>" class="card card-sm card-link"
+              style="text-decoration: none; color: inherit;">
               <div class="card-body">
                 <div class="row align-items-center">
                   <div class="col-auto">
@@ -162,7 +174,7 @@
                   </div>
                 </div>
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </div>

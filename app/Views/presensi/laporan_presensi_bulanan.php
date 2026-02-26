@@ -31,6 +31,16 @@
                       <select name="filter_tahun" class="form-select filter_tahun" id="filter_tahun">
                       </select>
                     </div>
+                    <div class="col">
+                      <select name="filter_jabatan" id="filter_jabatan" class="form-select">
+                        <option value="">Semua Unit</option>
+                        <?php foreach ($data_jabatan as $jabatan): ?>
+                        <option value="<?= $jabatan->id ?>" <?= ($filter_jabatan == $jabatan->id) ? 'selected' : '' ?>>
+                          <?= esc($jabatan->jabatan) ?>
+                        </option>
+                        <?php endforeach; ?>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div class="col-auto">
@@ -60,6 +70,7 @@
                     <th>No</th>
                     <th>Nomor Induk</th>
                     <th>Nama</th>
+                    <th>Unit</th>
                     <th>Tanggal</th>
                     <th>Status</th>
                     <th>Jam Masuk</th>
@@ -131,6 +142,7 @@
                     <td class="text-center"><?= $nomor++ ?></td>
                     <td class="text-center"><?= $data->nomor_induk ?></td>
                     <td><?= $data->nama ?></td>
+                    <td class="text-center"><?= esc($data->nama_jabatan ?? '-') ?></td>
                     <td class="text-center"><?= date('d/m/Y', strtotime($data->tanggal_masuk)) ?></td>
                     <td class="text-center"><?= $badge_status ?></td>
                     <td class="text-center"><?= $jam_masuk_tampil ?></td>
@@ -206,13 +218,25 @@ document.addEventListener('DOMContentLoaded', function() {
               <option value="11" <?= $filter_bulan === '11' ? 'selected' : '' ?>>November</option>
               <option value="12" <?= $filter_bulan === '12' ? 'selected' : '' ?>>Desember</option>
             </select>
-            <div class="text-muted small">
-              *Laporan akan berisi seluruh pengguna (Hadir, Alpha, & Libur).
-            </div>
           </div>
           <div class="mb-3">
             <label for="filter_tahun">Tahun</label>
             <input type="number" name="filter_tahun" class="form-control" value="<?= $filter_tahun ?>">
+          </div>
+          <div class="mb-3">
+            <label for="filter_jabatan_export" class="form-label">Filter Unit</label>
+            <select name="filter_jabatan" id="filter_jabatan_export" class="form-select">
+              <option value="">Semua Unit</option>
+              <?php foreach ($data_jabatan as $jabatan): ?>
+              <option value="<?= $jabatan->id ?>" <?= ($filter_jabatan == $jabatan->id) ? 'selected' : '' ?>>
+                <?= esc($jabatan->jabatan) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="text-muted small">
+            *Laporan akan berisi seluruh pengguna (Hadir, Alpha, & Libur).<br>
+            *Data akan dikelompokkan per unit dalam sheet terpisah di Excel.
           </div>
         </div>
         <div class="modal-footer">

@@ -941,287 +941,348 @@ class Presensi extends BaseController
     {
         $currentPage = $this->request->getVar('page_harian') ? $this->request->getVar('page_harian') : 1;
         $user_profile = $this->usersModel->getUserInfo(user_id());
-
         $tanggal_filter = $this->request->getGet('tanggal_filter');
+        $filter_jabatan = $this->request->getGet('filter_jabatan');
+        
         if (empty($tanggal_filter)) {
             $tanggal_filter = date('Y-m-d');
         }
-
-        $data_presensi_pegawai = $this->presensiModel->getLaporanHarianLengkap($tanggal_filter);
-
+        
+        $data_presensi_pegawai = $this->presensiModel->getLaporanHarianLengkap($tanggal_filter, $filter_jabatan);
         $data_presensi = $data_presensi_pegawai['laporan-harian'];
         $pager = $data_presensi_pegawai['links'];
         $total = $data_presensi_pegawai['total'];
         $perPage = $data_presensi_pegawai['perPage'];
-
+        
         // Proses Status menggunakan helper yang konsisten
         foreach ($data_presensi as $key => $value) {
             $data_presensi[$key]->status_kehadiran = $this->_tentukanStatus($value, $tanggal_filter);
         }
-
+        
+        // Ambil semua jabatan untuk dropdown filter
+        $jabatanModel = new \App\Models\JabatanModel();
+        $data_jabatan = $jabatanModel->getJabatan(false, false, 100, true);
+        
         $data = [
             'title' => 'Laporan Presensi Harian',
             'user_profile' => $user_profile,
             'data_tanggal' => date('d F Y', strtotime($tanggal_filter)),
             'tanggal_filter' => $tanggal_filter,
+            'filter_jabatan' => $filter_jabatan,
+            'data_jabatan' => $data_jabatan['jabatan'],
             'data_presensi' => $data_presensi,
             'currentPage' => $currentPage,
             'pager' => $pager,
             'total' => $total,
             'perPage' => $perPage,
         ];
-
+        
         return view('presensi/laporan_presensi_harian', $data);
     }
-
 
     public function laporanHarianExcel()
     {
         $tanggal_filter = $this->request->getPost('tanggal_filter');
+        $filter_jabatan = $this->request->getPost('filter_jabatan');
+        
         if (empty($tanggal_filter)) {
             $tanggal_filter = date('Y-m-d');
         }
-
-        $data_presensi = $this->presensiModel->getLaporanHarianLengkapNoPage($tanggal_filter);
-
-        $spreadsheet = new Spreadsheet();
-        $worksheet = $spreadsheet->getActiveSheet();
-
-        // ========== HEADER TITLE ==========
-        $worksheet->setCellValue('A1', 'LAPORAN PRESENSI HARIAN');
-        $worksheet->mergeCells('A1:J1');
         
-        // Style Header Title
-        $worksheet->getStyle('A1')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 16,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '1e3a8a']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-            ]
-        ]);
-        $worksheet->getRowDimension(1)->setRowHeight(30);
-
-        // ========== INFO TANGGAL ==========
-        $worksheet->setCellValue('A3', 'Tanggal');
-        $worksheet->setCellValue('B3', ':');
-        $worksheet->setCellValue('C3', date('d F Y', strtotime($tanggal_filter)));
+        $data_presensi = $this->presensiModel->getLaporanHarianLengkapNoPage($tanggal_filter, $filter_jabatan);
         
-        $worksheet->getStyle('A3')->getFont()->setBold(true);
-        $worksheet->getStyle('C3')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => '1e3a8a']]
-        ]);
-
-        // ========== HEADER KOLOM ==========
-        $headers = [
-            'A6' => 'NO',
-            'B6' => 'NOMOR INDUK',
-            'C6' => 'NAMA',
-            'D6' => 'STATUS',
-            'E6' => 'JAM MASUK',
-            'F6' => 'FOTO MASUK',
-            'G6' => 'JAM PULANG',
-            'H6' => 'FOTO PULANG',
-            'I6' => 'TOTAL JAM KERJA',
-            'J6' => 'KETERLAMBATAN'
-        ];
-
-        foreach ($headers as $cell => $value) {
-            $worksheet->setCellValue($cell, $value);
+        // Proses Status
+        foreach ($data_presensi as $key => $value) {
+            $data_presensi[$key]->status_kehadiran = $this->_tentukanStatus($value, $tanggal_filter);
         }
-
-        // Style Header Kolom
-        $worksheet->getStyle('A6:J6')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
-                'size' => 11
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '1e3a8a']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => '000000']
-                ]
-            ]
-        ]);
-        $worksheet->getRowDimension(6)->setRowHeight(25);
-
-        // ========== ISI DATA ==========
-        $data_start_row = 7;
-        $nomor = 1;
-
-        $styleBorder = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => 'CCCCCC']
-                ]
-            ]
-        ];
-
+        
+        // Group data by jabatan untuk multiple sheets
+        $data_by_jabatan = [];
         foreach ($data_presensi as $data) {
-            $status = $this->_tentukanStatus($data, $tanggal_filter);
-            
-            // Inisialisasi default
-            $jam_masuk = '-';
-            $jam_keluar = '-';
-            $foto_masuk = '-';
-            $foto_keluar = '-';
-            $total_jam_kerja = '-';
-            $keterlambatan = '-';
-
-            // Warna status
-            $status_color = '000000';
-            switch($status) {
-                case 'Hadir':
-                    $status_color = '16a34a'; // Hijau
-                    break;
-                case 'Sakit':
-                    $status_color = 'eab308'; // Kuning
-                    break;
-                case 'Izin':
-                    $status_color = '3b82f6'; // Biru
-                    break;
-                case 'Libur':
-                    $status_color = '6b7280'; // Abu
-                    break;
-                case 'Alpha':
-                    $status_color = 'dc2626'; // Merah
-                    break;
+            $jabatan_nama = $data->nama_jabatan ?? 'Tanpa Jabatan';
+            if (!isset($data_by_jabatan[$jabatan_nama])) {
+                $data_by_jabatan[$jabatan_nama] = [];
             }
-
-            // Hanya hitung jika HADIR
-            if ($status == 'Hadir' && !empty($data->jam_masuk)) {
-                $jam_masuk = $data->jam_masuk;
-                $jam_keluar = ($data->jam_keluar == '00:00:00') ? 'Belum Pulang' : $data->jam_keluar;
-                $foto_masuk = 'Ada';
-                $foto_keluar = ($data->jam_keluar != '00:00:00' && $data->foto_keluar != '-') ? 'Ada' : '-';
-
-                // Hitung Jam Kerja
-                if ($data->jam_keluar != '00:00:00') {
-                    $start = strtotime($data->tanggal_masuk . ' ' . $data->jam_masuk);
-                    $end = strtotime($data->tanggal_keluar . ' ' . $data->jam_keluar);
-                    $selisih = $end - $start;
-                    $jam = floor($selisih / 3600);
-                    $menit = floor(($selisih % 3600) / 60);
-                    $total_jam_kerja = $jam . ' Jam ' . $menit . ' Menit';
+            $data_by_jabatan[$jabatan_nama][] = $data;
+        }
+        
+        // Sort jabatan alphabetically
+        ksort($data_by_jabatan);
+        
+        $spreadsheet = new Spreadsheet();
+        $sheetIndex = 0;
+        
+        // Loop untuk setiap jabatan = 1 sheet
+        foreach ($data_by_jabatan as $nama_jabatan => $data_pegawai) {
+            if ($sheetIndex > 0) {
+                $spreadsheet->createSheet();
+            }
+            $spreadsheet->setActiveSheetIndex($sheetIndex);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Beri nama sheet sesuai jabatan (max 31 karakter untuk Excel)
+            $sheet_name = substr($nama_jabatan, 0, 31);
+            $worksheet->setTitle($sheet_name);
+            
+            // ========== HEADER TITLE ==========
+            $worksheet->setCellValue('A1', 'LAPORAN PRESENSI HARIAN');
+            $worksheet->mergeCells('A1:K1');
+            
+            // Style Header Title
+            $worksheet->getStyle('A1')->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 16,
+                    'color' => ['rgb' => 'FFFFFF']
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1e3a8a']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ]
+            ]);
+            $worksheet->getRowDimension(1)->setRowHeight(30);
+            
+            // ========== INFO TANGGAL & JABATAN ==========
+            $worksheet->setCellValue('A3', 'Tanggal');
+            $worksheet->setCellValue('B3', ':');
+            $worksheet->setCellValue('C3', date('d F Y', strtotime($tanggal_filter)));
+            
+            $worksheet->setCellValue('A4', 'Unit');
+            $worksheet->setCellValue('B4', ':');
+            $worksheet->setCellValue('C4', $nama_jabatan);
+            
+            $worksheet->getStyle('A3:A4')->getFont()->setBold(true);
+            $worksheet->getStyle('C3:C4')->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '1e3a8a']]
+            ]);
+            
+            // ========== HEADER KOLOM ==========
+            $headers = [
+                'A6' => 'NO',
+                'B6' => 'NOMOR INDUK',
+                'C6' => 'NAMA',
+                'D6' => 'UNIT',
+                'E6' => 'STATUS',
+                'F6' => 'JAM MASUK',
+                'G6' => 'FOTO MASUK',
+                'H6' => 'JAM PULANG',
+                'I6' => 'FOTO PULANG',
+                'J6' => 'TOTAL JAM KERJA',
+                'K6' => 'KETERLAMBATAN'
+            ];
+            foreach ($headers as $cell => $value) {
+                $worksheet->setCellValue($cell, $value);
+            }
+            
+            // Style Header Kolom
+            $worksheet->getStyle('A6:K6')->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'FFFFFF'],
+                    'size' => 11
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1e3a8a']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000']
+                    ]
+                ]
+            ]);
+            $worksheet->getRowDimension(6)->setRowHeight(25);
+            
+            // ========== ISI DATA ==========
+            $data_start_row = 7;
+            $nomor = 1;
+            $styleBorder = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'CCCCCC']
+                    ]
+                ]
+            ];
+            
+            foreach ($data_pegawai as $data) {
+                $status = $data->status_kehadiran;
+                
+                // Inisialisasi default
+                $jam_masuk = '-';
+                $jam_keluar = '-';
+                $foto_masuk = '-';
+                $foto_keluar = '-';
+                $total_jam_kerja = '-';
+                $keterlambatan = '-';
+                
+                // Warna status
+                $status_color = '000000';
+                switch($status) {
+                    case 'Hadir':
+                        $status_color = '16a34a';
+                        break;
+                    case 'Sakit':
+                        $status_color = 'eab308';
+                        break;
+                    case 'Izin':
+                        $status_color = '3b82f6';
+                        break;
+                    case 'Libur':
+                        $status_color = '6b7280';
+                        break;
+                    case 'Alpha':
+                        $status_color = 'dc2626';
+                        break;
                 }
-
-                // Hitung Keterlambatan
-                if (!empty($data->jam_masuk_kantor)) {
-                    $timestamp_masuk = strtotime(date('H:i:s', strtotime($data->jam_masuk)));
-                    $timestamp_jadwal = strtotime($data->jam_masuk_kantor);
-                    $terlambat = $timestamp_masuk - $timestamp_jadwal;
+                
+                // Hanya hitung jika HADIR
+                if ($status == 'Hadir' && !empty($data->jam_masuk)) {
+                    $jam_masuk = $data->jam_masuk;
+                    $jam_keluar = ($data->jam_keluar == '00:00:00') ? 'Belum Pulang' : $data->jam_keluar;
+                    $foto_masuk = 'Ada';
+                    $foto_keluar = ($data->jam_keluar != '00:00:00' && $data->foto_keluar != '-') ? 'Ada' : '-';
                     
-                    if ($terlambat > 0) {
-                        $jam_lat = floor($terlambat / 3600);
-                        $menit_lat = floor(($terlambat % 3600) / 60);
-                        $keterlambatan = $jam_lat . ' Jam ' . $menit_lat . ' Menit';
-                    } else {
-                        $keterlambatan = 'On Time';
+                    // Hitung Jam Kerja
+                    if ($data->jam_keluar != '00:00:00') {
+                        $start = strtotime($data->tanggal_masuk . ' ' . $data->jam_masuk);
+                        $end = strtotime($data->tanggal_keluar . ' ' . $data->jam_keluar);
+                        $selisih = $end - $start;
+                        $jam = floor($selisih / 3600);
+                        $menit = floor(($selisih % 3600) / 60);
+                        $total_jam_kerja = $jam . ' Jam ' . $menit . ' Menit';
+                    }
+                    
+                    // Hitung Keterlambatan
+                    if (!empty($data->jam_masuk_kantor)) {
+                        $timestamp_masuk = strtotime(date('H:i:s', strtotime($data->jam_masuk)));
+                        $timestamp_jadwal = strtotime($data->jam_masuk_kantor);
+                        $terlambat = $timestamp_masuk - $timestamp_jadwal;
+                        
+                        if ($terlambat > 0) {
+                            $jam_lat = floor($terlambat / 3600);
+                            $menit_lat = floor(($terlambat % 3600) / 60);
+                            $keterlambatan = $jam_lat . ' Jam ' . $menit_lat . ' Menit';
+                        } else {
+                            $keterlambatan = 'On Time';
+                        }
                     }
                 }
-            }
-
-            $worksheet->setCellValue('A' . $data_start_row, $nomor++);
-            $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
-            $worksheet->setCellValue('C' . $data_start_row, $data->nama);
-            $worksheet->setCellValue('D' . $data_start_row, $status);
-            $worksheet->setCellValue('E' . $data_start_row, $jam_masuk);
-            $worksheet->setCellValue('F' . $data_start_row, $foto_masuk);
-            $worksheet->setCellValue('G' . $data_start_row, $jam_keluar);
-            $worksheet->setCellValue('H' . $data_start_row, $foto_keluar);
-            $worksheet->setCellValue('I' . $data_start_row, $total_jam_kerja);
-            $worksheet->setCellValue('J' . $data_start_row, $keterlambatan);
-
-            // Style row
-            $worksheet->getStyle('A' . $data_start_row . ':J' . $data_start_row)->applyFromArray($styleBorder);
-            
-            // Zebra striping
-            if ($nomor % 2 == 0) {
-                $worksheet->getStyle('A' . $data_start_row . ':J' . $data_start_row)->applyFromArray([
-                    'fill' => [
-                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                        'startColor' => ['rgb' => 'f3f4f6']
-                    ]
+                
+                $worksheet->setCellValue('A' . $data_start_row, $nomor++);
+                $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
+                $worksheet->setCellValue('C' . $data_start_row, $data->nama);
+                $worksheet->setCellValue('D' . $data_start_row, $data->nama_jabatan ?? '-');
+                $worksheet->setCellValue('E' . $data_start_row, $status);
+                $worksheet->setCellValue('F' . $data_start_row, $jam_masuk);
+                $worksheet->setCellValue('G' . $data_start_row, $foto_masuk);
+                $worksheet->setCellValue('H' . $data_start_row, $jam_keluar);
+                $worksheet->setCellValue('I' . $data_start_row, $foto_keluar);
+                $worksheet->setCellValue('J' . $data_start_row, $total_jam_kerja);
+                $worksheet->setCellValue('K' . $data_start_row, $keterlambatan);
+                
+                // Style row
+                $worksheet->getStyle('A' . $data_start_row . ':K' . $data_start_row)->applyFromArray($styleBorder);
+                
+                // Zebra striping
+                if ($nomor % 2 == 0) {
+                    $worksheet->getStyle('A' . $data_start_row . ':K' . $data_start_row)->applyFromArray([
+                        'fill' => [
+                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => 'f3f4f6']
+                        ]
+                    ]);
+                }
+                
+                // Warna status
+                $worksheet->getStyle('E' . $data_start_row)->applyFromArray([
+                    'font' => ['bold' => true, 'color' => ['rgb' => $status_color]]
                 ]);
+                
+                // Center align untuk kolom tertentu
+                $worksheet->getStyle('A' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('B' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('D' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('E' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('F' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('G' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('H' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $worksheet->getStyle('I' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                
+                $data_start_row++;
             }
-
-            // Warna status
-            $worksheet->getStyle('D' . $data_start_row)->applyFromArray([
-                'font' => ['bold' => true, 'color' => ['rgb' => $status_color]]
+            
+            // ========== FOOTER ==========
+            $footer_row = $data_start_row + 2;
+            $worksheet->setCellValue('A' . $footer_row, 'PresenSI - "Si Pintar Urusan Presensi"');
+            $worksheet->mergeCells('A' . $footer_row . ':K' . $footer_row);
+            
+            $footer_row++;
+            $worksheet->setCellValue('A' . $footer_row, 'Diekspor pada: ' . date('d F Y H:i:s'));
+            $worksheet->mergeCells('A' . $footer_row . ':K' . $footer_row);
+            
+            $worksheet->getStyle('A' . ($footer_row - 1) . ':A' . $footer_row)->applyFromArray([
+                'font' => [
+                    'italic' => true,
+                    'size' => 9,
+                    'color' => ['rgb' => '6b7280']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+                ]
             ]);
-
-            // Center align untuk kolom tertentu
-            $worksheet->getStyle('A' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('B' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('D' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('E' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('F' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('G' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $worksheet->getStyle('H' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-            $data_start_row++;
+            
+            // ========== AUTO SIZE COLUMNS ==========
+            foreach (range('A', 'K') as $col) {
+                $worksheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Set minimum width untuk kolom tertentu
+            $worksheet->getColumnDimension('C')->setWidth(25); // Nama
+            $worksheet->getColumnDimension('D')->setWidth(20); // Jabatan
+            $worksheet->getColumnDimension('J')->setWidth(20); // Total Jam Kerja
+            $worksheet->getColumnDimension('K')->setWidth(20); // Keterlambatan
+            
+            $sheetIndex++;
         }
-
-        // ========== FOOTER ==========
-        $footer_row = $data_start_row + 2;
-        $worksheet->setCellValue('A' . $footer_row, 'PresenSI - "Si Pintar Urusan Presensi"');
-        $worksheet->mergeCells('A' . $footer_row . ':J' . $footer_row);
         
-        $footer_row++;
-        $worksheet->setCellValue('A' . $footer_row, 'Diekspor pada: ' . date('d F Y H:i:s'));
-        $worksheet->mergeCells('A' . $footer_row . ':J' . $footer_row);
-
-        $worksheet->getStyle('A' . ($footer_row - 1) . ':A' . $footer_row)->applyFromArray([
-            'font' => [
-                'italic' => true,
-                'size' => 9,
-                'color' => ['rgb' => '6b7280']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
-            ]
-        ]);
-
-        // ========== AUTO SIZE COLUMNS ==========
-        foreach (range('A', 'J') as $col) {
-            $worksheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        // Set minimum width untuk kolom tertentu
-        $worksheet->getColumnDimension('C')->setWidth(25); // Nama
-        $worksheet->getColumnDimension('I')->setWidth(20); // Total Jam Kerja
-        $worksheet->getColumnDimension('J')->setWidth(20); // Keterlambatan
-
+        // Set sheet pertama sebagai active
+        $spreadsheet->setActiveSheetIndex(0);
+        
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="Laporan_Presensi_Harian_' . $tanggal_filter . '.xlsx"');
         header('Cache-Control: max-age=0');
-
+        
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit();
     }
 
-    private function _generateDataBulanan($bulan, $tahun)
+    private function _generateDataBulanan($bulan, $tahun, $filter_jabatan = false)
     {
-        // 1. Ambil semua pegawai
-        $semua_pegawai = $this->pegawaiModel->findAll();
+        // 1. Ambil semua pegawai (dengan filter jabatan jika ada)
+        $pegawaiModel = new \App\Models\PegawaiModel();
+        $builder = $pegawaiModel->builder();
+        $builder->select('pegawai.*, jabatan.jabatan as nama_jabatan');
+        $builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan', 'left');
+        
+        if ($filter_jabatan) {
+            $builder->where('pegawai.id_jabatan', $filter_jabatan);
+        }
+        
+        $builder->orderBy('jabatan.jabatan', 'ASC');
+        $builder->orderBy('pegawai.nama', 'ASC');
+        
+        $semua_pegawai = $builder->get()->getResultArray();
         
         // 2. Ambil data presensi (Masuk/Pulang)
         $presensi_raw = $this->presensiModel->getPresensiByMonth($bulan, $tahun);
@@ -1229,36 +1290,34 @@ class Presensi extends BaseController
         foreach ($presensi_raw as $p) {
             $presensi_map[$p['pegawai_id']][$p['tanggal_masuk']] = $p;
         }
-
+        
         // 3. AMBIL DATA KETIDAKHADIRAN (IZIN/SAKIT)
         $ketidakhadiran_raw = $this->ketidakhadiranModel->getKetidakhadiranByMonth($bulan, $tahun);
         $izin_map = [];
-
         // Mapping rentang tanggal izin ke tanggal satuan
         foreach ($ketidakhadiran_raw as $izin) {
             $start = new \DateTime($izin['tanggal_mulai']);
             $end = new \DateTime($izin['tanggal_berakhir']);
             $end->modify('+1 day');
-
             $period = new \DatePeriod($start, new \DateInterval('P1D'), $end);
-
             foreach ($period as $dt) {
                 $date_str = $dt->format('Y-m-d');
                 $izin_map[$izin['id_pegawai']][$date_str] = $izin['tipe_ketidakhadiran'];
             }
         }
-
+        
         // 4. Generate Loop
         $jumlah_hari = cal_days_in_month(CAL_GREGORIAN, $bulan, $tahun);
         $result_data = [];
-
+        
         for ($hari = 1; $hari <= $jumlah_hari; $hari++) {
             $tanggal_curr = sprintf('%04d-%02d-%02d', $tahun, $bulan, $hari);
-
+            
             foreach ($semua_pegawai as $pegawai) {
                 $row = new \stdClass();
                 $row->nomor_induk = $pegawai['nomor_induk'];
                 $row->nama = $pegawai['nama'];
+                $row->nama_jabatan = $pegawai['nama_jabatan'] ?? 'Tanpa Jabatan';
                 $row->tanggal_masuk = $tanggal_curr;
                 
                 // Cek apakah ada data presensi
@@ -1281,7 +1340,7 @@ class Presensi extends BaseController
                     $row->foto_keluar = '-';
                     $row->tanggal_keluar = null;
                     $row->jam_masuk_kantor = null;
-
+                    
                     // Cek apakah ada ketidakhadiran (Izin/Sakit)
                     if (isset($izin_map[$pegawai['id']][$tanggal_curr])) {
                         $row->tipe_ketidakhadiran = $izin_map[$pegawai['id']][$tanggal_curr];
@@ -1289,14 +1348,14 @@ class Presensi extends BaseController
                         $row->tipe_ketidakhadiran = null;
                     }
                 }
-
+                
                 // GUNAKAN HELPER UNTUK MENENTUKAN STATUS - KONSISTEN!
                 $row->status_kehadiran = $this->_tentukanStatus($row, $tanggal_curr);
                 
                 $result_data[] = $row;
             }
         }
-
+        
         return $result_data;
     }
 
@@ -1304,18 +1363,19 @@ class Presensi extends BaseController
     {
         $currentPage = $this->request->getVar('page_bulanan') ? $this->request->getVar('page_bulanan') : 1;
         $user_profile = $this->usersModel->getUserInfo(user_id());
-
+        
         $filter_bulan = $this->request->getGet('filter_bulan');
         $filter_tahun = $this->request->getGet('filter_tahun');
-
+        $filter_jabatan = $this->request->getGet('filter_jabatan');
+        
         if (empty($filter_bulan)) $filter_bulan = date('m');
         if (empty($filter_tahun)) $filter_tahun = date('Y');
-
+        
         $data_bulan = $filter_tahun . '-' . $filter_bulan;
-
-        // 1. Generate Data Lengkap (Hadir + Alpha)
-        $data_lengkap = $this->_generateDataBulanan($filter_bulan, $filter_tahun);
-
+        
+        // 1. Generate Data Lengkap (Hadir + Alpha) dengan filter jabatan
+        $data_lengkap = $this->_generateDataBulanan($filter_bulan, $filter_tahun, $filter_jabatan);
+        
         // 2. Manual Pagination untuk Array
         $perPage = 10;
         $total = count($data_lengkap);
@@ -1323,31 +1383,37 @@ class Presensi extends BaseController
         
         // Potong array sesuai halaman
         $data_presensi = array_slice($data_lengkap, $offset, $perPage);
-
+        
         // Buat Pager
         $pager = service('pager');
         $pager_links = $pager->makeLinks($currentPage, $perPage, $total, 'default_full', 0, 'bulanan');
-
+        
         if ($this->presensiModel->getMinYear()) {
             $tahun_mulai = $this->presensiModel->getMinYear();
         } else {
             $tahun_mulai = date('Y');
         }
-
+        
+        // Ambil semua jabatan untuk dropdown filter
+        $jabatanModel = new \App\Models\JabatanModel();
+        $data_jabatan = $jabatanModel->getJabatan(false, false, 100, true);
+        
         $data = [
             'title' => 'Laporan Presensi Bulanan',
             'user_profile' => $user_profile,
             'tahun_mulai' => $tahun_mulai,
             'data_bulan' => $data_bulan,
-            'data_presensi' => $data_presensi, // Data yang sudah dipotong
+            'data_presensi' => $data_presensi,
             'currentPage' => $currentPage,
-            'pager' => $pager_links, // Link pagination
+            'pager' => $pager_links,
             'total' => $total,
             'perPage' => $perPage,
             'filter_bulan' => $filter_bulan,
             'filter_tahun' => $filter_tahun,
+            'filter_jabatan' => $filter_jabatan,
+            'data_jabatan' => $data_jabatan['jabatan'],
         ];
-
+        
         return view('presensi/laporan_presensi_bulanan', $data);
     }
 
@@ -1355,236 +1421,273 @@ class Presensi extends BaseController
     {
         $filter_bulan = $this->request->getPOST('filter_bulan');
         $filter_tahun = $this->request->getPOST('filter_tahun');
+        $filter_jabatan = $this->request->getPOST('filter_jabatan');
         
         if (empty($filter_tahun)) $filter_tahun = date('Y');
         if (empty($filter_bulan)) $filter_bulan = date('m');
-
-        $data_presensi = $this->_generateDataBulanan($filter_bulan, $filter_tahun);
-
-        $spreadsheet = new Spreadsheet();
-        $worksheet = $spreadsheet->getActiveSheet();
-
-        // ========== HEADER TITLE ==========
-        $worksheet->setCellValue('A1', 'LAPORAN PRESENSI BULANAN');
-        $worksheet->mergeCells('A1:I1');
         
-        $worksheet->getStyle('A1')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'size' => 16,
-                'color' => ['rgb' => 'FFFFFF']
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '1e3a8a']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-            ]
-        ]);
-        $worksheet->getRowDimension(1)->setRowHeight(30);
-
-        // ========== INFO PERIODE ==========
-        $worksheet->setCellValue('A3', 'Bulan');
-        $worksheet->setCellValue('B3', ':');
-        $worksheet->setCellValue('C3', date('F', mktime(0, 0, 0, $filter_bulan, 10)));
+        $data_presensi = $this->_generateDataBulanan($filter_bulan, $filter_tahun, $filter_jabatan);
         
-        $worksheet->setCellValue('A4', 'Tahun');
-        $worksheet->setCellValue('B4', ':');
-        $worksheet->setCellValue('C4', $filter_tahun);
-        
-        $worksheet->getStyle('A3:A4')->getFont()->setBold(true);
-        $worksheet->getStyle('C3:C4')->applyFromArray([
-            'font' => ['bold' => true, 'color' => ['rgb' => '1e3a8a']]
-        ]);
-
-        // ========== HEADER KOLOM ==========
-        $headers = [
-            'A6' => 'NO',
-            'B6' => 'NOMOR INDUK',
-            'C6' => 'NAMA',
-            'D6' => 'TANGGAL',
-            'E6' => 'STATUS',
-            'F6' => 'JAM MASUK',
-            'G6' => 'JAM PULANG',
-            'H6' => 'TOTAL JAM KERJA',
-            'I6' => 'KETERLAMBATAN'
-        ];
-
-        foreach ($headers as $cell => $value) {
-            $worksheet->setCellValue($cell, $value);
+        // Group data by jabatan untuk multiple sheets
+        $data_by_jabatan = [];
+        foreach ($data_presensi as $data) {
+            $jabatan_nama = $data->nama_jabatan ?? 'Tanpa Jabatan';
+            if (!isset($data_by_jabatan[$jabatan_nama])) {
+                $data_by_jabatan[$jabatan_nama] = [];
+            }
+            $data_by_jabatan[$jabatan_nama][] = $data;
         }
-
-        $worksheet->getStyle('A6:I6')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
-                'size' => 11
-            ],
-            'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '1e3a8a']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => '000000']
+        
+        // Sort jabatan alphabetically
+        ksort($data_by_jabatan);
+        
+        $spreadsheet = new Spreadsheet();
+        $sheetIndex = 0;
+        
+        // Loop untuk setiap jabatan = 1 sheet
+        foreach ($data_by_jabatan as $nama_jabatan => $data_pegawai) {
+            if ($sheetIndex > 0) {
+                $spreadsheet->createSheet();
+            }
+            $spreadsheet->setActiveSheetIndex($sheetIndex);
+            $worksheet = $spreadsheet->getActiveSheet();
+            
+            // Beri nama sheet sesuai jabatan (max 31 karakter untuk Excel)
+            $sheet_name = substr($nama_jabatan, 0, 31);
+            $worksheet->setTitle($sheet_name);
+            
+            // ========== HEADER TITLE ==========
+            $worksheet->setCellValue('A1', 'LAPORAN PRESENSI BULANAN');
+            $worksheet->mergeCells('A1:J1');
+            
+            $worksheet->getStyle('A1')->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 16,
+                    'color' => ['rgb' => 'FFFFFF']
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1e3a8a']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
                 ]
-            ]
-        ]);
-        $worksheet->getRowDimension(6)->setRowHeight(25);
-
-        // ========== ISI DATA ==========
-        $data_start_row = 7;
-        $nomor = 1;
-
-        $styleBorder = [
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                    'color' => ['rgb' => 'CCCCCC']
+            ]);
+            $worksheet->getRowDimension(1)->setRowHeight(30);
+            
+            // ========== INFO PERIODE & JABATAN ==========
+            $worksheet->setCellValue('A3', 'Bulan');
+            $worksheet->setCellValue('B3', ':');
+            $worksheet->setCellValue('C3', date('F', mktime(0, 0, 0, $filter_bulan, 10)));
+            
+            $worksheet->setCellValue('A4', 'Tahun');
+            $worksheet->setCellValue('B4', ':');
+            $worksheet->setCellValue('C4', $filter_tahun);
+            
+            $worksheet->setCellValue('A5', 'Unit');
+            $worksheet->setCellValue('B5', ':');
+            $worksheet->setCellValue('C5', $nama_jabatan);
+            
+            $worksheet->getStyle('A3:A5')->getFont()->setBold(true);
+            $worksheet->getStyle('C3:C5')->applyFromArray([
+                'font' => ['bold' => true, 'color' => ['rgb' => '1e3a8a']]
+            ]);
+            
+            // ========== HEADER KOLOM ==========
+            $headers = [
+                'A7' => 'NO',
+                'B7' => 'NOMOR INDUK',
+                'C7' => 'NAMA',
+                'D7' => 'UNIT',
+                'E7' => 'TANGGAL',
+                'F7' => 'STATUS',
+                'G7' => 'JAM MASUK',
+                'H7' => 'JAM PULANG',
+                'I7' => 'TOTAL JAM KERJA',
+                'J7' => 'KETERLAMBATAN'
+            ];
+            foreach ($headers as $cell => $value) {
+                $worksheet->setCellValue($cell, $value);
+            }
+            
+            $worksheet->getStyle('A7:J7')->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'FFFFFF'],
+                    'size' => 11
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '1e3a8a']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                ],
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => '000000']
+                    ]
                 ]
-            ]
-        ];
-
-        if (!empty($data_presensi)) {
-            foreach ($data_presensi as $data) {
-                
-                $jam_masuk = '-';
-                $jam_keluar = '-';
-                $total_jam_kerja_format = '-';
-                $keterlambatan_format = '-';
-                $status = $data->status_kehadiran;
-
-                // Warna status
-                $status_color = '000000';
-                switch($status) {
-                    case 'Hadir':
-                        $status_color = '16a34a';
-                        break;
-                    case 'Sakit':
-                        $status_color = 'eab308';
-                        break;
-                    case 'Izin':
-                        $status_color = '3b82f6';
-                        break;
-                    case 'Libur':
-                        $status_color = '6b7280';
-                        break;
-                    case 'Alpha':
-                        $status_color = 'dc2626';
-                        break;
-                }
-
-                // Hanya hitung jika HADIR
-                if ($data->status_kehadiran == 'Hadir') {
-                    $jam_masuk = $data->jam_masuk;
-                    $jam_keluar = ($data->jam_keluar == '00:00:00') ? 'Belum Pulang' : $data->jam_keluar;
-
-                    // Hitung Jam Kerja
-                    if ($data->jam_keluar != '00:00:00') {
-                        $start = strtotime($data->tanggal_masuk . ' ' . $data->jam_masuk);
-                        $end = strtotime($data->tanggal_keluar . ' ' . $data->jam_keluar);
-                        $selisih = $end - $start;
-                        $jam = floor($selisih / 3600);
-                        $menit = floor(($selisih % 3600) / 60);
-                        $total_jam_kerja_format = $jam . ' Jam ' . $menit . ' Menit';
+            ]);
+            $worksheet->getRowDimension(7)->setRowHeight(25);
+            
+            // ========== ISI DATA ==========
+            $data_start_row = 8;
+            $nomor = 1;
+            $styleBorder = [
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'CCCCCC']
+                    ]
+                ]
+            ];
+            
+            if (!empty($data_pegawai)) {
+                foreach ($data_pegawai as $data) {
+                    
+                    $jam_masuk = '-';
+                    $jam_keluar = '-';
+                    $total_jam_kerja_format = '-';
+                    $keterlambatan_format = '-';
+                    $status = $data->status_kehadiran;
+                    
+                    // Warna status
+                    $status_color = '000000';
+                    switch($status) {
+                        case 'Hadir':
+                            $status_color = '16a34a';
+                            break;
+                        case 'Sakit':
+                            $status_color = 'eab308';
+                            break;
+                        case 'Izin':
+                            $status_color = '3b82f6';
+                            break;
+                        case 'Libur':
+                            $status_color = '6b7280';
+                            break;
+                        case 'Alpha':
+                            $status_color = 'dc2626';
+                            break;
                     }
-
-                    // Hitung Keterlambatan
-                    if (!empty($data->jam_masuk_kantor)) {
-                        $timestamp_masuk = strtotime(date('H:i:s', strtotime($data->jam_masuk)));
-                        $timestamp_jadwal = strtotime($data->jam_masuk_kantor);
-                        $terlambat = $timestamp_masuk - $timestamp_jadwal;
+                    
+                    // Hanya hitung jika HADIR
+                    if ($data->status_kehadiran == 'Hadir') {
+                        $jam_masuk = $data->jam_masuk;
+                        $jam_keluar = ($data->jam_keluar == '00:00:00') ? 'Belum Pulang' : $data->jam_keluar;
                         
-                        if ($terlambat > 0) {
-                            $jam_lat = floor($terlambat / 3600);
-                            $menit_lat = floor(($terlambat % 3600) / 60);
-                            $keterlambatan_format = $jam_lat . ' Jam ' . $menit_lat . ' Menit';
-                        } else {
-                            $keterlambatan_format = 'On Time';
+                        // Hitung Jam Kerja
+                        if ($data->jam_keluar != '00:00:00') {
+                            $start = strtotime($data->tanggal_masuk . ' ' . $data->jam_masuk);
+                            $end = strtotime($data->tanggal_keluar . ' ' . $data->jam_keluar);
+                            $selisih = $end - $start;
+                            $jam = floor($selisih / 3600);
+                            $menit = floor(($selisih % 3600) / 60);
+                            $total_jam_kerja_format = $jam . ' Jam ' . $menit . ' Menit';
+                        }
+                        
+                        // Hitung Keterlambatan
+                        if (!empty($data->jam_masuk_kantor)) {
+                            $timestamp_masuk = strtotime(date('H:i:s', strtotime($data->jam_masuk)));
+                            $timestamp_jadwal = strtotime($data->jam_masuk_kantor);
+                            $terlambat = $timestamp_masuk - $timestamp_jadwal;
+                            
+                            if ($terlambat > 0) {
+                                $jam_lat = floor($terlambat / 3600);
+                                $menit_lat = floor(($terlambat % 3600) / 60);
+                                $keterlambatan_format = $jam_lat . ' Jam ' . $menit_lat . ' Menit';
+                            } else {
+                                $keterlambatan_format = 'On Time';
+                            }
                         }
                     }
-                }
-
-                $worksheet->setCellValue('A' . $data_start_row, $nomor++);
-                $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
-                $worksheet->setCellValue('C' . $data_start_row, $data->nama);
-                $worksheet->setCellValue('D' . $data_start_row, date('d/m/Y', strtotime($data->tanggal_masuk)));
-                $worksheet->setCellValue('E' . $data_start_row, $status);
-                $worksheet->setCellValue('F' . $data_start_row, $jam_masuk);
-                $worksheet->setCellValue('G' . $data_start_row, $jam_keluar);
-                $worksheet->setCellValue('H' . $data_start_row, $total_jam_kerja_format);
-                $worksheet->setCellValue('I' . $data_start_row, $keterlambatan_format);
-
-                // Style row
-                $worksheet->getStyle('A' . $data_start_row . ':I' . $data_start_row)->applyFromArray($styleBorder);
-                
-                // Zebra striping
-                if ($nomor % 2 == 0) {
-                    $worksheet->getStyle('A' . $data_start_row . ':I' . $data_start_row)->applyFromArray([
-                        'fill' => [
-                            'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                            'startColor' => ['rgb' => 'f3f4f6']
-                        ]
+                    
+                    $worksheet->setCellValue('A' . $data_start_row, $nomor++);
+                    $worksheet->setCellValue('B' . $data_start_row, $data->nomor_induk);
+                    $worksheet->setCellValue('C' . $data_start_row, $data->nama);
+                    $worksheet->setCellValue('D' . $data_start_row, $data->nama_jabatan);
+                    $worksheet->setCellValue('E' . $data_start_row, date('d/m/Y', strtotime($data->tanggal_masuk)));
+                    $worksheet->setCellValue('F' . $data_start_row, $status);
+                    $worksheet->setCellValue('G' . $data_start_row, $jam_masuk);
+                    $worksheet->setCellValue('H' . $data_start_row, $jam_keluar);
+                    $worksheet->setCellValue('I' . $data_start_row, $total_jam_kerja_format);
+                    $worksheet->setCellValue('J' . $data_start_row, $keterlambatan_format);
+                    
+                    // Style row
+                    $worksheet->getStyle('A' . $data_start_row . ':J' . $data_start_row)->applyFromArray($styleBorder);
+                    
+                    // Zebra striping
+                    if ($nomor % 2 == 0) {
+                        $worksheet->getStyle('A' . $data_start_row . ':J' . $data_start_row)->applyFromArray([
+                            'fill' => [
+                                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                                'startColor' => ['rgb' => 'f3f4f6']
+                            ]
+                        ]);
+                    }
+                    
+                    // Warna status
+                    $worksheet->getStyle('F' . $data_start_row)->applyFromArray([
+                        'font' => ['bold' => true, 'color' => ['rgb' => $status_color]]
                     ]);
+                    
+                    // Center align
+                    $worksheet->getStyle('A' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('B' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('D' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('E' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('F' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('G' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $worksheet->getStyle('H' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    
+                    $data_start_row++;
                 }
-
-                // Warna status
-                $worksheet->getStyle('E' . $data_start_row)->applyFromArray([
-                    'font' => ['bold' => true, 'color' => ['rgb' => $status_color]]
-                ]);
-
-                // Center align
-                $worksheet->getStyle('A' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $worksheet->getStyle('B' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $worksheet->getStyle('D' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $worksheet->getStyle('E' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $worksheet->getStyle('F' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $worksheet->getStyle('G' . $data_start_row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-                $data_start_row++;
             }
+            
+            // ========== FOOTER ==========
+            $footer_row = $data_start_row + 2;
+            $worksheet->setCellValue('A' . $footer_row, 'PresenSI - "Si Pintar Urusan Presensi"');
+            $worksheet->mergeCells('A' . $footer_row . ':J' . $footer_row);
+            
+            $footer_row++;
+            $worksheet->setCellValue('A' . $footer_row, 'Diekspor pada: ' . date('d F Y H:i:s'));
+            $worksheet->mergeCells('A' . $footer_row . ':J' . $footer_row);
+            
+            $worksheet->getStyle('A' . ($footer_row - 1) . ':A' . $footer_row)->applyFromArray([
+                'font' => [
+                    'italic' => true,
+                    'size' => 9,
+                    'color' => ['rgb' => '6b7280']
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+                ]
+            ]);
+            
+            // ========== AUTO SIZE COLUMNS ==========
+            foreach (range('A', 'J') as $col) {
+                $worksheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            $worksheet->getColumnDimension('C')->setWidth(25);
+            $worksheet->getColumnDimension('D')->setWidth(20);
+            $worksheet->getColumnDimension('I')->setWidth(20);
+            $worksheet->getColumnDimension('J')->setWidth(20);
+            
+            $sheetIndex++;
         }
-
-        // ========== FOOTER ==========
-        $footer_row = $data_start_row + 2;
-        $worksheet->setCellValue('A' . $footer_row, 'PresenSI - "Si Pintar Urusan Presensi"');
-        $worksheet->mergeCells('A' . $footer_row . ':I' . $footer_row);
         
-        $footer_row++;
-        $worksheet->setCellValue('A' . $footer_row, 'Diekspor pada: ' . date('d F Y H:i:s'));
-        $worksheet->mergeCells('A' . $footer_row . ':I' . $footer_row);
-
-        $worksheet->getStyle('A' . ($footer_row - 1) . ':A' . $footer_row)->applyFromArray([
-            'font' => [
-                'italic' => true,
-                'size' => 9,
-                'color' => ['rgb' => '6b7280']
-            ],
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
-            ]
-        ]);
-
-        // ========== AUTO SIZE COLUMNS ==========
-        foreach (range('A', 'I') as $col) {
-            $worksheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $worksheet->getColumnDimension('C')->setWidth(25);
-        $worksheet->getColumnDimension('H')->setWidth(20);
-        $worksheet->getColumnDimension('I')->setWidth(20);
-
+        // Set sheet pertama sebagai active
+        $spreadsheet->setActiveSheetIndex(0);
+        
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         header('Content-Disposition: attachment;filename="Laporan_Bulanan_' . $filter_bulan . '-' . $filter_tahun . '.xlsx"');
         header('Cache-Control: max-age=0');
-
+        
         $writer = new Xlsx($spreadsheet);
         $writer->save('php://output');
         exit();

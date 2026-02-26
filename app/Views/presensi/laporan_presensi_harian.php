@@ -14,6 +14,17 @@
                   <input type="date" name="tanggal_filter" id="tanggal_filter" class="form-control"
                     value="<?= $tanggal_filter ?>">
                 </div>
+                <div class="col">
+                  <label for="filter_jabatan" class="form-label">Unit</label>
+                  <select name="filter_jabatan" id="filter_jabatan" class="form-select">
+                    <option value="">Semua Unit</option>
+                    <?php foreach ($data_jabatan as $jabatan): ?>
+                    <option value="<?= $jabatan->id ?>" <?= ($filter_jabatan == $jabatan->id) ? 'selected' : '' ?>>
+                      <?= esc($jabatan->jabatan) ?>
+                    </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
                 <div class="col-auto">
                   <button type="submit" class="btn btn-primary">Tampilkan</button>
                 </div>
@@ -52,6 +63,7 @@
                     <th>No</th>
                     <th>Nomor Induk</th>
                     <th>Nama Pegawai</th>
+                    <th>Unit</th>
                     <th>Status</th>
                     <th>Jam Masuk</th>
                     <th>Foto Masuk</th>
@@ -129,11 +141,11 @@
                                                 }
                                             }
                                             ?>
-
                   <tr class="align-middle">
                     <td class="text-center"><?= $nomor++ ?></td>
                     <td class="text-center"><?= $data->nomor_induk ?></td>
                     <td><?= esc($data->nama) ?></td>
+                    <td class="text-center"><?= esc($data->nama_jabatan ?? '-') ?></td>
                     <td class="text-center"><?= $badge_status ?></td>
                     <td class="text-center"><?= $jam_masuk_tampil ?></td>
                     <td class="text-center"><?= $foto_masuk_tampil ?></td>
@@ -175,8 +187,20 @@
             <label class="form-label">Pilih Tanggal</label>
             <input type="date" class="form-control" name="tanggal_filter" value="<?= $tanggal_filter ?>" required>
           </div>
+          <div class="mb-3">
+            <label for="filter_jabatan_export" class="form-label">Filter Unit</label>
+            <select name="filter_jabatan" id="filter_jabatan_export" class="form-select">
+              <option value="">Semua Unit</option>
+              <?php foreach ($data_jabatan as $jabatan): ?>
+              <option value="<?= $jabatan->id ?>" <?= ($filter_jabatan == $jabatan->id) ? 'selected' : '' ?>>
+                <?= esc($jabatan->jabatan) ?>
+              </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
           <div class="text-muted small">
-            *Laporan akan berisi seluruh pengguna (Hadir, Alpha, & Libur).
+            *Laporan akan berisi seluruh pengguna (Hadir, Alpha, & Libur).<br>
+            *Data akan dikelompokkan per unit dalam sheet terpisah di Excel.
           </div>
         </div>
         <div class="modal-footer">

@@ -96,6 +96,35 @@ class AuthController extends Controller
         $redirectURL = session('redirect_url') ?? site_url('/');
         unset($_SESSION['redirect_url']);
 
+        // If the redirect target is the default home, apply group-based overrides
+        $user = $this->auth->user();
+        if ($redirectURL === site_url('/')) {
+            helper('auth'); // ensure in_groups() is available
+
+            if (function_exists('in_groups')) {
+                if (in_groups('kiosk')) {
+                    return redirect()->to(base_url('kiosk'))->withCookies()->with('message', lang('Auth.loginSuccess'));
+                }
+                if (in_groups('helper')) {
+                    return redirect()->to(base_url('data-pegawai'))->withCookies()->with('message', lang('Auth.loginSuccess'));
+                }
+            }
+
+            // Fallback: check on the user entity if available
+            if ($user) {
+                try {
+                    if (method_exists($user, 'inGroup') && $user->inGroup('kiosk')) {
+                        return redirect()->to(base_url('kiosk'))->withCookies()->with('message', lang('Auth.loginSuccess'));
+                    }
+                    if (method_exists($user, 'inGroup') && $user->inGroup('helper')) {
+                        return redirect()->to(base_url('data-pegawai'))->withCookies()->with('message', lang('Auth.loginSuccess'));
+                    }
+                } catch (\Throwable $e) {
+                    // ignore and fall back to default redirect
+                }
+            }
+        }
+
         return redirect()->to($redirectURL)->withCookies()->with('message', lang('Auth.loginSuccess'));
     }
 

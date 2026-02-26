@@ -188,3 +188,10 @@ $routes->get('lab', 'Lab::index', ['filter' => 'role:admin,head,helper']);
 $routes->get('lab/load-descriptor/(:num)', 'Lab::loadDescriptorByPegawai/$1', ['filter' => 'role:admin,head,helper']);
 $routes->post('lab/save-session-descriptor', 'Lab::saveSessionDescriptor', ['filter' => 'role:admin,head,helper']);
 $routes->delete('lab/clear-session', 'Lab::clearSessionDescriptors', ['filter' => 'role:admin,head,helper']);
+
+// ============================================================================
+// KIOSK MODE
+// ============================================================================
+$routes->get('/kiosk', 'Kiosk::index', ['filter' => 'role:kiosk']);
+$routes->post('/kiosk/cari-pegawai', 'Kiosk::cariPegawai', ['filter' => 'role:kiosk']);
+$routes->post('/kiosk/simpan-presensi', 'Kiosk::simpanPresensi', ['filter' => 'role:kiosk']);

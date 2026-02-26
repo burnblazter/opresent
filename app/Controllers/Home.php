@@ -31,7 +31,7 @@ class Home extends BaseController
         if (in_array($user_lokasi->zona_waktu, timezone_identifiers_list())) {
             date_default_timezone_set($user_lokasi->zona_waktu);
         } else {
-            date_default_timezone_set('Asia/Jakarta');
+            date_default_timezone_set('Asia/Makassar');
         }
         
         $presensi_masuk = $this->presensiModel->cekPresensiMasuk($user_profile->id_pegawai, date('Y-m-d'));

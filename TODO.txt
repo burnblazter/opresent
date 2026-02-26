@@ -1,8 +1,8 @@
 Dear Future Me, 
 Please do this if you have time (asap):
 
-- add feature scan qr code
-- add link in group
+-add feature pengingat in lokasi that time is in 24 hour format jangan salah salah!
+- add gimmick AI to compile data for admin fun
 - finish editing video
 - finish makalah asap
 

@@ -3,20 +3,21 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kiosk Presensi</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=0.5">
+  <title>Kiosk | PresenSi</title>
+  <link rel="preload" as="image" href="<?= base_url('assets/img/company/logo.png') ?>">
+  <link rel="icon" type="image/png" href="<?= base_url('assets/img/company/logo.png') ?>">
   <link rel="stylesheet" href="<?= base_url('assets/css/tabler.min.css') ?>">
   <link rel="stylesheet" href="<?= base_url('assets/css/custom.css') ?>">
-  <!-- dark mode helper -->
   <script src="<?= base_url('assets/js/darkreader.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/quagga.min.js') ?>"></script>
   <script src="<?= base_url('assets/js/human.js') ?>"></script>
   <script src="<?= base_url('assets/js/sweetalert.min.js') ?>"></script>
+  <script src="<?= base_url('assets/js/qrcode.min.js') ?>"></script>
 
   <style>
   /* ============================================
-     KIOSK MODE - ULTRA FAST & CLEAN
+     KIOSK MODE - SEAMLESS SINGLE PAGE
      ============================================ */
 
   * {
@@ -36,6 +37,7 @@
     overflow: hidden;
     width: 100vw;
     height: 100vh;
+    zoom: 0.9;
   }
 
   .kiosk-container {
@@ -47,7 +49,7 @@
   }
 
   /* ============================================
-     HEADER - MINIMAL & FIXED
+     HEADER
      ============================================ */
   .kiosk-header {
     background: rgba(255, 255, 255, 0.85);
@@ -63,11 +65,6 @@
     left: 0;
     right: 0;
     z-index: 100;
-    transition: transform 0.3s ease;
-  }
-
-  .kiosk-header.hidden {
-    transform: translateY(-100%);
   }
 
   .header-left {
@@ -79,7 +76,6 @@
   .kiosk-brand {
     display: flex;
     align-items: center;
-    /* vertical centering of logo + text */
     gap: 0.75rem;
     text-decoration: none;
   }
@@ -88,17 +84,14 @@
     height: 36px;
     width: auto;
     display: block;
-    /* remove inline image baseline gap */
   }
 
   .kiosk-title {
     margin: 0;
-    /* reset default h1 margins */
     font-size: 1.25rem;
     font-weight: 700;
     color: #1e3a8a;
     letter-spacing: -0.025em;
-    /* ensure line-height same as logo so text doesn't float */
     line-height: 36px;
   }
 
@@ -155,11 +148,6 @@
     box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
   }
 
-  .btn-header svg {
-    width: 18px;
-    height: 18px;
-  }
-
   .btn-logout {
     background: #dc3545;
     color: white;
@@ -172,27 +160,165 @@
   }
 
   /* ============================================
-     MAIN CONTENT - FULLSCREEN CANVAS
+     MAIN LAYOUT - SIDEBAR + CONTENT
      ============================================ */
   .kiosk-main {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    position: relative;
     margin-top: 68px;
+    height: calc(100vh - 68px);
+    overflow: hidden;
   }
 
-  /* When the page is in fullscreen we still keep the 68px top margin
-     so the header (logo/title) remains visible. The previous behaviour hid
-     the header which made fullscreen feel monotonous and logo-less. */
-  .kiosk-main.fullscreen {
-    margin-top: 68px;
+  /* SIDEBAR - PRESENSI TERAKHIR */
+  .sidebar-recent {
+    width: 320px;
+    background: rgba(255, 255, 255, 0.9);
+    border-right: 1px solid rgba(30, 58, 138, 0.1);
+    backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid rgba(30, 58, 138, 0.1);
+  }
+
+  .sidebar-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sidebar-subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  .sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: white;
+    border: 1px solid rgba(30, 58, 138, 0.1);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .recent-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #1e3a8a;
+  }
+
+  .recent-info {
+    flex: 1;
+  }
+
+  .recent-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .recent-time {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.25rem;
+  }
+
+  .recent-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  .recent-badge.masuk {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+  }
+
+  .recent-badge.keluar {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+  }
+
+  .sidebar-empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+  }
+
+  /* MAIN CONTENT AREA */
+  .content-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
   }
 
   /* ============================================
-     SCANNER CONTAINER - FULLSCREEN
+     STATE TRANSITIONS - SEAMLESS
      ============================================ */
-  .scanner-container {
+  .state-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .state-container.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* ============================================
+     SCANNER STATE
+     ============================================ */
+  .scanner-view {
     width: 100%;
     height: 100%;
     position: relative;
@@ -204,10 +330,6 @@
     position: relative;
   }
 
-  /* keep barcode camera centered and preserve aspect ratio instead of
-     stretching to fill the container. Quagga tends to force 100% width/height
-     so we override with auto dimensions and allow the element to scale within
-     the parent box. */
   #scanner-viewport video,
   #scanner-viewport canvas {
     position: absolute;
@@ -219,92 +341,101 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    object-position: center;
     background: black;
   }
 
-  /* quagga/drawing buffer appears on top of video; simply hide it */
-  #scanner-viewport .drawingBuffer,
-  /* also hide globally just in case other components inject it */
   .drawingBuffer {
     display: none !important;
   }
 
+  .scanner-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    border: 3px solid #dda518;
+    border-radius: 16px;
+    pointer-events: none;
+  }
+
+  .scanner-overlay::before,
+  .scanner-overlay::after,
+  .scanner-overlay>span::before,
+  .scanner-overlay>span::after {
+    content: '';
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 4px solid #dda518;
+  }
+
+  .scanner-overlay::before {
+    top: -3px;
+    left: -3px;
+    border-right: none;
+    border-bottom: none;
+  }
+
+  .scanner-overlay::after {
+    top: -3px;
+    right: -3px;
+    border-left: none;
+    border-bottom: none;
+  }
+
+  .scanner-overlay>span::before {
+    bottom: -3px;
+    left: -3px;
+    border-right: none;
+    border-top: none;
+  }
+
+  .scanner-overlay>span::after {
+    bottom: -3px;
+    right: -3px;
+    border-left: none;
+    border-top: none;
+  }
+
   .scanner-instruction {
-    position: fixed;
-    bottom: 2rem;
+    position: absolute;
+    bottom: 3rem;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(30, 58, 138, 0.95);
     color: white;
-    padding: 1rem 2rem;
+    padding: 1.25rem 2.5rem;
     border-radius: 12px;
     font-size: 1.125rem;
     font-weight: 600;
     text-align: center;
     backdrop-filter: blur(10px);
     border: 2px solid rgba(221, 165, 24, 0.5);
-    z-index: 50;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
   }
 
   /* ============================================
-     VERIFICATION MODE - FULLSCREEN
+     VERIFICATION STATE
      ============================================ */
-  .verification-container {
-    display: none;
+  .verification-view {
     width: 100%;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 200;
-    background-color: var(--custom-bg-cream);
-    background-image:
-      radial-gradient(circle, rgba(30, 58, 138, 0.15) 1.5px, transparent 1.5px),
-      radial-gradient(circle, rgba(221, 165, 24, 0.08) 1px, transparent 1px);
-    background-size: 40px 40px, 60px 60px;
-    background-position: 0 0, 20px 20px;
-  }
-
-  .verification-header {
-    background: rgba(255, 255, 255, 0.85);
-    border-bottom: 1px solid rgba(30, 58, 138, 0.1);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.06);
-  }
-
-  .verification-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e3a8a;
-  }
-
-  .verification-content {
-    height: calc(100% - 68px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    max-width: 1000px;
     padding: 2rem;
-    gap: 1.5rem;
   }
 
-  .pegawai-info {
-    background: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow:
-      0 8px 32px rgba(30, 58, 138, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    padding: 1.5rem 2rem;
+  .pegawai-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(30, 58, 138, 0.1);
+    box-shadow: 0 4px 16px rgba(30, 58, 138, 0.08);
+    padding: 1.5rem;
     border-radius: 16px;
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .pegawai-foto {
@@ -317,15 +448,14 @@
   }
 
   .pegawai-details {
-    text-align: left;
+    flex: 1;
   }
 
   .pegawai-nama {
     font-size: 1.5rem;
     font-weight: 700;
     color: #1e3a8a;
-    margin-bottom: 0.25rem;
-    letter-spacing: -0.025em;
+    margin: 0 0 0.25rem 0;
   }
 
   .pegawai-nip {
@@ -334,20 +464,59 @@
     font-weight: 500;
   }
 
-  .camera-container {
+  /* INSTRUCTION PANEL */
+  .instruction-panel {
+    background: #1e3a8a;
+    color: white;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: 2px solid #dda518;
+  }
+
+  .instruction-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .instruction-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .instruction-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+    font-size: 0.875rem;
+    opacity: 0.95;
+  }
+
+  .instruction-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #dda518;
+    font-weight: bold;
+  }
+
+  .camera-wrapper {
     position: relative;
     width: 100%;
     max-width: 640px;
     height: 480px;
+    margin: 0 auto;
     border-radius: 12px;
     overflow: hidden;
     transform: scaleX(-1);
     background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow:
-      0 8px 32px rgba(30, 58, 138, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
-    /* center the video feed inside the container */
+    border: 1px solid rgba(30, 58, 138, 0.1);
+    box-shadow: 0 4px 16px rgba(30, 58, 138, 0.08);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -359,47 +528,66 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    object-position: center;
   }
 
-  .face-status {
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    font-size: 1.125rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-    min-width: 300px;
+  .face-status-panel {
     text-align: center;
+    padding: 1rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    border: 2px solid transparent;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .face-status.success {
+  .face-status-panel.info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+    border-color: rgba(59, 130, 246, 0.2);
+  }
+
+  .face-status-panel.success {
     background: rgba(34, 197, 94, 0.1);
     color: #16a34a;
     border-color: rgba(34, 197, 94, 0.2);
   }
 
-  .face-status.warning {
+  .face-status-panel.warning {
     background: rgba(245, 158, 11, 0.1);
     color: #d97706;
     border-color: rgba(245, 158, 11, 0.2);
   }
 
-  .face-status.danger {
+  .face-status-panel.danger {
     background: rgba(239, 68, 68, 0.1);
     color: #dc2626;
     border-color: rgba(239, 68, 68, 0.2);
   }
 
-  .btn-cancel {
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+  }
+
+  .btn-action {
     padding: 0.75rem 2rem;
-    background: #dc3545;
-    color: white;
     border: none;
     border-radius: 8px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+  }
+
+  .btn-cancel {
+    background: #dc3545;
+    color: white;
   }
 
   .btn-cancel:hover {
@@ -409,28 +597,103 @@
   }
 
   /* ============================================
+     FAILURE HELP STATE
+     ============================================ */
+  .failure-help {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 2rem;
+    border-radius: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(30, 58, 138, 0.08);
+  }
+
+  .failure-icon {
+    font-size: 4rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .failure-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #dc2626;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .failure-message {
+    font-size: 1rem;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  .qr-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px dashed #dda518;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .qr-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1e3a8a;
+    margin-bottom: 1rem;
+  }
+
+  #qrcode-container {
+    display: inline-block;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+  }
+
+  .qr-url {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 0.75rem;
+    word-break: break-all;
+  }
+
+  /* ============================================
      RESPONSIVE
      ============================================ */
+  @media (max-width: 1024px) {
+    .sidebar-recent {
+      width: 280px;
+    }
+  }
+
   @media (max-width: 768px) {
-    .kiosk-header {
-      padding: 0.75rem 1rem;
+    .sidebar-recent {
+      position: fixed;
+      left: -320px;
+      top: 68px;
+      height: calc(100vh - 68px);
+      z-index: 90;
     }
 
-    .kiosk-title {
-      font-size: 1rem;
+    .sidebar-recent.active {
+      left: 0;
     }
 
     .kiosk-operator {
       display: none;
     }
 
-    .camera-container {
+    .camera-wrapper {
       height: 360px;
     }
   }
 
   /* ============================================
-     LOGOUT MODAL
+     MODAL STYLES
      ============================================ */
   .modal-content {
     background: rgba(255, 255, 255, 0.95);
@@ -438,13 +701,24 @@
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
+
+  /* ============================================
+     HIDE LOGOUT BUTTON IN FULLSCREEN
+     ============================================ */
+  :fullscreen .btn-logout {
+    display: none !important;
+  }
+
+  :-webkit-full-screen .btn-logout {
+    display: none !important;
+  }
   </style>
 </head>
 
 <body>
   <div class="kiosk-container">
     <!-- Header -->
-    <div class="kiosk-header" id="kiosk-header">
+    <div class="kiosk-header">
       <div class="header-left">
         <a class="kiosk-brand">
           <img src="<?= base_url('assets/img/company/logo.png') ?>" alt="Logo" class="kiosk-logo">
@@ -459,37 +733,35 @@
       </div>
 
       <div class="header-right">
-        <!-- dark mode toggles (uses DarkReader) -->
-        <a href="#" class="nav-link px-2" id="enable-dark-mode" title="Enable dark mode" data-bs-toggle="tooltip"
-          data-bs-placement="bottom">
+        <a href="#" class="nav-link px-2" id="enable-dark-mode" title="Enable dark mode">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-            stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            stroke-width="2" stroke="currentColor" fill="none">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
           </svg>
         </a>
-        <a href="#" class="nav-link px-2 d-none" id="enable-light-mode" title="Enable light mode"
-          data-bs-toggle="tooltip" data-bs-placement="bottom">
+        <a href="#" class="nav-link px-2 d-none" id="enable-light-mode" title="Enable light mode">
           <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
-            stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            stroke-width="2" stroke="currentColor" fill="none">
             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
             <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
             <path d="M3 12h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7" />
           </svg>
         </a>
+
         <div class="kiosk-time" id="current-time"></div>
 
         <button class="btn-header" id="btn-fullscreen" onclick="toggleFullscreen()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
           </svg>
           <span id="fullscreen-text">Fullscreen</span>
         </button>
 
-        <button class="btn-header btn-logout" id="btn-logout" data-bs-toggle="modal" data-bs-target="#logout-modal">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <button class="btn-header btn-logout" data-bs-toggle="modal" data-bs-target="#logout-modal">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
             <polyline points="16 17 21 12 16 7" />
             <line x1="21" y1="12" x2="9" y2="12" />
@@ -499,41 +771,108 @@
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="kiosk-main" id="kiosk-main">
-      <!-- Scanner Mode -->
-      <div class="scanner-container" id="scanner-container">
-        <div id="scanner-viewport"></div>
-        <div class="scanner-instruction">
-          📱 Arahkan Barcode ke Kamera
+    <!-- Main Content Layout -->
+    <div class="kiosk-main">
+      <!-- Sidebar: Presensi Terakhir -->
+      <div class="sidebar-recent" id="sidebar-recent">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 5H7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2V7a2 2 0 0 0 -2 -2h-2" />
+              <rect x="9" y="3" width="6" height="4" rx="2" />
+              <path d="M9 14l2 2l4 -4" />
+            </svg>
+            Presensi Terakhir
+          </h3>
+          <p class="sidebar-subtitle">Riwayat presensi sesi ini</p>
+        </div>
+        <div class="sidebar-content" id="recent-list">
+          <div class="sidebar-empty">
+            <p>🕐 Belum ada presensi</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Verification Mode -->
-    <div class="verification-container" id="verification-container">
-      <div class="verification-header">
-        <div class="verification-title">🔐 Verifikasi Wajah</div>
-        <div class="kiosk-time" id="current-time-verify"></div>
-      </div>
+      <!-- Content Area: State-Based Rendering -->
+      <div class="content-area">
 
-      <div class="verification-content">
-        <div class="pegawai-info">
-          <img src="" alt="Foto" class="pegawai-foto" id="pegawai-foto">
-          <div class="pegawai-details">
-            <div class="pegawai-nama" id="pegawai-nama"></div>
-            <div class="pegawai-nip" id="pegawai-nip"></div>
+        <!-- STATE 1: SCANNER -->
+        <div class="state-container active" id="state-scanner">
+          <div class="scanner-view">
+            <div id="scanner-viewport"></div>
+            <div class="scanner-overlay"><span></span></div>
+            <div class="scanner-instruction">
+              📱 Arahkan Barcode ke Kamera
+            </div>
           </div>
         </div>
 
-        <div class="camera-container">
-          <video id="verification-video" autoplay playsinline></video>
-          <canvas id="capture-canvas" style="display:none;"></canvas>
+        <!-- STATE 2: VERIFICATION -->
+        <div class="state-container" id="state-verification">
+          <div class="verification-view">
+            <!-- Pegawai Info -->
+            <div class="pegawai-card">
+              <img src="" alt="Foto" class="pegawai-foto" id="pegawai-foto">
+              <div class="pegawai-details">
+                <h2 class="pegawai-nama" id="pegawai-nama"></h2>
+                <p class="pegawai-nip" id="pegawai-nip"></p>
+              </div>
+            </div>
+
+            <!-- Instruction Panel -->
+            <div class="instruction-panel">
+              <div class="instruction-title">
+                💡 Panduan Verifikasi Wajah
+              </div>
+              <ul class="instruction-list">
+                <li>Arahkan wajah ke kamera dengan pencahayaan yang cukup</li>
+                <li>Lepas masker, kacamata, atau topi jika perlu</li>
+                <li>Posisikan wajah di tengah area kamera</li>
+                <li>Tunggu hingga sistem mencocokkan wajah Anda</li>
+              </ul>
+            </div>
+
+            <!-- Camera -->
+            <div class="camera-wrapper">
+              <video id="verification-video" autoplay playsinline></video>
+              <canvas id="capture-canvas" style="display:none;"></canvas>
+            </div>
+
+            <!-- Face Status -->
+            <div class="face-status-panel info" id="face-status">
+              Memuat kamera...
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+              <button class="btn-action btn-cancel" onclick="resetToScanner()">❌ Batal</button>
+            </div>
+          </div>
         </div>
 
-        <div class="face-status" id="face-status"></div>
+        <!-- STATE 3: FAILURE HELP -->
+        <div class="state-container" id="state-failure">
+          <div class="failure-help">
+            <div class="failure-icon">⚠️</div>
+            <h2 class="failure-title">Verifikasi Wajah Gagal</h2>
+            <p class="failure-message">
+              Jika verifikasi gagal karena perubahan wajah atau wajah belum terdaftar, silakan login melalui perangkat
+              pribadi Anda dan lakukan <strong>Request Pendaftaran Wajah</strong>.
+            </p>
 
-        <button class="btn-cancel" onclick="resetToScanner()">❌ Batal</button>
+            <div class="qr-section">
+              <div class="qr-title">📱 Scan QR Code untuk membuka PresenSi di perangkat pribadi Anda</div>
+              <div id="qrcode-container"></div>
+              <p class="qr-url" id="qr-url-text"></p>
+            </div>
+
+            <div class="action-buttons">
+              <button class="btn-action btn-cancel" onclick="resetToScanner()">🔄</button>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -556,7 +895,25 @@
   <script src="<?= base_url('assets/js/tabler.min.js') ?>"></script>
 
   <script>
-  // dark mode initialization (copied from production template)
+  // ==================== GLOBAL STATE ====================
+  const state = {
+    currentMode: 'scanner', // scanner | verification | failure
+    currentPegawai: null,
+    human: null,
+    isModelLoaded: false,
+    isFaceVerifying: false,
+    isProcessingScan: false,
+    lastScanTime: 0,
+    detectionInterval: null,
+    streamVerification: null,
+    baseUrl: '<?= base_url() ?>',
+    csrfToken: '<?= csrf_token() ?>',
+    csrfHash: '<?= csrf_hash() ?>',
+    recentAttendance: [], // Session-based storage (max 10)
+    failureTimeout: null
+  };
+
+  // ==================== DARK MODE ====================
   const drOptions = {
     brightness: 100,
     contrast: 100,
@@ -605,22 +962,51 @@
     }
   });
 
-  // ==================== STATE ====================
-  const state = {
-    currentMode: 'scanner',
-    currentPegawai: null,
-    human: null,
-    isModelLoaded: false,
-    isFaceVerifying: false,
-    isProcessingScan: false,
-    lastScanTime: 0,
-    detectionInterval: null,
-    streamVerification: null,
-    isFullscreen: false,
-    baseUrl: '<?= base_url() ?>',
-    csrfToken: '<?= csrf_token() ?>',
-    csrfHash: '<?= csrf_hash() ?>'
-  };
+  // ==================== CLOCK ====================
+  function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const clockEl = document.getElementById('current-time');
+    if (clockEl) clockEl.textContent = timeString;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ==================== FULLSCREEN ====================
+  function toggleFullscreen() {
+    const elem = document.documentElement;
+    const btnText = document.getElementById('fullscreen-text');
+
+    if (!document.fullscreenElement) {
+      elem.requestFullscreen().then(() => {
+        btnText.textContent = 'Exit Fullscreen';
+      }).catch(err => console.error('Fullscreen error:', err));
+    } else {
+      document.exitFullscreen().then(() => {
+        btnText.textContent = 'Fullscreen';
+      });
+    }
+  }
+
+  // ==================== STATE MANAGEMENT ====================
+  function switchState(newState) {
+    // Hide all states
+    document.querySelectorAll('.state-container').forEach(el => {
+      el.classList.remove('active');
+    });
+
+    // Show target state
+    const targetEl = document.getElementById('state-' + newState);
+    if (targetEl) {
+      targetEl.classList.add('active');
+    }
+
+    state.currentMode = newState;
+  }
 
   // ==================== PRELOAD HUMAN.JS ====================
   async function preloadHumanJS() {
@@ -653,67 +1039,7 @@
     }
   }
 
-  // ==================== CLOCK ====================
-  function updateClock() {
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    const clockEl = document.getElementById('current-time');
-    const clockVerifyEl = document.getElementById('current-time-verify');
-    if (clockEl) clockEl.textContent = timeString;
-    if (clockVerifyEl) clockVerifyEl.textContent = timeString;
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  // ==================== FULLSCREEN MANAGEMENT ====================
-  function toggleFullscreen() {
-    const elem = document.documentElement;
-    const btnText = document.getElementById('fullscreen-text');
-    const header = document.getElementById('kiosk-header');
-    const btnLogout = document.getElementById('btn-logout');
-    const kioskMain = document.getElementById('kiosk-main');
-
-    if (!document.fullscreenElement) {
-      elem.requestFullscreen().then(() => {
-        state.isFullscreen = true;
-        btnText.textContent = 'Exit Fullscreen';
-        // leave the header visible so the logo stays on screen; only hide
-        // the logout button to avoid accidental clicks
-        //header.classList.add('hidden');
-        btnLogout.style.display = 'none';
-        kioskMain.classList.add('fullscreen');
-      }).catch(err => {
-        console.error('Fullscreen error:', err);
-      });
-    } else {
-      document.exitFullscreen().then(() => {
-        state.isFullscreen = false;
-        btnText.textContent = 'Fullscreen';
-        //header.classList.remove('hidden');
-        btnLogout.style.display = 'flex';
-        kioskMain.classList.remove('fullscreen');
-      });
-    }
-  }
-
-  document.addEventListener('fullscreenchange', () => {
-    const btnText = document.getElementById('fullscreen-text');
-    const btnLogout = document.getElementById('btn-logout');
-    const kioskMain = document.getElementById('kiosk-main');
-
-    if (!document.fullscreenElement) {
-      state.isFullscreen = false;
-      btnText.textContent = 'Fullscreen';
-      btnLogout.style.display = 'flex';
-      kioskMain.classList.remove('fullscreen');
-    }
-  });
-
-  // ==================== OPTIMIZED SCANNER ====================
+  // ==================== SCANNER ====================
   function initScanner() {
     const viewport = document.getElementById('scanner-viewport');
     if (viewport) viewport.innerHTML = '';
@@ -755,9 +1081,7 @@
           title: 'Scanner Error',
           text: err.message,
           timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          confirmButtonColor: '#1e3a8a'
+          showConfirmButton: false
         });
         return;
       }
@@ -770,10 +1094,7 @@
 
   function handleBarcodeDetected(result) {
     const now = Date.now();
-
-    // Anti-spam: minimal 2 detik antar scan
     if (now - state.lastScanTime < 2000) return;
-
     if (state.isProcessingScan) return;
     if (!result || !result.codeResult || !result.codeResult.code) return;
 
@@ -824,16 +1145,7 @@
       state.currentPegawai = data.data;
 
       if (!state.currentPegawai.descriptors || state.currentPegawai.descriptors.length === 0) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Wajah Belum Terdaftar',
-          text: 'Wajah pegawai belum terdaftar. Hubungi admin.',
-          timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          confirmButtonColor: '#1e3a8a'
-        });
-        resetToScanner();
+        showFailureHelp();
         return;
       }
 
@@ -844,11 +1156,9 @@
       Swal.fire({
         icon: 'error',
         title: 'Koneksi Error',
-        text: 'Terjadi kesalahan jaringan. Silakan coba lagi.',
+        text: 'Terjadi kesalahan jaringan.',
         timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        confirmButtonColor: '#1e3a8a'
+        showConfirmButton: false
       });
       resetToScanner();
     }
@@ -856,18 +1166,16 @@
 
   // ==================== VERIFICATION MODE ====================
   async function showVerificationMode() {
-    document.getElementById('scanner-container').style.display = 'none';
-    document.getElementById('verification-container').style.display = 'block';
+    switchState('verification');
 
     document.getElementById('pegawai-foto').src = state.currentPegawai.foto;
     document.getElementById('pegawai-nama').textContent = state.currentPegawai.nama;
     document.getElementById('pegawai-nip').textContent = 'Nomor Induk: ' + state.currentPegawai.nomor_induk;
 
-    updateFaceStatus('Memuat kamera...', 'warning');
+    updateFaceStatus('Memuat kamera...', 'info');
 
     await initVerificationCamera();
 
-    // Human.js sudah di-preload, langsung pakai!
     if (!state.isModelLoaded) {
       await preloadHumanJS();
     }
@@ -897,20 +1205,26 @@
         title: 'Kamera Error',
         text: 'Gagal mengakses kamera: ' + error.message,
         timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        confirmButtonColor: '#1e3a8a'
+        showConfirmButton: false
       });
       resetToScanner();
     }
   }
 
-  // ==================== FACE DETECTION ====================
   async function startFaceDetection() {
     const video = document.getElementById('verification-video');
+    const startTime = Date.now();
+    const MAX_WAIT_TIME = 10000; // 10 detik dalam milidetik
 
     state.detectionInterval = setInterval(async () => {
       if (state.isFaceVerifying) return;
+      if (Date.now() - startTime >= MAX_WAIT_TIME) {
+        updateFaceStatus('Waktu verifikasi habis', 'danger');
+        clearInterval(state.detectionInterval);
+        state.detectionInterval = null;
+        showFailureHelp();
+        return;
+      }
 
       try {
         const result = await state.human.detect(video);
@@ -945,6 +1259,7 @@
         } else {
           updateFaceStatus('👤 Tidak ada wajah terdeteksi', 'danger');
         }
+
       } catch (error) {
         console.error('Detection error:', error);
       }
@@ -955,8 +1270,44 @@
     const statusEl = document.getElementById('face-status');
     if (statusEl) {
       statusEl.textContent = message;
-      statusEl.className = 'face-status ' + type;
+      statusEl.className = 'face-status-panel ' + type;
     }
+  }
+
+  // ==================== FAILURE HELP STATE ====================
+  // ==================== FAILURE HELP STATE ====================
+  function showFailureHelp() {
+    if (state.streamVerification) {
+      state.streamVerification.getTracks().forEach(t => t.stop());
+      state.streamVerification = null;
+    }
+
+    if (state.detectionInterval) {
+      clearInterval(state.detectionInterval);
+      state.detectionInterval = null;
+    }
+
+    switchState('failure');
+
+    // Generate QR Code for face enrollment
+    const enrollmentUrl = state.baseUrl + 'login';
+    document.getElementById('qr-url-text').textContent = enrollmentUrl;
+
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    qrcodeContainer.innerHTML = ''; // Clear previous QR
+
+    new QRCode(qrcodeContainer, {
+      text: enrollmentUrl,
+      width: 200,
+      height: 200,
+      colorDark: "#1e3a8a",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.H
+    });
+
+    state.failureTimeout = setTimeout(() => {
+      resetToScanner();
+    }, 7500);
   }
 
   // ==================== CAPTURE & SUBMIT ====================
@@ -1010,6 +1361,7 @@
       if (result.csrf_hash) state.csrfHash = result.csrf_hash;
 
       if (result.success || result.duplicate) {
+        addToRecentList(result.data, mode, imageData);
         showConfirmation(result.data, mode, result.duplicate);
       } else {
         Swal.fire({
@@ -1017,9 +1369,7 @@
           title: 'Gagal',
           text: result.message,
           timer: 3000,
-          timerProgressBar: true,
-          showConfirmButton: false,
-          confirmButtonColor: '#1e3a8a'
+          showConfirmButton: false
         });
         resetToScanner();
       }
@@ -1031,12 +1381,56 @@
         title: 'Koneksi Error',
         text: 'Terjadi kesalahan koneksi.',
         timer: 3000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        confirmButtonColor: '#1e3a8a'
+        showConfirmButton: false
       });
       resetToScanner();
     }
+  }
+
+  // ==================== RECENT ATTENDANCE (SESSION-BASED) ====================
+  function addToRecentList(data, mode, capturedImage) {
+    const recentItem = {
+      nama: data.nama,
+      foto: capturedImage || state.currentPegawai.foto,
+      jam: data.jam,
+      mode: mode,
+      timestamp: Date.now()
+    };
+
+    state.recentAttendance.unshift(recentItem);
+    if (state.recentAttendance.length > 1000) {
+      state.recentAttendance = state.recentAttendance.slice(0, 1000);
+    }
+
+    renderRecentList();
+  }
+
+  function renderRecentList() {
+    const listContainer = document.getElementById('recent-list');
+
+    if (state.recentAttendance.length === 0) {
+      listContainer.innerHTML = '<div class="sidebar-empty"><p>🕐 Belum ada presensi</p></div>';
+      return;
+    }
+
+    let html = '';
+    state.recentAttendance.forEach(item => {
+      const badgeClass = item.mode === 'masuk' ? 'masuk' : 'keluar';
+      const badgeText = item.mode === 'masuk' ? 'Masuk' : 'Keluar';
+
+      html += `
+        <div class="recent-item">
+          <img src="${item.foto}" alt="${item.nama}" class="recent-avatar">
+          <div class="recent-info">
+            <div class="recent-name">${item.nama}</div>
+            <div class="recent-time">${item.jam}</div>
+          </div>
+          <span class="recent-badge ${badgeClass}">${badgeText}</span>
+        </div>
+      `;
+    });
+
+    listContainer.innerHTML = html;
   }
 
   // ==================== CONFIRMATION ====================
@@ -1044,7 +1438,6 @@
     if (state.streamVerification) {
       state.streamVerification.getTracks().forEach(t => t.stop());
     }
-    document.getElementById('verification-container').style.display = 'none';
 
     const isLate = data.status.includes('Terlambat');
     const icon = isDuplicate ? 'info' : (isLate ? 'warning' : 'success');
@@ -1074,7 +1467,6 @@
       showConfirmButton: false,
       allowOutsideClick: false,
       didOpen: () => {
-        // Auto-reset setelah 3 detik
         setTimeout(() => {
           resetToScanner();
         }, 3000);
@@ -1082,8 +1474,13 @@
     });
   }
 
-  // ==================== RESET - ULTRA FAST ====================
+  // ==================== RESET ====================
   function resetToScanner() {
+    if (state.failureTimeout) {
+      clearTimeout(state.failureTimeout);
+      state.failureTimeout = null;
+    }
+
     if (state.streamVerification) {
       state.streamVerification.getTracks().forEach(t => t.stop());
       state.streamVerification = null;
@@ -1107,10 +1504,8 @@
     state.isFaceVerifying = false;
     state.isProcessingScan = false;
 
-    document.getElementById('verification-container').style.display = 'none';
-    document.getElementById('scanner-container').style.display = 'block';
+    switchState('scanner');
 
-    // INSTANT RESTART - NO DELAY!
     setTimeout(() => {
       initScanner();
     }, 100);
@@ -1118,11 +1513,9 @@
 
   // ==================== INIT ====================
   document.addEventListener('DOMContentLoaded', function() {
-    // Preload Human.js di background
     preloadHumanJS();
-
-    // Start scanner
     initScanner();
+    renderRecentList();
   });
 
   window.addEventListener('beforeunload', function() {

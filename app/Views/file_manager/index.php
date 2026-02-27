@@ -106,7 +106,7 @@
               <div class="mb-3">
                 <label class="form-label">Upload Logo Baru</label>
                 <input type="file" class="form-control" name="logo" accept="image/*" required>
-                <small class="form-hint">Format: PNG/JPG, Max: 2MB</small>
+                <small class="form-hint">Format: PNG, Max: 2MB</small>
               </div>
               <button type="submit" class="btn btn-primary">Upload Logo</button>
             </form>

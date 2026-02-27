@@ -1,6 +1,8 @@
 <?= $this->extend('templates/index') ?>
 
 <?= $this->section('pageBody') ?>
+<link href="<?= base_url('assets/css/flatpickr.min.css') ?>" rel="stylesheet" />
+
 <!-- Page body -->
 <div class="page-body">
   <div class="container-xl">
@@ -143,21 +145,50 @@
                 <?php endif; ?>
               </div>
               <div class="mb-3">
-                <label class="form-label">Jam Masuk</label>
-                <input name="jam_masuk" type="time"
+                <label class="form-label d-flex align-items-center">
+                  Jam Masuk
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-info-circle ms-2" data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="Gunakan format 24 jam<br>Contoh: 07:00 untuk jam 7 pagi, 15:00 untuk jam 3 sore"
+                    data-bs-placement="top">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                    <path d="M12 9h.01" />
+                    <path d="M11 12h1v4h1" />
+                  </svg>
+                </label>
+                <input id="jam_masuk" name="jam_masuk" type="text"
                   class="form-control <?= validation_show_error('jam_masuk') ? 'is-invalid' : '' ?>"
-                  value="<?= old('jam_masuk', date('H:i', strtotime($lokasi['jam_masuk']))) ?>">
+                  value="<?= old('jam_masuk', date('H:i', strtotime($lokasi['jam_masuk']))) ?>" placeholder="07:00">
+                <small class="form-hint">Format 24 jam. Contoh: 07:00 (pagi) atau 19:00 (malam)</small>
                 <?php if (validation_show_error('jam_masuk')) : ?>
                 <div class="invalid-feedback">
                   <?= validation_show_error('jam_masuk') ?>
                 </div>
                 <?php endif; ?>
               </div>
+
               <div class="mb-3">
-                <label class="form-label">Jam Pulang</label>
-                <input name="jam_pulang" type="time"
+                <label class="form-label d-flex align-items-center">
+                  Jam Pulang
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-info-circle ms-2" data-bs-toggle="tooltip"
+                    data-bs-html="true"
+                    title="Gunakan format 24 jam<br>Contoh: 15:00 untuk jam 3 sore, 17:00 untuk jam 5 sore"
+                    data-bs-placement="top">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                    <path d="M12 9h.01" />
+                    <path d="M11 12h1v4h1" />
+                  </svg>
+                </label>
+                <input id="jam_pulang" name="jam_pulang" type="text"
                   class="form-control <?= validation_show_error('jam_pulang') ? 'is-invalid' : '' ?>"
-                  value="<?= old('jam_pulang', date('H:i', strtotime($lokasi['jam_pulang']))) ?>">
+                  value="<?= old('jam_pulang', date('H:i', strtotime($lokasi['jam_pulang']))) ?>" placeholder="17:00">
+                <small class="form-hint">Format 24 jam. Contoh: 15:00 (jam 3 sore) atau 17:00 (jam 5 sore)</small>
                 <?php if (validation_show_error('jam_pulang')) : ?>
                 <div class="invalid-feedback">
                   <?= validation_show_error('jam_pulang') ?>
@@ -177,6 +208,9 @@
     </form>
   </div>
 </div>
+
+<!-- Flatpickr JS -->
+<script src="<?= base_url('assets/js/flatpickr.min.js') ?>"></script>
 
 <script>
 $(document).ready(function() {
@@ -277,6 +311,28 @@ $(document).ready(function() {
   $('input[name="radius"]').on('input', function() {
     var r = parseFloat($(this).val());
     if (!isNaN(r)) circle.setRadius(r);
+  });
+
+  // ====================
+  // FLATPICKR TIME PICKER
+  // ====================
+
+  flatpickr("#jam_masuk", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true,
+    minuteIncrement: 1,
+    allowInput: true
+  });
+
+  flatpickr("#jam_pulang", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true,
+    minuteIncrement: 1,
+    allowInput: true
   });
 });
 </script>

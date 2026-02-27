@@ -154,7 +154,7 @@ class Kiosk extends BaseController
         ]);
     }
 
-/**
+    /**
      * Simpan presensi dari kiosk
      */
     public function simpanPresensi()
@@ -178,12 +178,10 @@ class Kiosk extends BaseController
             return $this->response->setJSON(['success' => false, 'csrf_hash' => csrf_hash(), 'message' => 'Data tidak valid']);
         }
 
-        // FIX: Paksa jadi object
         $pegawai_data = $this->pegawaiModel->find($id_pegawai);
         if (!$pegawai_data) return $this->response->setJSON(['success' => false, 'csrf_hash' => csrf_hash(), 'message' => 'Data pegawai tidak ditemukan']);
         $pegawai = (object) $pegawai_data;
 
-        // FIX: Paksa jadi object
         $lokasi_data = $this->lokasiModel->find($pegawai->id_lokasi_presensi);
         if (!$lokasi_data) return $this->response->setJSON(['success' => false, 'csrf_hash' => csrf_hash(), 'message' => 'Lokasi presensi tidak ditemukan']);
         $lokasi = (object) $lokasi_data;
@@ -201,10 +199,8 @@ class Kiosk extends BaseController
         // Cek existing presensi hari ini
         $presensi_hari_ini = $this->presensiModel->where(['id_pegawai' => $id_pegawai, 'tanggal_masuk' => $tanggal_sekarang])->first();
 
-        // Logic validasi berdasarkan mode
         if ($mode === 'masuk') {
             if ($presensi_hari_ini) {
-                // Gunakan object access jika first() mereturn object
                 $jam_masuk_existing = is_object($presensi_hari_ini) ? $presensi_hari_ini->jam_masuk : $presensi_hari_ini['jam_masuk'];
                 $selisih_detik = abs($jam_current - strtotime($jam_masuk_existing));
                 
@@ -216,7 +212,7 @@ class Kiosk extends BaseController
                         'message' => 'Presensi masuk sudah tercatat',
                         'data' => [
                             'nama' => $pegawai->nama, 'jam' => $jam_masuk_existing,
-                            'status' => $this->getStatusKeterlambatan($jam_masuk_existing, $lokasi->jam_masuk)
+                            'status' => $this->getPesanLayarKiosk('masuk', $jam_masuk_existing, $lokasi)
                         ]
                     ]);
                 }
@@ -235,7 +231,10 @@ class Kiosk extends BaseController
                 if ($selisih_detik < self::IDEMPOTENCY_WINDOW_SECONDS) {
                     return $this->response->setJSON([
                         'success' => true, 'csrf_hash' => csrf_hash(), 'duplicate' => true, 'message' => 'Presensi keluar sudah tercatat',
-                        'data' => ['nama' => $pegawai->nama, 'jam' => $jam_keluar_existing, 'status' => 'Tepat Waktu']
+                        'data' => [
+                            'nama' => $pegawai->nama, 'jam' => $jam_keluar_existing, 
+                            'status' => $this->getPesanLayarKiosk('keluar', $jam_keluar_existing, $lokasi)
+                        ]
                     ]);
                 }
                 return $this->response->setJSON(['success' => false, 'csrf_hash' => csrf_hash(), 'message' => 'Anda sudah melakukan presensi keluar hari ini']);
@@ -247,7 +246,7 @@ class Kiosk extends BaseController
             }
         }
 
-        // Proses foto (Disalin identik dari punya Anda, hanya memastikan token kembali)
+        // Proses foto
         $foto = $this->request->getPost('image');
         $foto = base64_decode(preg_replace('/^data:image\/(jpeg|png);base64,/', '', $foto), true);
         
@@ -275,13 +274,17 @@ class Kiosk extends BaseController
             return $this->response->setJSON(['success' => false, 'csrf_hash' => csrf_hash(), 'message' => 'Gagal menyimpan presensi']);
         }
 
-        try { $this->sendTelegramNotification($pegawai, $mode, $jam_sekarang, $lokasi); } catch (\Exception $e) {}
+        // Kirim notif Telegram ke Orang Tua (Format Resmi)
+        try { 
+            $this->sendTelegramNotification($pegawai, $mode, $jam_sekarang, $lokasi); 
+        } catch (\Exception $e) {}
 
-        $status_text = ($mode === 'masuk') ? $this->getStatusKeterlambatan($jam_sekarang, $lokasi->jam_masuk) : 'Tepat Waktu';
+        // Dapatkan Pesan Lucu khusus Layar Kiosk
+        $status_text = $this->getPesanLayarKiosk($mode, $jam_sekarang, $lokasi);
 
         return $this->response->setJSON([
             'success' => true,
-            'csrf_hash' => csrf_hash(), // Update token
+            'csrf_hash' => csrf_hash(),
             'message' => 'Presensi ' . $mode . ' berhasil disimpan',
             'data' => [
                 'nama' => $pegawai->nama, 'nomor_induk' => $pegawai->nomor_induk,
@@ -290,23 +293,63 @@ class Kiosk extends BaseController
             ]
         ]);
     }
-    
+
     /**
-     * Helper: Hitung status keterlambatan
+     * Helper: Pesan Keterlambatan (Khusus Layar Kiosk)
      */
-    private function getStatusKeterlambatan($jam_masuk, $jam_target)
+    private function getPesanLayarKiosk($mode, $jam_sekarang, $lokasi)
     {
-        $timestamp_masuk = strtotime($jam_masuk);
-        $timestamp_target = strtotime($jam_target);
+        if ($mode === 'masuk') {
+            $timestamp_masuk = strtotime($jam_sekarang);
+            $timestamp_target = strtotime($lokasi->jam_masuk);
 
-        if ($timestamp_masuk > $timestamp_target) {
-            $selisih = $timestamp_masuk - $timestamp_target;
-            $jam_lat = floor($selisih / 3600);
-            $menit_lat = floor(($selisih % 3600) / 60);
-            return "Terlambat {$jam_lat} Jam {$menit_lat} Menit";
+            if ($timestamp_masuk > $timestamp_target) {
+                $selisih = $timestamp_masuk - $timestamp_target;
+                $jam_lat = floor($selisih / 3600);
+                $menit_lat = floor(($selisih % 3600) / 60);
+                
+                $pesan_masuk = [
+                    "Terlambat %d Jam %d Menit. Gerbang sekolah hampir karatan menunggu Anda.",
+                    "Keterlambatan %d Jam %d Menit tercatat. Apakah jalanan ke sekolah dipenuhi rintangan naga?",
+                    "Anda tiba %d Jam %d Menit lebih lambat. Guru piket sudah hafal langkah kaki Anda.",
+                    "Waktu keterlambatan: %d Jam %d Menit. Alarm pagi sepertinya butuh diganti dengan sirine.",
+                    "Masuk terlambat %d Jam %d Menit. KBM sudah berjalan setengah bab, selamat mengejar.",
+                    "Terlambat %d Jam %d Menit. Kami apresiasi kedatangan Anda, walau matahari sudah tinggi.",
+                    "Tercatat lambat %d Jam %d Menit. Pastikan alasan Anda lebih masuk akal dari 'ban bocor'.",
+                    "Keterlambatan: %d Jam %d Menit. Semoga esok hari gravitasi kasur Anda sedikit berkurang.",
+                    "Anda masuk terlambat %d Jam %d Menit. Buku poin menanti nama Anda dengan antusias.",
+                    "Terlambat %d Jam %d Menit. Silakan bergegas, sebelum bel istirahat berbunyi."
+                ];
+                return sprintf($pesan_masuk[array_rand($pesan_masuk)], $jam_lat, $menit_lat);
+            }
+            return 'Tepat Waktu';
+        } else {
+            $jam_pulang_target = strtotime($lokasi->jam_pulang);
+            $jam_current = strtotime($jam_sekarang);
+            
+            if ($jam_current > $jam_pulang_target) {
+                $selisih = $jam_current - $jam_pulang_target;
+                $jam_lebih = floor($selisih / 3600);
+                $menit_lebih = floor(($selisih % 3600) / 60);
+                
+                if ($jam_lebih > 0 || $menit_lebih > 0) {
+                    $pesan_pulang = [
+                        "Pulang lambat %d Jam %d Menit. Apakah Anda sedang membangun candi di kelas?",
+                        "Tercatat pulang lambat %d Jam %d Menit. Satpam sekolah berterima kasih atas temannya malam ini.",
+                        "Anda pulang %d Jam %d Menit dari jadwal. Jangan lupa sekolah ini bukan kos-kosan Anda.",
+                        "Overtime %d Jam %d Menit. Penjaga gerbang sudah bersiap mengunci Anda dari dalam.",
+                        "Pulang telat %d Jam %d Menit. Apakah Anda kandidat ketua OSIS seumur hidup?",
+                        "Lambat %d Jam %d Menit saat pulang. Dedikasi Anda melampaui batas kewajaran seorang siswa.",
+                        "Waktu tambahan: %d Jam %d Menit. Hati-hati, penunggu lorong sekolah mulai mengajak kenalan.",
+                        "Pulang mundur %d Jam %d Menit. Kami harap Anda tidak sedang membuat markas rahasia di gudang.",
+                        "Anda pulang lambat %d Jam %d Menit. Orang tua Anda mungkin sudah mulai mencari.",
+                        "Ekstra waktu %d Jam %d Menit. Jika sekolah memberi gaji lembur, Anda sudah kaya raya."
+                    ];
+                    return sprintf($pesan_pulang[array_rand($pesan_pulang)], $jam_lebih, $menit_lebih);
+                }
+            }
+            return 'Tepat Waktu';
         }
-
-        return 'Tepat Waktu';
     }
 
     /**
@@ -314,22 +357,41 @@ class Kiosk extends BaseController
      */
     private function sendTelegramNotification($pegawai, $mode, $jam, $lokasi)
     {
-        if ($mode === 'masuk') {
-            $status_text = $this->getStatusKeterlambatan($jam, $lokasi->jam_masuk);
-            $icon = (strpos($status_text, 'Terlambat') !== false) ? '⚠️' : '✅';
-            
-            $pesan  = "<b>🟢 LAPORAN KEDATANGAN SISWA (KIOSK)</b>\n";
-            $pesan .= "-----------------------------------\n";
-            $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
-            $pesan .= "🆔 <b>Nomor Induk:</b> " . htmlspecialchars($pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
-            $pesan .= "📅 <b>Tanggal:</b> " . htmlspecialchars(format_tanggal_indo(date('Y-m-d')), ENT_QUOTES, 'UTF-8') . "\n";
-            $pesan .= "-----------------------------------\n";
-            $pesan .= "⏰ <b>Jadwal Masuk:</b> " . $lokasi->jam_masuk . "\n";
-            $pesan .= "🕐 <b>Waktu Scan:</b> " . htmlspecialchars($jam, ENT_QUOTES, 'UTF-8') . "\n";
-            $pesan .= "-----------------------------------\n";
-            $pesan .= "<b>Status:</b> {$status_text} {$icon}";
-            
-            send_telegram_notification($pesan);
+        if ($mode === 'keluar') {
+            return;
         }
+
+        $tanggal_indo = format_tanggal_indo(date('Y-m-d'));
+        
+        $jam_jadwal = $lokasi->jam_masuk;
+        $timestamp_scan = strtotime($jam);
+        $timestamp_jadwal = strtotime($jam_jadwal);
+        
+        if ($timestamp_scan > $timestamp_jadwal) {
+            $status_text = 'TERLAMBAT ⚠️';
+            $selisih = $timestamp_scan - $timestamp_jadwal;
+            $jam_lat = floor($selisih / 3600);
+            $menit_lat = floor(($selisih % 3600) / 60);
+            $keterangan_waktu = "⏳ <b>Terlambat:</b> {$jam_lat} Jam {$menit_lat} Menit";
+        } else {
+            $status_text = 'TEPAT WAKTU ✅';
+            $selisih = $timestamp_jadwal - $timestamp_scan;
+            $menit_awal = floor(($selisih % 3600) / 60);
+            $keterangan_waktu = "✨ <b>Info:</b> Datang {$menit_awal} menit lebih awal";
+        }
+        
+        $pesan  = "<b>🟢 PresenSi [Kiosk]</b>\n";
+        $pesan .= "-----------------------------------\n";
+        $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
+        $pesan .= "🆔 <b>Nomor Induk:</b> " . htmlspecialchars($pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
+        $pesan .= "📅 <b>Tanggal:</b> " . htmlspecialchars($tanggal_indo, ENT_QUOTES, 'UTF-8') . "\n";
+        $pesan .= "-----------------------------------\n";
+        $pesan .= "⏰ <b>Jadwal Masuk:</b> " . $jam_jadwal . "\n";
+        $pesan .= "🕐 <b>Waktu Scan:</b> " . htmlspecialchars($jam, ENT_QUOTES, 'UTF-8') . "\n";
+        $pesan .= "-----------------------------------\n";
+        $pesan .= $keterangan_waktu . "\n";
+        $pesan .= "<b>Status:</b> " . $status_text;
+        
+        send_telegram_notification($pesan);
     }
 }

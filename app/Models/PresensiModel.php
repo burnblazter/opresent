@@ -198,10 +198,10 @@ class PresensiModel extends Model
         $offset = ($page - 1) * $perPage;
         $this->builder = $this->db->table('pegawai');
         
-        // SELECT data pegawai, presensi, DAN tipe_ketidakhadiran + jabatan
+        // PERBAIKAN: Menambahkan presensi.tanggal_keluar pada select
         $this->builder->select('pegawai.id as id_pegawai_real, pegawai.nomor_induk, pegawai.nama, pegawai.id_lokasi_presensi, pegawai.id_jabatan,
                                 lokasi_presensi.nama_lokasi as lokasi_presensi, lokasi_presensi.jam_masuk as jam_masuk_kantor,
-                                presensi.id as id_presensi, presensi.tanggal_masuk, presensi.jam_masuk, presensi.jam_keluar, presensi.foto_masuk, presensi.foto_keluar,
+                                presensi.id as id_presensi, presensi.tanggal_masuk, presensi.jam_masuk, presensi.tanggal_keluar, presensi.jam_keluar, presensi.foto_masuk, presensi.foto_keluar,
                                 ketidakhadiran.tipe_ketidakhadiran,
                                 jabatan.jabatan as nama_jabatan');
         
@@ -210,7 +210,6 @@ class PresensiModel extends Model
         
         // Join Presensi (Hadir)
         $this->builder->join('presensi', 'presensi.id_pegawai = pegawai.id AND presensi.tanggal_masuk = ' . "'" . $tanggal . "'", 'left');
-        // Join Ketidakhadiran (Izin/Sakit) yang APPROVED dan tanggalnya mencakup hari ini
         $this->builder->join('ketidakhadiran', "ketidakhadiran.id_pegawai = pegawai.id AND ketidakhadiran.status_pengajuan = 'APPROVED' AND '$tanggal' BETWEEN ketidakhadiran.tanggal_mulai AND ketidakhadiran.tanggal_berakhir", 'left');
         
         // Filter berdasarkan jabatan jika dipilih
@@ -239,15 +238,15 @@ class PresensiModel extends Model
         $this->builder = $this->db->table('pegawai');
         $this->builder->select('pegawai.id as id_pegawai_real, pegawai.nomor_induk, pegawai.nama, pegawai.id_jabatan,
                                 lokasi_presensi.jam_masuk as jam_masuk_kantor,
-                                presensi.tanggal_masuk, presensi.jam_masuk, presensi.jam_keluar,
+                                presensi.tanggal_masuk, presensi.jam_masuk, presensi.tanggal_keluar, presensi.jam_keluar, presensi.foto_masuk, presensi.foto_keluar,
                                 ketidakhadiran.tipe_ketidakhadiran,
                                 jabatan.jabatan as nama_jabatan');
+                                
         $this->builder->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi', 'left');
         $this->builder->join('jabatan', 'jabatan.id = pegawai.id_jabatan', 'left');
         $this->builder->join('presensi', 'presensi.id_pegawai = pegawai.id AND presensi.tanggal_masuk = ' . "'" . $tanggal . "'", 'left');
         $this->builder->join('ketidakhadiran', "ketidakhadiran.id_pegawai = pegawai.id AND ketidakhadiran.status_pengajuan = 'APPROVED' AND '$tanggal' BETWEEN ketidakhadiran.tanggal_mulai AND ketidakhadiran.tanggal_berakhir", 'left');
         
-        // Filter berdasarkan jabatan jika dipilih
         if ($filter_jabatan) {
             $this->builder->where('pegawai.id_jabatan', $filter_jabatan);
         }
@@ -256,17 +255,5 @@ class PresensiModel extends Model
         $this->builder->orderBy('pegawai.nama', 'ASC');
         
         return $this->builder->get()->getResult();
-    }
-
-    // Ambil data presensi mentah berdasarkan Bulan dan Tahun untuk mapping
-    public function getPresensiByMonth($bulan, $tahun)
-    {
-        return $this->builder
-            ->select('presensi.*, pegawai.id as pegawai_id')
-            ->join('pegawai', 'pegawai.id = presensi.id_pegawai')
-            ->where('MONTH(tanggal_masuk)', $bulan)
-            ->where('YEAR(tanggal_masuk)', $tahun)
-            ->get()
-            ->getResultArray();
     }
 }

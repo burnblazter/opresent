@@ -414,7 +414,7 @@ class Presensi extends BaseController
                 $tanggal_indo = format_tanggal_indo($tanggal_masuk);
                 
                 // Format Pesan Telegram
-                $pesan  = "<b>🟢 LAPORAN KEDATANGAN SISWA</b>\n";
+                $pesan  = "<b>🟢 PresenSi [Mandiri]</b>\n";
                 $pesan .= "-----------------------------------\n";
                 $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($detail_pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "🆔 <b>Nomor Induk:</b> " . htmlspecialchars($detail_pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
@@ -1702,7 +1702,6 @@ class Presensi extends BaseController
         
         $result = [];
         foreach ($descriptors as $desc) {
-            // ========== FIX: DECODE DESCRIPTOR DENGAN VALIDASI ==========
             $descriptorArray = json_decode($desc->descriptor, true);
             
             // Validasi hasil decode
@@ -1733,7 +1732,7 @@ class Presensi extends BaseController
                 'id_pegawai' => $desc->id_pegawai,
                 'nama' => $desc->nama,
                 'nomor_induk' => $desc->nomor_induk,
-                'descriptor' => $descriptorArray, // ← Sudah dalam bentuk array
+                'descriptor' => $descriptorArray,
                 'label' => $desc->label
             ];
         }
@@ -1752,11 +1751,6 @@ class Presensi extends BaseController
         if (!logged_in()) {
             return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'])->setStatusCode(403);
         }
-
-        // TODO: Implement group check setelah testing selesai
-        // if (!in_groups(3)) {
-        //     return $this->response->setJSON(['success' => false, 'message' => 'Forbidden'])->setStatusCode(403);
-        // }
 
         $descriptor = $this->request->getJSON(true)['descriptor'] ?? null;
         

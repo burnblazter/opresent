@@ -1,11 +1,10 @@
 Dear Future Me, 
 Please do this if you have time (asap):
 
--add feature pengingat in lokasi that time is in 24 hour format jangan salah salah!
-- add gimmick AI to compile data for admin fun
+- add gimmick AI to compile data for admin fun using RAG
 - finish editing video
-- finish makalah asap
+- finish makalah asap 
 
-deadline: 26 february 2026
+deadline: 27 february 2026
 
 !!!

@@ -6,9 +6,6 @@
 faceapi
 humanjs
 
-# Prettier
-.prettierignore
-
 # OS X
 .DS_Store
 .AppleDouble
@@ -142,4 +139,4 @@ nb-configuration.xml
 !/public/assets/img/foto_presensi/keluar/.gitkeep
 
 # Local todo file
-todo.txt
+todo.md

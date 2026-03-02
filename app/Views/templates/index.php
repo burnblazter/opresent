@@ -99,9 +99,21 @@
     <script src="<?= base_url('assets/js/leaflet.js') ?>"></script>
     <script src="<?= base_url('assets/js/sweetalert.min.js') ?>"></script>
     <script src="<?= base_url('assets/js/select2.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/marked.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/purify.min.js') ?>"></script>
 
     <?php if (session()->getFlashdata('berhasil')) : ?>
         <script>Swal.fire({ title: "Berhasil", text: "<?= session()->getFlashdata('berhasil') ?>", icon: "success" });</script>
     <?php endif; ?>
+
+    <?php
+$user_profile = $user_profile ?? (function_exists('user_id') && user_id()
+    ? (new \App\Models\UsersModel())->getUserInfo(user_id())
+    : null);
+
+if ($user_profile) {
+    echo view('components/ai_chat_widget', ['user_profile' => $user_profile]);
+}
+?>
 </body>
 </html>

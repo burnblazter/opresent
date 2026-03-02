@@ -195,3 +195,8 @@ $routes->delete('lab/clear-session', 'Lab::clearSessionDescriptors', ['filter' =
 $routes->get('/kiosk', 'Kiosk::index', ['filter' => 'role:kiosk']);
 $routes->post('/kiosk/cari-pegawai', 'Kiosk::cariPegawai', ['filter' => 'role:kiosk']);
 $routes->post('/kiosk/simpan-presensi', 'Kiosk::simpanPresensi', ['filter' => 'role:kiosk']);
+
+// ============================================================================
+// AI CHAT
+// ============================================================================
+$routes->post('ai-chat/chat', 'AIChatController::chat', ['filter' => 'role:admin,head,pegawai']);

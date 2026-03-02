@@ -256,6 +256,25 @@
                 Tambah
               </a>
 
+
+              <!-- Barcode Button -->
+              <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal"
+                data-bs-target="#barcodeModal">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24"
+                  stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path d="M4 7v-1a2 2 0 0 1 2 -2h2" />
+                  <path d="M4 17v1a2 2 0 0 0 2 2h2" />
+                  <path d="M16 4h2a2 2 0 0 1 2 2v1" />
+                  <path d="M16 20h2a2 2 0 0 0 2 -2v-1" />
+                  <path d="M5 11h1v2h-1z" />
+                  <path d="M10 11l0 2" />
+                  <path d="M14 11h1v2h-1z" />
+                  <path d="M19 11l0 2" />
+                </svg>
+                Barcode
+              </button>
+
               <!-- Import/Export Dropdown -->
               <div class="btn-group">
                 <button type="button" class="btn btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
@@ -418,7 +437,7 @@
                 </th>
                 <th style="width: 50px">No</th>
                 <th>Pegawai</th>
-                <th>NIP</th>
+                <th>Nomor Induk</th>
                 <th>Unit</th>
                 <th>Role</th>
                 <th>Status</th>
@@ -896,6 +915,69 @@
               <path d="M9.5 13.5l2.5 -2.5l2.5 2.5" />
             </svg>
             Import Data
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode Modal -->
+<div class="modal modal-blur fade" id="barcodeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header" style="background: #1e3a8a; color: #fff;">
+        <h5 class="modal-title">Cetak Barcode Code 128</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="formBarcode" action="<?= base_url('/data-pegawai/barcode') ?>" method="POST">
+        <?= csrf_field() ?>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            Hanya data dengan Role <strong>pegawai</strong> (yang dapat melakukan presensi) akan dicetak.
+          </div>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-bold">Unit / Jabatan <span class="text-danger">*</span></label>
+              <select name="jabatan" class="form-select">
+                <option value="">-- Semua Unit --</option>
+                <?php foreach ($data_jabatan as $opsi) : ?>
+                <option value="<?= esc($opsi['jabatan']) ?>"><?= esc($opsi['jabatan']) ?></option>
+                <?php endforeach; ?>
+              </select>
+              <small class="form-hint">Disarankan pilih unit tertentu agar tidak mencetak semua sekaligus.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Status Akun</label>
+              <select name="status" class="form-select">
+                <option value="">Semua Status</option>
+                <option value="1">Sudah Aktivasi</option>
+                <option value="0">Belum Aktivasi</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Jenis Kelamin</label>
+              <select name="jenis-kelamin" class="form-select">
+                <option value="">Semua</option>
+                <option value="Perempuan">Perempuan</option>
+                <option value="Laki-laki">Laki-laki</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Lokasi Presensi</label>
+              <select name="lokasi-presensi" class="form-select">
+                <option value="">Semua Lokasi</option>
+                <?php foreach ($data_lokasi as $opsi) : ?>
+                <option value="<?= esc($opsi['nama_lokasi']) ?>"><?= esc($opsi['nama_lokasi']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn text-white" style="background:#1e3a8a;">
+            Generate &amp; Cetak
           </button>
         </div>
       </form>

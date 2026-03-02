@@ -1109,4 +1109,28 @@ public function update()
             ]);
         }
     }
+
+    public function cetakBarcode()
+    {
+        $filter = [
+            'keyword'         => $this->request->getPost('keyword') ?? '',
+            'jabatan'         => $this->request->getPost('jabatan') ?? '',
+            'role'            => 'pegawai',
+            'status'          => $this->request->getPost('status') ?? '',
+            'jenis-kelamin'   => $this->request->getPost('jenis-kelamin') ?? '',
+            'lokasi-presensi' => $this->request->getPost('lokasi-presensi') ?? '',
+        ];
+
+        $per_page = max(1, (int)($this->request->getPost('per_page') ?? 8));
+
+        $result       = $this->pegawaiModel->getPegawai(false, $filter, true);
+        $data_pegawai = $result['pegawai'];
+
+        return view('data_pegawai/cetak_barcode', [
+            'data_pegawai' => $data_pegawai,
+            'filter'       => $filter,
+            'base_url'     => base_url(),
+            'per_page'     => $per_page,
+        ]);
+    }
 }

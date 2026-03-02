@@ -9,7 +9,7 @@
             </th>
             <th style="width: 50px">No</th>
             <th>Pegawai</th>
-            <th>NIP</th>
+            <th>Nomor Induk</th>
             <th>Unit</th>
             <th>Role</th>
             <th>Status</th>

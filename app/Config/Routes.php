@@ -58,10 +58,9 @@ $routes->post('/data-pegawai/save-face-descriptor', 'Pegawai::saveFaceDescriptor
 $routes->post('/data-pegawai/update-descriptor-label', 'Pegawai::updateDescriptorLabel', ['filter' => 'role:admin,head,helper']);
 $routes->get('/data-pegawai/delete-descriptor/(:num)', 'Pegawai::deleteDescriptor/$1', ['filter' => 'role:admin,head,helper']);
 $routes->get('/data-pegawai/(:segment)', 'Pegawai::detail/$1', ['filter' => 'role:admin,head,helper']);
-
 $routes->get('/cari-pegawai', 'Pegawai::pencarianPegawai', ['filter' => 'role:admin,head,helper']);
 $routes->post('/hapus-foto/(:segment)', 'Pegawai::hapusFoto/$1', ['filter' => 'role:admin,head,helper']);
-
+$routes->post('data-pegawai/barcode', 'Pegawai::cetakBarcode', ['filter' => 'role:admin,head,helper']);
 // ============================================================================
 // PRESENSI
 // ============================================================================

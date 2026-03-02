@@ -356,7 +356,7 @@ EOT;
   Menyimpan data semua pegawai/anggota yang terdaftar di sistem.
   Kolom:
   - id (PK)
-  - nomor_induk → NIP/nomor identitas unik
+  - nomor_induk → NIS/nomor induk/nomor identitas unik
   - id_jabatan (FK → jabatan.id) → jabatan/kelas/divisi pegawai
   - id_lokasi_presensi (FK → lokasi_presensi.id) → lokasi absen pegawai
   - nama, jenis_kelamin, alamat, no_handphone, foto

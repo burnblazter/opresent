@@ -8,8 +8,22 @@
       <div class="col-md-4">
         <div class="card">
           <div class="card-body p-4 text-center">
-            <span class="avatar avatar-xl mb-3 rounded"
-              style="background-image: url(<?= base_url('/assets/img/user_profile/' . $user_profile->foto) ?>)"></span>
+            <!-- Avatar clickable dengan overlay icon kamera -->
+            <a href="<?= base_url('/profile/edit') ?>"
+              class="avatar-edit-wrapper d-inline-block position-relative mb-3">
+              <span class="avatar avatar-xl rounded"
+                style="background-image: url(<?= base_url('/assets/img/user_profile/' . $user_profile->foto) ?>)">
+              </span>
+              <span class="avatar-edit-overlay">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" stroke-width="2"
+                  stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                  <path
+                    d="M5 7h1a2 2 0 0 0 2 -2a1 1 0 0 1 1 -1h6a1 1 0 0 1 1 1a2 2 0 0 0 2 2h1a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2" />
+                  <path d="M9 13a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                </svg>
+              </span>
+            </a>
             <h3 class="m-0 mb-1"><?= $user_profile->nama ?></h3>
             <div class="text-muted"><?= $user_profile->jabatan ?></div>
             <div class="mt-3">
@@ -251,4 +265,56 @@
     </div>
   </div>
 </div>
+
+<style>
+.avatar-edit-wrapper {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.avatar-edit-wrapper .avatar {
+  width: 80px;
+  height: 80px;
+  transition: filter 0.2s ease;
+  display: block;
+}
+
+.avatar-edit-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-edit-wrapper:hover .avatar {
+  filter: brightness(0.7);
+}
+
+.avatar-edit-wrapper:hover .avatar-edit-overlay {
+  opacity: 1;
+}
+
+.avatar-edit-wrapper::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  width: 22px;
+  height: 22px;
+  background: #1e3a8a;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5'%3E%3Cpath d='M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7'/%3E%3Cpath d='M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 11px;
+}
+</style>
+
 <?= $this->endSection() ?>

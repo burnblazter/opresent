@@ -70,6 +70,20 @@
                     <path d="M11 12h1v4h1" />
                   </svg>
                 </label>
+                <div class="input-group mb-2">
+                  <input type="text" id="map-search" class="form-control"
+                    placeholder="Cari lokasi... (e.g. Kantor Balikpapan)" />
+                  <button class="btn btn-outline-secondary" type="button" id="btn-search-map">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="m21 21-4.35-4.35" />
+                    </svg>
+                    Cari
+                  </button>
+                </div>
+                <div id="search-results" class="list-group mb-2"
+                  style="display:none; max-height: 200px; overflow-y:auto;"></div>
                 <div id="map" style="height: 350px; border-radius: 8px;"></div>
                 <small class="text-muted">Klik pada peta atau drag marker untuk mengubah koordinat lokasi</small>
               </div>
@@ -333,6 +347,73 @@ $(document).ready(function() {
     time_24hr: true,
     minuteIncrement: 1,
     allowInput: true
+  });
+
+  // ====================
+  // MAP SEARCH
+  // ====================
+  function doMapSearch() {
+    var query = $('#map-search').val().trim();
+    if (!query) return;
+
+    $('#btn-search-map').prop('disabled', true).text('Mencari...');
+    $('#search-results').hide().empty();
+
+    $.getJSON('https://nominatim.openstreetmap.org/search', {
+        q: query,
+        format: 'json',
+        limit: 5,
+        addressdetails: 1
+      })
+      .done(function(results) {
+        if (results.length === 0) {
+          $('#search-results')
+            .append('<div class="list-group-item text-muted">Lokasi tidak ditemukan</div>')
+            .show();
+          return;
+        }
+
+        results.forEach(function(place) {
+          var $item = $('<button type="button" class="list-group-item list-group-item-action"></button>')
+            .text(place.display_name)
+            .on('click', function() {
+              var lat = parseFloat(place.lat);
+              var lng = parseFloat(place.lon);
+              marker.setLatLng([lat, lng]);
+              circle.setLatLng([lat, lng]);
+              map.setView([lat, lng], 16);
+              updateCoordinates(lat, lng);
+
+              $('#search-results').hide().empty();
+              $('#map-search').val(place.display_name.split(',').slice(0, 2).join(','));
+            });
+          $('#search-results').append($item);
+        });
+
+        $('#search-results').show();
+      })
+      .fail(function() {
+        alert('Gagal menghubungi layanan pencarian. Coba lagi.');
+      })
+      .always(function() {
+        $('#btn-search-map').prop('disabled', false).html(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg> Cari'
+        );
+      });
+  }
+
+  $('#btn-search-map').on('click', doMapSearch);
+  $('#map-search').on('keypress', function(e) {
+    if (e.which === 13) {
+      e.preventDefault();
+      doMapSearch();
+    }
+  });
+
+  $(document).on('click', function(e) {
+    if (!$(e.target).closest('#map-search, #search-results, #btn-search-map').length) {
+      $('#search-results').hide();
+    }
   });
 });
 </script>

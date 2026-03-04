@@ -31,17 +31,15 @@ foreach ($files as $file) {
         continue;
     }
 
-    // Sisipkan setelah <?php
-    $new = preg_replace(
-        '/^<\?php\s*/m',
-        "<?php\n$relPath\n\n$header\n\n",
-        $content,
-        1
-    );
+    if (preg_match('/^<\?php/m', $content)) {
+        $new = preg_replace('/^<\?php\s*/m', "<?php\n$relPath\n\n$header\n\n", $content, 1);
+    } else {
+        $new = "<?php\n$relPath\n\n$header\n?>\n" . $content;
+}
 
-    file_put_contents($file->getPathname(), $new);
-    echo "[OK]   $relPath\n";
-    $ok++;
+file_put_contents($file->getPathname(), $new);
+echo "[OK] $relPath\n";
+$ok++;
 }
 
 echo "\nDone: $ok updated, $skip skipped.\n";

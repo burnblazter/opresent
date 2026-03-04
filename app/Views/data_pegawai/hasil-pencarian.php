@@ -1,3 +1,12 @@
+<?php
+// \app\Views\data_pegawai\hasil-pencarian.php
+
+/**
+ * PresenSI by burnblazter <hello@fael.my.id>
+ * Fork of o-present by Josephine (github.com/josephines1/o-present)
+ * @license GPL-3.0 | github.com/burnblazter
+ */
+?>
 <div class="card" id="data-pegawai">
   <div class="card-body p-0">
     <div class="table-responsive">

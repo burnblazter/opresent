@@ -1,3 +1,12 @@
+<?php
+// \app\Views\ketidakhadiran\hasil-pencarian-data.php
+
+/**
+ * PresenSI by burnblazter <hello@fael.my.id>
+ * Fork of o-present by Josephine (github.com/josephines1/o-present)
+ * @license GPL-3.0 | github.com/burnblazter
+ */
+?>
 <div class="card" id="data-ketidakhadiran">
   <div class="card-body">
     <h3 class="card-title">Ketidakhadiran Bulan <strong><?= date('F Y', strtotime($data_bulan)) ?></strong></h3>

@@ -1,4 +1,13 @@
-<?php $pager->setSurroundCount(2) ?>
+<?php
+// \app\Views\Pagers\peg_page.php
+
+/**
+ * PresenSI by burnblazter <hello@fael.my.id>
+ * Fork of o-present by Josephine (github.com/josephines1/o-present)
+ * @license GPL-3.0 | github.com/burnblazter
+ */
+
+$pager->setSurroundCount(2) ?>
 
 <nav aria-label="Page navigation">
     <ul class="pagination m-0 ms-auto">

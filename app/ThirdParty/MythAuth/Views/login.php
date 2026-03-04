@@ -14,7 +14,16 @@
 					<form action="<?= url_to('login') ?>" method="post">
 						<?= csrf_field() ?>
 
-<?php if ($config->validFields === ['email']): ?>
+<?php
+// \app\ThirdParty\MythAuth\Views\login.php
+
+/**
+ * PresenSI by burnblazter <hello@fael.my.id>
+ * Fork of o-present by Josephine (github.com/josephines1/o-present)
+ * @license GPL-3.0 | github.com/burnblazter
+ */
+
+if ($config->validFields === ['email']): ?>
 						<div class="form-group">
 							<label for="login"><?=lang('Auth.email')?></label>
 							<input type="email" class="form-control <?php if (session('errors.login')) : ?>is-invalid<?php endif ?>"

@@ -1,4 +1,12 @@
 <?php
+// \app\Views\components\ai_chat_widget.php
+
+/**
+ * PresenSI by burnblazter <hello@fael.my.id>
+ * Fork of o-present by Josephine (github.com/josephines1/o-present)
+ * @license GPL-3.0 | github.com/burnblazter
+ */
+
 // Hanya tampilkan jika user sudah login dan punya role yang valid
 if (!function_exists('user_id') || !user_id()) return;
 if (!in_groups(['admin', 'head', 'pegawai'])) return;

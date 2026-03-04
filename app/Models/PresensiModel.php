@@ -256,4 +256,18 @@ class PresensiModel extends Model
         
         return $this->builder->get()->getResult();
     }
+
+    public function getPresensiByMonth($bulan, $tahun)
+    {
+        $builder = $this->db->table('presensi');
+
+        return $builder
+            ->select('presensi.*, pegawai.id as pegawai_id, lokasi_presensi.jam_masuk as jam_masuk_kantor')
+            ->join('pegawai', 'pegawai.id = presensi.id_pegawai', 'left')
+            ->join('lokasi_presensi', 'lokasi_presensi.id = pegawai.id_lokasi_presensi', 'left')
+            ->where('MONTH(presensi.tanggal_masuk)', $bulan)
+            ->where('YEAR(presensi.tanggal_masuk)', $tahun)
+            ->get()
+            ->getResultArray();
+    }
 }

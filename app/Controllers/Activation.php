@@ -37,7 +37,8 @@ class Activation extends BaseController
             return redirect()->to('/login');
         }
 
-        if (!empty($user->password_hash)) {
+        // Check if account is already fully activated (both password_hash set AND active = 1)
+        if (!empty($user->password_hash) && $user->active == 1) {
             session()->setFlashdata('message', 'Akun ini sudah aktif. Silakan login.');
             return redirect()->to('/login');
         }

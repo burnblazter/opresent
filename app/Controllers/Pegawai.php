@@ -456,8 +456,8 @@ public function index(): string
             'user_id' => $user_id,
         ]);
 
-        // Jika memilih cara aktivasi Melalui Email (aktivasi = 1), kirim langsung Activation Email
-        if ($caraAktivasi == 1) {
+        // Jika memilih cara aktivasi Melalui Email (aktivasi = 3), kirim langsung Activation Email
+        if ($caraAktivasi == 3) {
             $this->auth->resendActivateAccount($email);
         }
 

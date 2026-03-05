@@ -40,6 +40,8 @@ class Filters extends BaseConfig
                     'forgot/*',
                     'reset-password', 
                     'reset-password/*',
+                    'reset-feedback',
+                    'reset-feedback/*',
                     'activate-account',
                     'activate-account/*',
                     'playground',

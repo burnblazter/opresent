@@ -249,77 +249,67 @@ class AuthController extends Controller
     }
 
     /**
-     * Attempts to find a user account with that password
-     * and send password reset instructions to them.
+     * Attempts to find a user account with that email
+     * and send password reset instructions.
      */
-    public function attemptForgot($email = false)
+    public function attemptForgot($email = null)
     {
-    if ($this->config->activeResetter === null) {
-        return redirect()->route('login')->with('error', lang('Auth.forgotDisabled'));
-    }
-
-    if (!$email) {
-        $rules = [
-            'email' => [
-                'label' => lang('Auth.emailAddress'),
-                'rules' => 'required|valid_email',
-            ],
-        ];
-
-        if (!$this->validate($rules)) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        if ($this->config->activeResetter === null) {
+            return redirect()->route('login')->with('error', lang('Auth.forgotDisabled'));
         }
+
+        // Ambil email dari parameter atau POST
+        $email = $email ?? $this->request->getPost('email');
+
+        // Validasi email
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->back()->withInput()->with('error', lang('Auth.invalidEmail'));
+        }
+
+        $users = model(UserModel::class);
+        $user  = $users->where('email', $email)->first();
+
+        if ($user === null) {
+            return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
+        }
+
+        // Generate reset hash
+        $user->generateResetHash();
+        $users->save($user);
+
+        $resetter = service('resetter');
+        $sent     = $resetter->send($user);
+
+        if (!$sent) {
+            $adminEmail = config('Email')->fromEmail ?? '';
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Email gagal dikirim, silahkan hubungi admin/' . $adminEmail);
+        }
+
+        return redirect()->to(base_url('reset-feedback') . '?email=' . urlencode($email));
     }
 
-    $users = model(UserModel::class);
-
-    if ($email) {
-        $user = $users->where('email', $email)->first();
-    } else {
-        $user = $users->where('email', $this->request->getPost('email'))->first();
-    }
-
-    if (null === $user) {
-        return redirect()->back()->with('error', lang('Auth.forgotNoUser'));
-    }
-
-    // Save the reset hash /
-    $user->generateResetHash();
-    $users->save($user);
-
-    $resetter = service('resetter');
-    $sent     = $resetter->send($user);
-
-    if (!$sent) {
-        $adminEmail = config('Email')->fromEmail ?? 'admin@presensi.local';
-        return redirect()->back()->withInput()
-            ->with('error', 'Email gagal dikirim. Hubungi admin: ' . $adminEmail);
-    }
-
-    // Redirect ke halaman feedback dengan email di query parameter
-    $emailData = $email ?? $this->request->getPost('email');
-    return redirect()->to(base_url('reset-feedback?email=' . urlencode($emailData)));
-    }
 
     /**
-     * Feedback setelah password reset email dikirim
+     * Feedback setelah email reset password dikirim
      */
     public function resetFeedback()
     {
-        $emailSent = $this->request->getGet('email');
-        
-        if (!$emailSent || !filter_var($emailSent, FILTER_VALIDATE_EMAIL)) {
-            return redirect()->route('login')
-                ->with('error', 'Email tidak valid');
+        $email = $this->request->getGet('email');
+
+        if (!$email || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->to(base_url('forgot-password'));
         }
-        
+
         $adminEmail = config('Email')->fromEmail ?? 'admin@presensi.local';
-        
+
         return $this->_render('auth/reset-feedback', [
-            'email' => $emailSent,
+            'email'       => $email,
             'admin_email' => $adminEmail,
         ]);
     }
+
 
     /**
      * Displays the Reset Password form.
@@ -330,34 +320,36 @@ class AuthController extends Controller
             return redirect()->route('login')->with('error', lang('Auth.forgotDisabled'));
         }
 
-        // Clear any previous reset session to prevent conflicts
+        // Hapus session reset lama
         session()->remove(['reset_token', 'reset_email']);
 
         $token = $this->request->getGet('token');
         $email = $this->request->getGet('email');
 
         if (empty($token)) {
-            return redirect()->to(url_to('login'))->with('error', 'Invalid or missing reset token. Please request a new password reset.');
+            return redirect()->to(url_to('login'))
+                ->with('error', 'Invalid or missing reset token. Please request a new password reset.');
         }
 
-        // Validate token exists and isn't expired
         $users = model(UserModel::class);
-        $user = $users->where('reset_hash', $token)->first();
+        $user  = $users->where('reset_hash', $token)->first();
 
-        if (null === $user) {
-            return redirect()->to(url_to('login'))->with('error', 'Invalid reset token. Please request a new password reset.');
+        if ($user === null) {
+            return redirect()->to(url_to('login'))
+                ->with('error', 'Invalid reset token. Please request a new password reset.');
         }
 
-        // Verify email matches (if provided)
         if (!empty($email) && $email !== $user->email) {
-            return redirect()->route('login')->with('error', 'Invalid email or token. Please request a new password reset.');
+            return redirect()->route('login')
+                ->with('error', 'Invalid email or token. Please request a new password reset.');
         }
 
         if (!empty($user->reset_expires) && time() > $user->reset_expires->getTimestamp()) {
-            return redirect()->to(url_to('login'))->with('error', 'Reset token has expired. Please request a new password reset.');
+            return redirect()->to(url_to('login'))
+                ->with('error', 'Reset token has expired. Please request a new password reset.');
         }
 
-        // Store token in session for secure validation during reset
+        // Simpan token di session
         session()->set('reset_token', $token);
         session()->set('reset_email', $user->email);
 
@@ -367,7 +359,7 @@ class AuthController extends Controller
             'email'  => $user->email,
         ]);
     }
-
+    
     /**
      * Verifies the code with the email and saves the new password,
      * if they all pass validation.

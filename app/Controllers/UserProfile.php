@@ -179,7 +179,7 @@ class UserProfile extends BaseController
     public function emailToken()
     {
         $user_profile = $this->usersModel->getUserInfo(user_id());
-        $email = $user_profile->email;
+        $email = trim($user_profile->email);
 
         $isEmailOnDB = $this->emailTokenModel->where('email', $email)->first() ? true : false;
 
@@ -203,11 +203,13 @@ class UserProfile extends BaseController
         $subject = 'Change Email Instruction';
         $variables = array();
         $variables['token'] = $token;
+        $variables['email'] = $email;
 
         // Send Instruction to user's current email
         if ($this->_sendEmail($from, $to, $subject, $variables)) {
-            // Redirect ke feedback page dengan email
-            return redirect()->to(base_url('change-email-feedback?email=' . urlencode($email)));
+            // Redirect ke feedback page dengan email (build URL manually to avoid encoding issues)
+            $url = base_url('change-email-feedback') . '?email=' . urlencode($email);
+            return redirect()->to($url);
         } else {
             return redirect()->to('/profile')
                 ->with('gagal', 'Email gagal dikirim. Hubungi admin.');
@@ -259,13 +261,15 @@ class UserProfile extends BaseController
 
     public function changeEmailFeedback()
     {
-        $emailSent = $this->request->getGet('email');
-        
-        if (!$emailSent || !filter_var($emailSent, FILTER_VALIDATE_EMAIL)) {
+        $emailSent = $this->request->getGet('email', FILTER_SANITIZE_EMAIL);
+
+        // If the query parameter is missing or not a valid address, log and redirect back with a better message
+        if (empty($emailSent) || !filter_var($emailSent, FILTER_VALIDATE_EMAIL)) {
+            logger()->warning('changeEmailFeedback called with invalid email', ['email' => $emailSent]);
             return redirect()->to('/profile')
-                ->with('gagal', 'Email tidak valid');
+                ->with('gagal', 'Email tidak valid atau tidak ditemukan. Pastikan permintaan berasal dari halaman profil.');
         }
-        
+
         return view('auth/change-email-feedback', [
             'email' => $emailSent,
         ]);

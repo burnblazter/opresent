@@ -3,6 +3,7 @@
 ?>
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -11,6 +12,7 @@
   <link href="<?= base_url('assets/css/custom.css?1684106062') ?>" rel="stylesheet" />
   <link rel="icon" type="image/png" href="<?= base_url('assets/img/company/logo.png') ?>">
 </head>
+
 <body class="d-flex flex-column">
   <div class="page page-center">
     <div class="container container-tight py-4">
@@ -24,19 +26,20 @@
       <div class="card card-md">
         <div class="card-body text-center">
           <div class="mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-success" width="64" height="64" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-success" width="64" height="64"
+              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M9 12l2 2l4 -4" />
               <path d="M12 2c6.627 0 12 5.373 12 12a12 12 0 0 1 -12 12a12 12 0 0 1 -12 -12a12 12 0 0 1 12 -12" />
             </svg>
           </div>
 
           <h2 class="h3 mb-2">Email Reset Terkirim!</h2>
-          
+
           <p class="text-muted mb-3">
             Email untuk reset password telah dikirim ke:
           </p>
-          
+
           <div class="alert alert-info" role="alert">
             <strong><?= esc($email) ?></strong>
           </div>
@@ -81,4 +84,5 @@
 
   <script src="<?= base_url('assets/js/tabler.min.js?1684106062') ?>" defer></script>
 </body>
+
 </html>

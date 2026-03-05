@@ -175,7 +175,7 @@
         </p>
 
         <div class="button-container">
-          <a href="<?= url_to('change-email') . '?token=' . $token ?>" class="cta-button"
+          <a href="<?= url_to('change-email') . '?token=' . $token . '&email=' . urlencode($email) ?>" class="cta-button"
             style="color: #ffffff !important; text-decoration: none; display: inline-block; background-color: #1e3a8a;">
             Verify New Email
           </a>
@@ -189,7 +189,7 @@
 
         <p
           style="font-size: 12px; color: #475569; word-break: break-all; background: #f1f5f9; padding: 10px; border-radius: 6px; border: 1px solid #e2e8f0;">
-          <?= url_to('change-email') . '?token=' . $token ?>
+          <?= url_to('change-email') . '?token=' . $token . '&email=' . urlencode($email) ?>
         </p>
 
         <div class="divider"></div>

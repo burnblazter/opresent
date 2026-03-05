@@ -173,9 +173,7 @@ class UserProfile extends BaseController
     {
         $user_profile = $this->usersModel->getUserInfo(user_id());
         $email = $user_profile->email;
-        if ($this->auth->attemptForgot($email)) {
-            return redirect()->to(base_url('reset-password'));
-        }
+        return $this->auth->attemptForgot($email);
     }
 
     public function emailToken()
@@ -208,77 +206,120 @@ class UserProfile extends BaseController
 
         // Send Instruction to user's current email
         if ($this->_sendEmail($from, $to, $subject, $variables)) {
-            session()->setFlashdata('berhasil', 'A security token has been emailed to you. Enter it in the box below to continue.');
-            return redirect()->to('/change-email');
+            // Redirect ke feedback page dengan email
+            return redirect()->to(base_url('change-email-feedback?email=' . urlencode($email)));
         } else {
-            session()->setFlashdata('gagal', 'We are unable to send the security token to your email address. Please ensure that your current email address is valid.');
-            return redirect()->to('/profile');
+            return redirect()->to('/profile')
+                ->with('gagal', 'Email gagal dikirim. Hubungi admin.');
         }
     }
 
     public function changeEmail()
     {
         $token = $this->request->getGet('token') ? $this->request->getGet('token') : '';
+        $email = $this->request->getGet('email') ? $this->request->getGet('email') : '';
+        
+        // Jika token dari URL, langsung validasi
+        if (!empty($token) && !empty($email)) {
+            $data = $this->emailTokenModel->where('email', $email)->first();
+            
+            if (!$data) {
+                return redirect()->to('/profile')
+                    ->with('gagal', 'Request perubahan email tidak ditemukan. Mulai ulang dari halaman profil.');
+            }
+            
+            if ($data['token'] !== $token) {
+                return redirect()->to('/profile')
+                    ->with('gagal', 'Token tidak valid. Cek email Anda kembali.');
+            }
+            
+            if (time() - $data['created_time'] > (5 * 60)) {
+                $this->emailTokenModel->delete($data['id']);
+                return redirect()->to('/profile')
+                    ->with('gagal', 'Token sudah kadaluarsa. Minta ulang dari halaman profil.');
+            }
+            
+            // Token valid, simpan ke session dan tampilkan form
+            session()->set('email_change_token', $token);
+            session()->set('email_change_old', $email);
+        }
+        
+        // Jika session tidak ada, redirect ke profil
+        if (!session()->get('email_change_token')) {
+            return redirect()->to('/profile');
+        }
+        
         $data = [
-            'token' => $token,
+            'token' => session()->get('email_change_token'),
+            'email' => session()->get('email_change_old'),
         ];
+        
         return view('auth/change-email', $data);
+    }
+
+    public function changeEmailFeedback()
+    {
+        $emailSent = $this->request->getGet('email');
+        
+        if (!$emailSent || !filter_var($emailSent, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->to('/profile')
+                ->with('gagal', 'Email tidak valid');
+        }
+        
+        return view('auth/change-email-feedback', [
+            'email' => $emailSent,
+        ]);
     }
 
     public function attemptChangeEmail()
     {
+        $token = session()->get('email_change_token');
+        $oldEmail = session()->get('email_change_old');
+        
+        if (empty($token) || empty($oldEmail)) {
+            return redirect()->to('/profile')
+                ->with('gagal', 'Sesi perubahan email telah berakhir. Mulai ulang dari halaman profil.');
+        }
+        
         $rules = [
-            'token' => [
-                'rules' => 'required',
-                'errors' => [
-                    'required' => 'Token wajib diisi.',
-                ],
-            ],
-            'email' => [
-                'rules' => 'required|valid_email',
-                'errors' => [
-                    'required' => 'Alamat Email wajib diisi.',
-                    'valid_email' => 'Alamat email tidak valid.'
-                ]
-            ],
             'newEmail' => [
                 'rules' => 'required|is_unique[users.email]|valid_email',
                 'errors' => [
-                    'required' => 'Alamat Email Baru wajib diisi.',
-                    'is_unique' => 'Alamat email tidak tersedia.',
-                    'valid_email' => 'Alamat email tidak valid.',
+                    'required' => 'Email baru wajib diisi.',
+                    'is_unique' => 'Email sudah terdaftar.',
+                    'valid_email' => 'Format email tidak valid.',
                 ],
             ],
         ];
 
         if (!$this->validate($rules)) {
-            return redirect()->to('/change-email')->withInput();
+            return redirect()->back()->withInput()
+                ->with('errors', $this->validator->getErrors());
         }
 
-        $token = $this->request->getPost('token');
-        $email = $this->request->getPost('email');
         $newEmail = $this->request->getPost('newEmail');
-
-        $data = $this->emailTokenModel->where('email', $email)->first();
+        
+        // Validasi token satu kali lagi
+        $data = $this->emailTokenModel->where('email', $oldEmail)
+            ->where('token', $token)->first();
+        
         if (!$data) {
-            session()->setFlashdata('gagal', 'No email change request found. If you wish to update your email, kindly resubmit the request on your profile page.');
-            return redirect()->to('/change-email')->withInput();
+            session()->remove(['email_change_token', 'email_change_old']);
+            return redirect()->to('/profile')
+                ->with('gagal', 'Token tidak valid. Minta ulang dari halaman profil.');
         }
-        if ($data['token'] !== $token) {
-            session()->setFlashdata('gagal', 'Invalid token. Please check the instructions email and try again.');
-            return redirect()->to('/change-email')->withInput();
-        }
+        
         if (time() - $data['created_time'] > (5 * 60)) {
             $this->emailTokenModel->delete($data['id']);
-
-            session()->setFlashdata('gagal', 'Token expired. Please resubmit the request on your profile page.');
-            return redirect()->to('/change-email')->withInput();
+            session()->remove(['email_change_token', 'email_change_old']);
+            return redirect()->to('/profile')
+                ->with('gagal', 'Token sudah kadaluarsa. Minta ulang dari halaman profil.');
         }
 
-        // Activate hash
+        // Buat activation hash untuk email baru
         $activate_hash = bin2hex(random_bytes(16));
 
-        // Update the Database
+        // Update database dengan email baru
         $this->usersModel->save([
             'id' => user_id(),
             'email' => $newEmail,
@@ -286,15 +327,16 @@ class UserProfile extends BaseController
             'activate_hash' => $activate_hash,
         ]);
 
-        // Delete the Email Token
+        // Hapus email token
         $this->emailTokenModel->delete($data['id']);
+        session()->remove(['email_change_token', 'email_change_old']);
 
-        // Send Activation Email to New Email
+        // Kirim activation email ke email baru
         $this->auth->resendActivateAccount($newEmail);
         $this->auth->logout();
 
-        session()->set('message', 'Email successfully changed! Please activate your new email address through the link sent to your updated email.');
-        return redirect()->to('/');
+        return redirect()->to('/')
+            ->with('message', 'Email berhasil diubah! Silakan aktivasi email baru Anda melalui link yang dikirim ke ' . $newEmail);
     }
 
     private function _sendEmail($from, $to, $subject, $variables)

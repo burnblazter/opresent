@@ -291,10 +291,34 @@ class AuthController extends Controller
     $sent     = $resetter->send($user);
 
     if (!$sent) {
-        return redirect()->back()->withInput()->with('error', $resetter->error() ?? lang('Auth.unknownError'));
+        $adminEmail = config('Email')->fromEmail ?? 'admin@presensi.local';
+        return redirect()->back()->withInput()
+            ->with('error', 'Email gagal dikirim. Hubungi admin: ' . $adminEmail);
     }
 
-    return redirect()->to(url_to('login'))->with('message', 'Password reset email has been sent! Please check your email for the reset link.');
+    // Redirect ke halaman feedback dengan email di query parameter
+    $emailData = $email ?? $this->request->getPost('email');
+    return redirect()->to(base_url('reset-feedback?email=' . urlencode($emailData)));
+    }
+
+    /**
+     * Feedback setelah password reset email dikirim
+     */
+    public function resetFeedback()
+    {
+        $emailSent = $this->request->getGet('email');
+        
+        if (!$emailSent || !filter_var($emailSent, FILTER_VALIDATE_EMAIL)) {
+            return redirect()->route('login')
+                ->with('error', 'Email tidak valid');
+        }
+        
+        $adminEmail = config('Email')->fromEmail ?? 'admin@presensi.local';
+        
+        return $this->_render('auth/reset-feedback', [
+            'email' => $emailSent,
+            'admin_email' => $adminEmail,
+        ]);
     }
 
     /**

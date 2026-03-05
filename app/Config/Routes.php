@@ -206,3 +206,8 @@ $routes->post('/kiosk/simpan-presensi', 'Kiosk::simpanPresensi', ['filter' => 'r
 // AI CHAT
 // ============================================================================
 $routes->post('ai-chat/chat', 'AIChatController::chat', ['filter' => 'role:admin,head,pegawai']);
+
+// ============================================================================
+// AUTH - Email Change Feedback
+// ============================================================================
+$routes->get('/change-email-feedback', 'UserProfile::changeEmailFeedback', ['filter' => 'role:pegawai,admin,head,helper']);

@@ -97,64 +97,36 @@
 
       <div class="card card-md">
         <div class="card-body">
-          <h2 class="h2 text-center mb-3">Change Your Email</h2>
+          <h2 class="h3 text-center mb-3">Tambah Email Baru</h2>
 
-          <?php if (isset($quote)): ?>
-          <div class="quote-box">
-            <div class="quote-text">"<?= esc($quote['text']) ?>"</div>
-            <div class="quote-author">— <?= esc($quote['author']) ?></div>
+          <div class="alert alert-info" role="alert">
+            <strong>Email Saat Ini:</strong> <?= esc($email) ?>
           </div>
-          <?php endif; ?>
 
-          <?php if (session()->getFlashdata('berhasil')) : ?>
-          <div class="alert alert-success alert-dismissible" role="alert">
-            <div class="d-flex">
-              <div><?= session()->getFlashdata('berhasil') ?></div>
-            </div>
-            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-          </div>
-          <?php endif; ?>
+          <?= view('App\ThirdParty\MythAuth\Views\_message_block') ?>
 
-          <?php if (session()->getFlashdata('gagal')) : ?>
-          <div class="alert alert-danger alert-dismissible" role="alert">
-            <div class="d-flex">
-              <div><?= session()->getFlashdata('gagal') ?></div>
-            </div>
-            <a class="btn-close" data-bs-dismiss="alert" aria-label="close"></a>
-          </div>
-          <?php endif; ?>
-
-          <form action="<?= url_to('update-email') ?>" method="post" autocomplete="off" novalidate>
+          <form action="<?= url_to('update-email') ?>" method="post" autocomplete="off">
             <?= csrf_field() ?>
 
             <div class="mb-3">
-              <label class="form-label"><?= lang('Auth.token') ?></label>
-              <input name="token" type="text"
-                class="form-control <?php if (validation_show_error('token')) : ?>is-invalid<?php endif ?>"
-                placeholder="<?= lang('Auth.token') ?>" value="<?= old('token', $token ?? '') ?>" autocomplete="off">
-              <div class="invalid-feedback"><?= validation_show_error('token') ?></div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label"><?= lang('Auth.email') ?></label>
-              <input name="email" type="email"
-                class="form-control <?php if (validation_show_error('email')) : ?>is-invalid<?php endif ?>"
-                placeholder="<?= lang('Auth.email') ?>" value="<?= old('email') ?>" autocomplete="off">
-              <div class="invalid-feedback"><?= validation_show_error('email') ?></div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">New Email Address</label>
-              <input name="newEmail" type="text"
-                class="form-control <?php if (validation_show_error('newEmail')) : ?>is-invalid<?php endif ?>"
-                placeholder="New Email Address" autocomplete="off" value="<?= old('newEmail') ?>">
-              <div class="invalid-feedback"><?= validation_show_error('newEmail') ?></div>
+              <label class="form-label">Email Baru</label>
+              <input name="newEmail" type="email"
+                class="form-control <?php if (session('errors.newEmail')) : ?>is-invalid<?php endif ?>"
+                placeholder="Masukkan email baru Anda" autocomplete="off" value="<?= old('newEmail') ?>" required>
+              <small class="text-muted d-block mt-1">Gunakan email yang aktif dan dapat diakses</small>
+              <div class="invalid-feedback"><?= session('errors.newEmail') ?></div>
             </div>
 
             <div class="form-footer">
-              <button type="submit" class="btn btn-primary w-100">Change Email</button>
+              <button type="submit" class="btn btn-primary w-100">Konfirmasi Perubahan Email</button>
             </div>
           </form>
+
+          <hr class="my-3">
+
+          <p class="text-muted text-center small mb-0">
+            Anda akan menerima email aktivasi di alamat baru untuk menyelesaikan perubahan email
+          </p>
         </div>
       </div>
     </div>

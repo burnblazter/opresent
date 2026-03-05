@@ -38,4 +38,5 @@ $routes->group('', ['namespace' => 'App\ThirdParty\MythAuth\Controllers'], stati
     $routes->post($reservedRoutes['forgot'], 'AuthController::attemptForgot');
     $routes->get($reservedRoutes['reset-password'], 'AuthController::resetPassword', ['as' => $reservedRoutes['reset-password']]);
     $routes->post($reservedRoutes['reset-password'], 'AuthController::attemptReset');
+    $routes->get('reset-feedback', 'AuthController::resetFeedback', ['as' => 'reset-feedback']);
 });

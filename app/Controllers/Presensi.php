@@ -425,6 +425,7 @@ class Presensi extends BaseController
                 $pesan .= "-----------------------------------\n";
                 $pesan .= "👤 <b>Nama:</b> " . htmlspecialchars($detail_pegawai->nama, ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "🆔 <b>Nomor Induk:</b> " . htmlspecialchars($detail_pegawai->nomor_induk, ENT_QUOTES, 'UTF-8') . "\n";
+                $pesan .= "🏢 <b>Unit:</b> " . htmlspecialchars($detail_pegawai->jabatan ?? 'Tidak ada unit', ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "📅 <b>Tanggal:</b> " . htmlspecialchars($tanggal_indo, ENT_QUOTES, 'UTF-8') . "\n";
                 $pesan .= "-----------------------------------\n";
                 $pesan .= "⏰ <b>Jadwal Masuk:</b> " . $jam_jadwal . "\n";

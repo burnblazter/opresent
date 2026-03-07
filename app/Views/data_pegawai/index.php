@@ -935,7 +935,7 @@
 <div class="modal modal-blur fade" id="barcodeModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
-      <div class="modal-header" style="background: #1e3a8a; color: #fff;">
+      <div class="modal-header">
         <h5 class="modal-title">Cetak Barcode Code 128</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>

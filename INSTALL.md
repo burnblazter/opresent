@@ -164,7 +164,7 @@ C:\laragon\www\presensi\
    ```ini
    CI_ENVIRONMENT = production
    app.appTimezone = 'Asia/Makassar'
-   GROQ_MODEL = moonshotai/kimi-k2-instruct-0905
+   GROQ_MODEL = moonshotai/kimi-k2-instruct
    database.default.hostname = localhost
    database.default.DBDriver = MySQLi
    database.default.port     = 3306
@@ -290,7 +290,7 @@ Two deployment options are available. Choose the one that matches your hosting p
    ```ini
    CI_ENVIRONMENT = production
    app.appTimezone = 'Asia/Makassar'
-   GROQ_MODEL = moonshotai/kimi-k2-instruct-0905
+   GROQ_MODEL = moonshotai/kimi-k2-instruct
    database.default.hostname = localhost
    database.default.DBDriver = MySQLi
    database.default.port     = 3306

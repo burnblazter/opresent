@@ -267,11 +267,11 @@ All configuration is managed through the `.env` file.
 
 ### AI Assistant (Si Pintar)
 
-| Variable        | Description                                 | Example                            |
-| --------------- | ------------------------------------------- | ---------------------------------- |
-| `GROQ_API_KEY`  | Primary Groq API key                        | `gsk_abc123...`                    |
-| `GROQ_API_KEYS` | Multiple keys for pooling (comma-separated) | `key1,key2,key3`                   |
-| `GROQ_MODEL`    | LLM model to use                            | `moonshotai/kimi-k2-instruct-0905` |
+| Variable        | Description                                 | Example                       |
+| --------------- | ------------------------------------------- | ----------------------------- |
+| `GROQ_API_KEY`  | Primary Groq API key                        | `gsk_abc123...`               |
+| `GROQ_API_KEYS` | Multiple keys for pooling (comma-separated) | `key1,key2,key3`              |
+| `GROQ_MODEL`    | LLM model to use                            | `moonshotai/kimi-k2-instruct` |
 
 > **Tip:** Multiple API keys in `GROQ_API_KEYS` enable automatic random rotation
 > on each request, distributing load across keys and increasing effective rate limits.

@@ -25,7 +25,7 @@ class AIJokeController extends BaseController
             if ($key) $this->groqApiKeys = [trim($key)];
         }
 
-        $this->groqModel = env('GROQ_MODEL', 'llama-3.1-70b-versatile');
+        $this->groqModel = env('GROQ_MODEL', 'qwen/qwen3.8-27b');
     }
 
     public function generate()

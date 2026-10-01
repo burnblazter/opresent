@@ -31,7 +31,7 @@ public function __construct()
             $this->groqApiKeys = [getenv('GROQ_API_KEY')]; 
         }
         
-        $this->groqModel = getenv('GROQ_MODEL') ?: 'llama-3.1-70b-versatile';
+        $this->groqModel = getenv('GROQ_MODEL') ?: 'qwen/qwen3.8-27b';
     }
 
     public function index()

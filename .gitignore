@@ -5,6 +5,11 @@
 # Local test project
 faceapi
 humanjs
+*.sql
+!database/opresent-demo.sql
+presensi database dump (current).sql
+backup/
+database/backups/
 
 # OS X
 .DS_Store
@@ -63,6 +68,9 @@ writable/session/*
 
 writable/uploads/*
 !writable/uploads/index.html
+
+public/assets/img/user_profile/*
+!public/assets/img/user_profile/.gitkeep
 
 writable/debugbar/*
 !writable/debugbar/.gitkeep

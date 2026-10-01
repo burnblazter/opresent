@@ -38,7 +38,7 @@ class CreateAuthTables extends Migration
         $this->forge->addUniqueKey('email');
         $this->forge->addUniqueKey('username');
 
-        $this->forge->createTable('users', true);
+        $this->forge->createTable('users', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Auth Login Attempts
         $this->forge->addField([
@@ -53,7 +53,7 @@ class CreateAuthTables extends Migration
         $this->forge->addKey('email');
         $this->forge->addKey('user_id');
         // NOTE: Do NOT delete the user_id or email when the user is deleted for security audits
-        $this->forge->createTable('auth_logins', true);
+        $this->forge->createTable('auth_logins', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         /*
          * Auth Tokens
@@ -69,7 +69,7 @@ class CreateAuthTables extends Migration
         $this->forge->addKey('id', true);
         $this->forge->addKey('selector');
         $this->forge->addForeignKey('user_id', 'users', 'id', '', 'CASCADE');
-        $this->forge->createTable('auth_tokens', true);
+        $this->forge->createTable('auth_tokens', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Password Reset Table
         $this->forge->addField([
@@ -81,7 +81,7 @@ class CreateAuthTables extends Migration
             'created_at' => ['type' => 'datetime', 'null' => false],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('auth_reset_attempts', true);
+        $this->forge->createTable('auth_reset_attempts', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Activation Attempts Table
         $this->forge->addField([
@@ -92,7 +92,7 @@ class CreateAuthTables extends Migration
             'created_at' => ['type' => 'datetime', 'null' => false],
         ]);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('auth_activation_attempts', true);
+        $this->forge->createTable('auth_activation_attempts', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Groups Table
         $fields = [
@@ -103,7 +103,7 @@ class CreateAuthTables extends Migration
 
         $this->forge->addField($fields);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('auth_groups', true);
+        $this->forge->createTable('auth_groups', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Permissions Table
         $fields = [
@@ -114,7 +114,7 @@ class CreateAuthTables extends Migration
 
         $this->forge->addField($fields);
         $this->forge->addKey('id', true);
-        $this->forge->createTable('auth_permissions', true);
+        $this->forge->createTable('auth_permissions', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Groups/Permissions Table
         $fields = [
@@ -126,7 +126,7 @@ class CreateAuthTables extends Migration
         $this->forge->addKey(['group_id', 'permission_id']);
         $this->forge->addForeignKey('group_id', 'auth_groups', 'id', '', 'CASCADE');
         $this->forge->addForeignKey('permission_id', 'auth_permissions', 'id', '', 'CASCADE');
-        $this->forge->createTable('auth_groups_permissions', true);
+        $this->forge->createTable('auth_groups_permissions', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Users/Groups Table
         $fields = [
@@ -138,7 +138,7 @@ class CreateAuthTables extends Migration
         $this->forge->addKey(['group_id', 'user_id']);
         $this->forge->addForeignKey('group_id', 'auth_groups', 'id', '', 'CASCADE');
         $this->forge->addForeignKey('user_id', 'users', 'id', '', 'CASCADE');
-        $this->forge->createTable('auth_groups_users', true);
+        $this->forge->createTable('auth_groups_users', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
 
         // Users/Permissions Table
         $fields = [
@@ -150,7 +150,7 @@ class CreateAuthTables extends Migration
         $this->forge->addKey(['user_id', 'permission_id']);
         $this->forge->addForeignKey('user_id', 'users', 'id', '', 'CASCADE');
         $this->forge->addForeignKey('permission_id', 'auth_permissions', 'id', '', 'CASCADE');
-        $this->forge->createTable('auth_users_permissions', true);
+        $this->forge->createTable('auth_users_permissions', true, ['ENGINE' => 'InnoDB', 'DEFAULT CHARACTER SET' => 'utf8mb4', 'COLLATE' => 'utf8mb4_unicode_ci']);
     }
 
     //--------------------------------------------------------------------
@@ -168,15 +168,15 @@ class CreateAuthTables extends Migration
             $this->forge->dropForeignKey('auth_users_permissions', 'auth_users_permissions_permission_id_foreign');
         }
 
-        $this->forge->dropTable('users', true);
-        $this->forge->dropTable('auth_logins', true);
+        $this->forge->dropTable('auth_users_permissions', true);
+        $this->forge->dropTable('auth_groups_users', true);
+        $this->forge->dropTable('auth_groups_permissions', true);
         $this->forge->dropTable('auth_tokens', true);
+        $this->forge->dropTable('auth_logins', true);
         $this->forge->dropTable('auth_reset_attempts', true);
         $this->forge->dropTable('auth_activation_attempts', true);
+        $this->forge->dropTable('users', true);
         $this->forge->dropTable('auth_groups', true);
         $this->forge->dropTable('auth_permissions', true);
-        $this->forge->dropTable('auth_groups_permissions', true);
-        $this->forge->dropTable('auth_groups_users', true);
-        $this->forge->dropTable('auth_users_permissions', true);
     }
 }

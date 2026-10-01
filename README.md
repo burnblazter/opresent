@@ -6,9 +6,9 @@
 
 ### _Si Pintar Urusan Presensi_
 
-**An intelligent, enterprise-grade attendance management system featuring
-3-Factor Multi-Factor Authentication, client-side AI biometrics,
-GPS geofencing, and a natural language AI assistant.**
+**Attendance management system with 3-factor authentication, client-side face recognition, GPS geofencing, and a natural language query assistant.**
+
+**Language:** [English](README.md) | [Bahasa Indonesia](README.id.md)
 
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=flat-square&logo=php)](https://php.net)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-4.x-EF4223?style=flat-square&logo=codeigniter)](https://codeigniter.com)
@@ -26,11 +26,10 @@ GPS geofencing, and a natural language AI assistant.**
 
 ---
 
-> Originally forked from [`o-present`](https://github.com/josephines1/o-present) by Josephine,
-> PresenSI has been extensively re-engineered with a new architecture, security model,
-> AI integration, and feature set — making it a fundamentally different system.
+> Forked from [`o-present`](https://github.com/josephines1/o-present) by Josephine,
+> then rebuilt with a different architecture, security model, AI integration, and feature set.
 >
-> **Deployed at SMA Negeri 1 Balikpapan serving 1,000+ active students.**
+> **Running in production at SMA Negeri 1 Balikpapan, 1,000+ active students.**
 
 </div>
 
@@ -38,12 +37,12 @@ GPS geofencing, and a natural language AI assistant.**
 
 ## 📖 Background
 
-Traditional attendance systems — paper roll calls and fingerprint scanners — are
-fundamentally vulnerable to proxy attendance ("titip absen"), provide no location
-verification, and create significant administrative overhead.
+Paper roll calls and fingerprint scanners have the same problem: they're easy to game.
+Proxy attendance ("titip absen") is trivial, there's no location check, and someone
+has to manually reconcile the records afterward.
 
-PresenSI solves this by requiring **three independent factors to be satisfied
-simultaneously** before any attendance record is accepted:
+PresenSI's answer to this is to require **three independent factors to pass at the
+same time** before an attendance record gets accepted:
 
 | Factor    | What it verifies                           | Technology                      |
 | --------- | ------------------------------------------ | ------------------------------- |
@@ -51,9 +50,9 @@ simultaneously** before any attendance record is accepted:
 | **WHERE** | Physical presence within school grounds    | GPS + Haversine geofencing      |
 | **WHEN**  | Tamper-proof server-synchronized timestamp | Server `timeDiff` correction    |
 
-Because all three factors use **AND logic**, compromising one factor is never
-sufficient. A photo cannot pass liveness detection. Being off-campus blocks the GPS
-factor. Changing your device clock is corrected by `timeDiff`.
+All three run on AND logic, so beating one factor doesn't get you anywhere. A photo
+fails liveness detection. Being off-campus fails the GPS check. Changing your device
+clock gets corrected by `timeDiff` before it ever reaches the database.
 
 ---
 
@@ -61,67 +60,68 @@ factor. Changing your device clock is corrected by `timeDiff`.
 
 ### 🔐 Multi-Factor Authentication Engine
 
-- **3-Factor AND logic** — all factors must pass simultaneously; no bypasses
-- **Active Liveness Detection** — randomized head movement challenges (tilt up/down,
-  turn left/right) validated via `face.rotation.pitch` and `face.rotation.yaw`
-- **Face Recognition** — 1024-dimensional face embeddings via Human.js
-  (MobileNetV2-based), cosine similarity threshold ≥ 0.62
-- **GPS Geofencing** — Haversine formula with configurable radius per location,
-  continuous `watchPosition()` monitoring
-- **Server Time Synchronization** — `timeDiff = ServerTime − ClientTime` injected
-  at page load; all timestamps use corrected time, immune to device clock manipulation
+- **3-factor AND logic**, all checks have to pass, no bypasses
+- **Active liveness detection** with randomized head movement challenges (tilt up/down,
+  turn left/right), validated against `face.rotation.pitch` and `face.rotation.yaw`
+- **Face recognition** using 1024-dimensional embeddings from Human.js
+  (MobileNetV2-based), cosine similarity threshold set at 0.62
+- **GPS geofencing** via Haversine formula with a configurable radius per location,
+  continuous monitoring through `watchPosition()`
+- **Server time sync**, `timeDiff = ServerTime − ClientTime` computed at page load,
+  every timestamp afterward uses the corrected value so device clocks can't be spoofed
 
 ### 🤖 AI Assistant ("Si Pintar")
 
-- Natural language interface for attendance data queries in **Bahasa Indonesia**
-- **Two-Pass LLM Pipeline**: Pass 1 converts natural language → SQL;
-  Pass 2 narrates SQL results → human-readable response
-- Powered by **Groq API** (low-latency LPU inference) with **API key pooling**
-  for rate limit resilience
-- **Regex sanitizer** blocks DML queries (`INSERT`, `UPDATE`, `DELETE`, `DROP`)
-- **Per-user data isolation** — students only see their own records
+- Natural language queries over attendance data, in Bahasa Indonesia
+- **Two-pass LLM pipeline**: first pass turns the question into SQL, second pass
+  turns the SQL result back into a readable answer
+- Runs on **Groq** (LPU inference, low latency) with API key pooling for rate
+  limit headroom
+- A regex sanitizer blocks anything that isn't `SELECT` (`INSERT`, `UPDATE`,
+  `DELETE`, `DROP`, etc. are rejected before execution)
+- Per-user data isolation, students can only query their own records
 
 ### 🏢 Kiosk Mode
 
-- Fullscreen Single Page Application for shared attendance terminals
-- **3-state workflow**: Barcode scan → Face verification → Success/Failure
-- **30-second idempotency window** prevents duplicate entries from repeated scans
-- **Dynamic CSRF tokens** refreshed per AJAX response — no page reload needed
-- QR code fallback for users who fail face recognition
+- Fullscreen SPA for shared attendance terminals
+- **3-state flow**: barcode scan → face verification → success/failure
+- **30-second idempotency window** to stop duplicate entries from repeated scans
+- CSRF tokens refresh per AJAX response, no page reload required
+- Falls back to QR code if face recognition fails
 
 ### 🛡️ Privacy-First Biometrics
 
-- **Zero image upload** — facial images are never transmitted to the server
-- Only the mathematical face embedding vector (1024 floats) is stored
-- Embeddings cannot be used to reconstruct the original face
-- All AI inference runs entirely **client-side** via WebAssembly
+- **No images ever hit the server**, only the resulting embedding vector does
+- Each face is stored as a 1024-float vector, nothing else
+- The embedding is one-way, you can't reconstruct a face from it
+- All inference happens client-side via WebAssembly
 
 ### 📊 Management & Reporting
 
-- **Real-time dashboard** with attendance statistics (present, absent, sick/leave, late)
-- **Excel import/export** via PhpSpreadsheet with per-unit multi-sheet XLSX
-- **Absence management** with approval workflow, PDF certificate upload, date
-  overlap validation
-- **Holiday management** with external API sync (`libur.deno.dev`) + manual override
-- **Built-in File Manager** with bulk ZIP download and auto-cleanup
-- **Barcode 128 printing** for Kiosk Mode identification
+- Real-time dashboard covering present, absent, sick/leave, and late counts
+- Excel import/export through PhpSpreadsheet, multi-sheet XLSX per unit
+- Absence management with an approval workflow, PDF certificate upload, and
+  date overlap validation
+- Holiday calendar synced from an external API (`libur.deno.dev`) with manual override
+- Built-in file manager with bulk ZIP download and auto-cleanup
+- Code 128 barcode printing for kiosk identification
 
 ### 📢 Integrations
 
-- **Telegram Bot API** — real-time push notifications to parent groups on
-  successful attendance
-- **Groq API** — ultra-low-latency LLM inference for Si Pintar
-- **OpenStreetMap + Leaflet.js** — interactive maps for location management
-- **Nominatim** — coordinate search for location setup
+- **Telegram Bot API** for real-time push notifications to parent groups
+- **Groq API** for Si Pintar's LLM inference
+- **OpenStreetMap + Leaflet.js** for location management maps
+- **Nominatim** for coordinate lookup during location setup
 
 ### 🔒 Security
 
-- **Double password hashing**: SHA-384 pre-hash → Argon2id KDF
-- **Role-Based Access Control (RBAC)**: Admin, Head, Pegawai/Siswa, Kiosk, Helper
-- **CSRF protection** on all POST forms
-- **HTMLPurifier + Laminas Escaper** input sanitization
-- **Time-limited tokens** for password reset (24h) and email change (5 min)
-- **Zero CDN dependency** — all JS libraries self-hosted, no external dependency risk
+- Passwords go through **SHA-384 pre-hash → Argon2id KDF**, double hashing
+- **RBAC** across five roles: Admin, Head, Pegawai/Siswa, Kiosk, Helper
+- CSRF protection on every POST form
+- Input sanitized with HTMLPurifier and Laminas Escaper
+- Time-limited tokens for password reset (24h) and email change (5 min)
+- **Zero CDN dependency**, all JS libraries are self-hosted so there's no
+  third-party script risk
 
 ---
 
@@ -182,14 +182,14 @@ DOMAIN 2: Master Data               ketidakhadiran
   lokasi_presensi
 ```
 
-Key design decisions:
+A few design decisions worth noting:
 
-- `users.password_hash` — SHA-384 pre-hash + Argon2id (never plain Bcrypt)
-- `face_descriptors.descriptor` — `MEDIUMTEXT` storing JSON array of 1024 floats
-- `presensi` — stores both check-in and check-out with photo path references
-- `lokasi_presensi` — configurable `latitude`, `longitude`, `radius`, `timezone`,
+- `users.password_hash`, SHA-384 pre-hash + Argon2id, never plain Bcrypt
+- `face_descriptors.descriptor` is `MEDIUMTEXT` holding a JSON array of 1024 floats
+- `presensi` stores both check-in and check-out, with photo path references
+- `lokasi_presensi` holds `latitude`, `longitude`, `radius`, `timezone`,
   `jam_masuk`, `jam_keluar` per location
-- All tables use soft deletes (`deleted_at`) for audit trail preservation
+- Every table uses soft deletes (`deleted_at`) to keep an audit trail
 
 ---
 
@@ -235,18 +235,34 @@ Key design decisions:
 - **MySQL** 5.7+ or **MariaDB** 10.6+
 - **Web Server**: Apache 2.4+ (with `mod_rewrite`) or Nginx
 - **PHP Extensions**: `intl`, `mbstring`, `json`, `mysqlnd`, `curl`, `zip`
-- **Browser**: Any modern Chromium/WebKit/Gecko browser with WebAssembly support
-  (Chrome 57+, Firefox, Safari, Edge — Internet Explorer is **not** supported)
+- **Browser**: any modern Chromium/WebKit/Gecko browser with WebAssembly support
+  (Chrome 57+, Firefox, Safari, Edge; Internet Explorer is **not** supported)
 
 ---
 
 ## 🚀 Installation
 
-See the [INSTALL.md](INSTALL.md) file for full details.
+See [INSTALL.md](INSTALL.md) for the full walkthrough.
+Indonesian translations are at [README.id.md](README.id.md) and [INSTALL.id.md](INSTALL.id.md).
+
+### Database setup summary
+
+CodeIgniter 4 migrations are the source of truth for the schema. Create an empty
+MySQL or MariaDB database, set the connection in `.env`, then run:
+
+```bash
+php spark migrate --all
+php spark db:seed DatabaseSeeder
+```
+
+`--all` includes the internalized MythAuth migration. `DatabaseSeeder` only creates
+fictional development data, no face descriptors, photos, uploaded documents,
+tokens, or production records come from it. Don't import a local phpMyAdmin dump
+into this repository.
 
 ## ⚙️ Configuration
 
-All configuration is managed through the `.env` file.
+Everything is set through the `.env` file.
 
 ### Core Application
 
@@ -273,8 +289,8 @@ All configuration is managed through the `.env` file.
 | `GROQ_API_KEYS` | Multiple keys for pooling (comma-separated) | `key1,key2,key3`              |
 | `GROQ_MODEL`    | LLM model to use                            | `qwen/qwen3.8-27b` |
 
-> **Tip:** Multiple API keys in `GROQ_API_KEYS` enable automatic random rotation
-> on each request, distributing load across keys and increasing effective rate limits.
+> **Tip:** passing multiple keys in `GROQ_API_KEYS` enables random rotation per
+> request, which spreads the load and raises your effective rate limit.
 
 ### Telegram Notifications
 
@@ -366,23 +382,23 @@ Open /presensi/masuk
 ┌─ Factor 1: GPS ──────────────────────────────────────────┐
 │  watchPosition() → Haversine distance calculation        │
 │  ✅ Within radius → green UI, proceed                    │
-│  ❌ Outside radius → red UI, button locked               │
+│  ❌ Outside radius → red UI, button locked                │
 └──────────────────────────────────────────────────────────┘
         │ (pass)
         ▼
 ┌─ Factor 2: Liveness Detection ───────────────────────────┐
-│  Human.js loads → random challenge displayed             │
-│  e.g. "Tilt Up" → user tilts head up                    │
-│  Validated via face.rotation.pitch / yaw                 │
-│  Progress bar advances → all challenges complete         │
+│  Human.js loads → random challenge displayed              │
+│  e.g. "Tilt Up" → user tilts head up                      │
+│  Validated via face.rotation.pitch / yaw                  │
+│  Progress bar advances → all challenges complete           │
 └──────────────────────────────────────────────────────────┘
         │ (pass)
         ▼
 ┌─ Factor 3: Face Recognition ─────────────────────────────┐
-│  Extract 1024-dim embedding from camera frame            │
-│  Cosine similarity vs all stored descriptors             │
-│  similarity ≥ 0.62 → identity confirmed                  │
-│  3-second countdown → auto-capture snapshot              │
+│  Extract 1024-dim embedding from camera frame              │
+│  Cosine similarity vs all stored descriptors                │
+│  similarity ≥ 0.62 → identity confirmed                     │
+│  3-second countdown → auto-capture snapshot                 │
 └──────────────────────────────────────────────────────────┘
         │ (all factors pass)
         ▼
@@ -402,15 +418,15 @@ Dashboard updates + AI "Fun Fact" (age/emotion estimate)
 
 ### Face Enrollment
 
-Students can self-enroll their face for attendance:
+Students self-enroll their face:
 
 1. Go to **Profile → Daftar Wajah**
-2. Capture face photo via webcam or upload image
+2. Capture a photo via webcam, or upload one
 3. Crop to 1:1 using Cropper.js
-4. Submit enrollment request (max 3 requests/day)
-5. Admin approves → descriptor activated for attendance use
+4. Submit the enrollment request (capped at 3 requests/day)
+5. Admin approves it, descriptor goes live for attendance
 
-Admins can also directly manage descriptors at **Pengguna → Face Descriptor**.
+Admins can manage descriptors directly too, at **Pengguna → Face Descriptor**.
 
 ---
 
@@ -432,23 +448,23 @@ Click the floating AI widget on any dashboard page. Example queries:
 → Attendance trend narrative with data
 ```
 
-> **Security note:** Queries like `DROP TABLE`, `DELETE`, or accessing other
-> users' data are blocked by the regex sanitizer and per-user isolation layer.
+> **Security note:** things like `DROP TABLE`, `DELETE`, or trying to pull another
+> user's data get blocked by the regex sanitizer and the per-user isolation layer.
 
 ---
 
 ### Kiosk Mode
 
-Designed for school gate terminals operated by a staff member:
+Built for school gate terminals run by a staff member:
 
-1. Login with a **Kiosk** role account → automatically enters fullscreen SPA
-2. **State 1 (Scanner)**: Student scans their Barcode 128 badge
-3. **State 2 (Verification)**: Face recognition runs automatically (no button press)
-4. **State 3 Success**: Record saved → Telegram notification sent → returns to State 1
-5. **State 3 Failure**: QR code fallback displayed for manual verification
+1. Log in with a **Kiosk** role account, it drops straight into fullscreen SPA
+2. **State 1 (Scanner)**: student scans their Code 128 badge
+3. **State 2 (Verification)**: face recognition runs automatically, no button needed
+4. **State 3 Success**: record saved, Telegram notification sent, back to State 1
+5. **State 3 Failure**: QR code fallback shown for manual verification
 
-The 30-second idempotency window prevents duplicate records if the same badge
-is accidentally scanned multiple times.
+The 30-second idempotency window stops duplicate records if the same badge
+gets scanned twice by accident.
 
 ---
 
@@ -502,7 +518,7 @@ All 50 test scenarios passed across 5 modules:
 | Internet Explorer 11 | ❌          | ❌               | Not Supported   |
 | Chrome < 57          | ❌          | ❌               | Not Supported   |
 
-> Legacy browsers are intentionally unsupported — WebAssembly is a hard requirement
+> Legacy browsers are unsupported on purpose, WebAssembly is a hard requirement
 > for running Human.js inference.
 
 ### Client-Side Inference Performance
@@ -513,14 +529,15 @@ All 50 test scenarios passed across 5 modules:
 | Mid-range (2020–2022)  | 200–400 ms                  |
 | Entry-level (pre-2020) | > 500 ms (still functional) |
 
-Model loading: ~5–10s on first load (network dependent), < 1s from `localStorage` cache.
+Model loading takes roughly 5 to 10 seconds on first load depending on network,
+and under 1 second once cached in `localStorage`.
 
 ---
 
 ## 📡 API Reference
 
-PresenSI operates primarily as an MVC web application, but exposes internal AJAX
-endpoints. The primary one used externally is the AI chat endpoint.
+PresenSI is mostly an MVC web app, but it does expose internal AJAX endpoints.
+The one most relevant externally is the AI chat endpoint.
 
 ### AI Chat
 
@@ -564,32 +581,32 @@ Content-Type: application/json
 
 ## 🔧 Two-Pass LLM Pipeline (Technical Deep Dive)
 
-Si Pintar processes queries in two sequential LLM calls:
+Si Pintar handles each query in two sequential LLM calls:
 
 ````
 User query (Bahasa Indonesia)
          │
          ▼
 ┌─ Pass 1: Text-to-SQL ──────────────────────────┐
-│  System context: DB schema + table info        │
-│  Model generates: QUERY: ```sql SELECT ...```  │
-│                                                │
-│  Regex Sanitizer checks:                       │
-│  ✅ Allow: SELECT only                         │
-│  ❌ Block: INSERT, UPDATE, DELETE, DROP, etc.  │
-│  ✅ Limit: 30 rows max                         │
-└────────────────────────────────────────────────┘
+│  System context: DB schema + table info         │
+│  Model generates: QUERY: ```sql SELECT ...```   │
+│                                                 │
+│  Regex Sanitizer checks:                        │
+│  ✅ Allow: SELECT only                          │
+│  ❌ Block: INSERT, UPDATE, DELETE, DROP, etc.   │
+│  ✅ Limit: 30 rows max                          │
+└──────────────────────────────────────────────────┘
          │ (SQL extracted + executed against DB)
          ▼
     Raw JSON results from database
          │
          ▼
 ┌─ Pass 2: SQL-to-Natural Language ──────────────┐
-│  System context: "Answer in Bahasa Indonesia"  │
-│  Input: raw query results as JSON              │
-│  Output: narrative response + formatted data   │
-│  Markdown → DOMPurify → rendered HTML          │
-└────────────────────────────────────────────────┘
+│  System context: "Answer in Bahasa Indonesia"   │
+│  Input: raw query results as JSON               │
+│  Output: narrative response + formatted data    │
+│  Markdown → DOMPurify → rendered HTML           │
+└──────────────────────────────────────────────────┘
          │
          ▼
 Floating chat bubble renders response
@@ -605,8 +622,8 @@ Floating chat bubble renders response
 User password → SHA-384(password) → base64_encode → Argon2id(result)
 ```
 
-SHA-384 pre-hashing addresses Bcrypt/Argon2's 72-character input limit —
-long passwords are safely reduced to a fixed-length digest before KDF processing.
+SHA-384 pre-hashing works around Bcrypt/Argon2's 72-character input limit,
+so long passwords get reduced to a fixed-length digest before they hit the KDF.
 
 ### Time Integrity
 
@@ -621,16 +638,16 @@ const presenceTimestamp = Date.now() + timeDiff
 
 ### Biometric Privacy
 
-- Face images → processed entirely in browser (Human.js + WASM)
-- Only the resulting 1024-float embedding vector is sent to the server
-- Embeddings are mathematically one-way: the original face cannot be reconstructed
+- Face images are processed entirely in-browser (Human.js + WASM)
+- Only the resulting 1024-float embedding vector gets sent to the server
+- Embeddings are one-way math, you can't go from embedding back to face
 - Face data access is restricted to the owner and admin roles
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome. The usual flow:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/your-feature`)
@@ -638,18 +655,18 @@ Contributions are welcome! Please:
 4. Push to the branch (`git push origin feature/your-feature`)
 5. Open a Pull Request
 
-Please ensure your code follows the existing CodeIgniter 4 conventions and
-includes appropriate test cases for new functionality.
+Keep code consistent with the existing CodeIgniter 4 conventions, and add test
+cases for new functionality.
 
 ---
 
 ## 📜 License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+Licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 
-Permissions of this strong copyleft license are conditioned on making available
-complete source code of licensed works and modifications, which include larger
-works using a licensed work, under the same license.
+This is a strong copyleft license: using this license means any modifications
+or larger works that include it also need to make their complete source available
+under the same terms.
 
 See the [LICENSE](LICENSE) file for full details.
 
@@ -657,14 +674,13 @@ See the [LICENSE](LICENSE) file for full details.
 
 ## 🙏 Acknowledgements
 
-- **[o-present](https://github.com/josephines1/o-present)** by Josephine — the original
-  open-source project that PresenSI was built upon and extensively re-engineered from
-- **[vladmandic/human](https://github.com/vladmandic/human)** — the incredible
-  browser-native AI library that makes client-side biometrics possible
-- **[Groq](https://groq.com)** — for ultra-low-latency LLM inference via LPU hardware
-- **[Tabler UI](https://tabler.io)** — the clean, Bootstrap 5-based dashboard template
-- **SMA Negeri 1 Balikpapan** — for the opportunity to implement and validate this
-  system at scale with 1,000+ real users
+- **[o-present](https://github.com/josephines1/o-present)** by Josephine, the original
+  open-source project this was built on top of and extensively reworked
+- **[vladmandic/human](https://github.com/vladmandic/human)**, the library that makes
+  browser-native biometrics possible in the first place
+- **[Groq](https://groq.com)** for the low-latency LLM inference behind Si Pintar
+- **[Tabler UI](https://tabler.io)** for the Bootstrap 5-based dashboard template
+- **SMA Negeri 1 Balikpapan**, for the chance to run this at scale with 1,000+ real users
 
 ---
 

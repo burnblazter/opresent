@@ -1,5 +1,7 @@
 # PresenSI — Complete Installation Guide
 
+**Language:** [English](INSTALL.md) | [Bahasa Indonesia](INSTALL.id.md)
+
 > **"Si Pintar Urusan Presensi"**
 > Read this entire guide before beginning installation.
 > See also: `README.md` for feature documentation.
@@ -115,24 +117,13 @@ C:\laragon\www\presensi\
 
 > Laragon uses **HeidiSQL** as its built-in database client. HeidiSQL connects instantly without requiring browser-based authentication, making it faster than phpMyAdmin for local development.
 
-1. Click **[Menu]** → **Tools** → **HeidiSQL**.
+1. Click **[Menu]** → **[Tools]** → **HeidiSQL**.
 2. In the HeidiSQL Session Manager:
    - Click **[New]** in the bottom-left corner.
-   - Leave all settings at their defaults (`Host: 127.0.0.1`, `User: root`, `Password: (empty)`).
+   - Leave the local defaults (`Host: 127.0.0.1`, `User: root`, `Password: (empty)`) or use the credentials for your own MySQL server.
    - Click **[Open]**.
-3. In the left panel, right-click the connection name (usually _"Unnamed"_) → **Create New** → **Database**.
-4. Fill in the fields:
-   - **Name:** `presensi_db`
-   - **Collation:** `utf8mb4_general_ci`
-   - Click **[OK]**.
-5. Click on `presensi_db` in the left panel to make it the active database.
-6. Click **[File]** → **[Run SQL File...]**.
-7. Navigate to the project folder:
-   ```
-   C:\laragon\www\presensi\database\
-   ```
-   Select `presensi_db.sql` and click **[Open]**.
-8. Wait for the import to complete. No error messages means the import was successful.
+3. Create an empty database named `presensi_db` with collation `utf8mb4_unicode_ci`.
+4. Do not import a local phpMyAdmin dump. The schema is created by CodeIgniter migrations.
 
 ---
 
@@ -171,6 +162,15 @@ C:\laragon\www\presensi\
    ```
 
 4. Save the file (`Ctrl+S`).
+
+5. From the project root, create the schema and fictional development data:
+
+   ```bash
+   php spark migrate --all
+   php spark db:seed DatabaseSeeder
+   ```
+
+   The `--all` flag runs both the application migration and the internalized MythAuth migration. The seeder is for development and demo only. It does not insert photos, face descriptors, uploaded documents, tokens, or production data.
 
 ---
 
@@ -249,14 +249,23 @@ Two deployment options are available. Choose the one that matches your hosting p
 
 ---
 
-### Step 4 — Import the Database
+### Step 4 — Create the Database Schema
 
-1. In cPanel, open **[phpMyAdmin]**.
-2. Click on your database name in the left panel.
-3. Click the **[Import]** tab in the top toolbar.
-4. Click **[Choose File]** and select `presensi_db.sql` from your local machine.
-5. Leave all other settings at their defaults.
-6. Click **[Go]** and wait for the green success message.
+1. Open the project directory in the cPanel Terminal or connect through SSH.
+2. Configure the database values in `.env`.
+3. Run the migrations from the project root:
+
+   ```bash
+   php spark migrate --all
+   ```
+
+4. For a development environment only, add fictional data:
+
+   ```bash
+   php spark db:seed DatabaseSeeder
+   ```
+
+   Do not import a local phpMyAdmin dump or run the demo seeder on production.
 
 ---
 
